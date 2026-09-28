@@ -1049,12 +1049,32 @@ extension CAGridView {
 
     func isPointInFolderDropZone(_ point: CGPoint, targetIndex: Int) -> Bool {
         guard let center = iconCenter(for: targetIndex) else { return false }
-        let size = iconSize * folderDropZoneScale
+        // Clamp against the actual cell pitch: at high folderDropZoneScale values,
+        // or in denser layouts (more columns/rows, Compact window), an unclamped
+        // zone can reach or exceed half the distance to the next cell. That leaves
+        // no point that resolves to an adjacent cell while sitting outside this
+        // cell's merge zone, so gridPositionAt()/updateDragging() can never emit an
+        // .insert preview next to an occupied cell — the neighboring icons never
+        // shift to open a gap. Reserve a minimum insertion band on each side.
+        let insertMargin: CGFloat = 10
+        let size = min(iconSize * folderDropZoneScale, maxFolderDropZoneSide - insertMargin * 2)
         let rect = CGRect(x: center.x - size / 2,
                           y: center.y - size / 2,
                           width: size,
                           height: size)
         return rect.contains(point)
+    }
+
+    private var maxFolderDropZoneSide: CGFloat {
+        let availableWidth = max(0, bounds.width - contentInsets.left - contentInsets.right)
+        let availableHeight = max(0, bounds.height - contentInsets.top - contentInsets.bottom)
+        let totalColumnSpacing = columnSpacing * CGFloat(max(columns - 1, 0))
+        let totalRowSpacing = rowSpacing * CGFloat(max(rows - 1, 0))
+        let cellWidth = max(0, availableWidth - totalColumnSpacing) / CGFloat(max(columns, 1))
+        let cellHeight = max(0, availableHeight - totalRowSpacing) / CGFloat(max(rows, 1))
+        let strideX = cellWidth + columnSpacing
+        let strideY = cellHeight + rowSpacing
+        return min(strideX, strideY)
     }
 
     func iconCenter(for index: Int) -> CGPoint? {
@@ -1246,8 +1266,13 @@ extension CAGridView {
     }
 
     func startEdgeDragTimer(direction: Int) {
-        // 如果已有相同方向的计时器，不重复创建
-        if edgeDragTimer != nil { return }
+        // 如果已有相同方向的计时器，不重复创建；但相反方向必须取消旧计时器后重新开始，
+        // 否则在边界反向拖拽时会卡在旧方向上，翻页变得没有反应。
+        if edgeDragTimer != nil {
+            guard edgeDragTimerDirection != direction else { return }
+            cancelEdgeDragTimer()
+        }
+        edgeDragTimerDirection = direction
 
         let timer = Timer(timeInterval: edgeDragDelay, repeats: false) { [weak self] _ in
             guard let self = self else { return }
@@ -1261,6 +1286,7 @@ extension CAGridView {
 
             self.navigateToPage(targetPage, animated: true)
             self.edgeDragTimer = nil
+            self.edgeDragTimerDirection = nil
 
             // 翻页后继续检测
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
@@ -1275,6 +1301,7 @@ extension CAGridView {
     func cancelEdgeDragTimer() {
         edgeDragTimer?.invalidate()
         edgeDragTimer = nil
+        edgeDragTimerDirection = nil
     }
 
     func hardSnapToCurrentPage() {
@@ -1516,6 +1543,21 @@ extension CAGridView {
         logIfMismatch("endDragging")
     }
 
+    /// True while a live (pre-drop) drag is holding `item`'s original grid cell
+    /// hidden behind the floating preview. Unlike `dragLanding`/`isFolderMergeDestination`,
+    /// this covers the interval before mouse-up, so a mid-drag `rebuildLayers()`
+    /// (an unrelated items refresh, e.g. icon cache invalidation or an app-folder
+    /// rescan) knows to keep this cell hidden instead of redrawing it at full
+    /// opacity next to the still-floating preview.
+    func isLiveDragSource(_ item: LaunchpadItem) -> Bool {
+        guard isDraggingItem else { return false }
+        if isBatchDragging {
+            if case .app(let app) = item { return batchDraggingAppPathsOrdered.contains(app.url.path) }
+            return false
+        }
+        return item.id == draggingItem?.id
+    }
+
     func removeDraggingVisuals() {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -1556,6 +1598,17 @@ extension CAGridView {
     }
 
     func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
+        endExternalAppDragSessionIfActive()
+    }
+
+    /// `externalAppDragSessionActive` has exactly one normal reset path: this
+    /// delegate callback from AppKit's `NSDraggingSession`. mouseDown/mouseDragged/
+    /// mouseUp all early-return while it is true, so if the callback is ever not
+    /// delivered to this exact view instance (window torn down or hidden mid
+    /// system drag), the grid stops responding to clicks and drags permanently.
+    /// Call this from window-hide/teardown paths as a safety net.
+    func endExternalAppDragSessionIfActive() {
+        guard externalAppDragSessionActive else { return }
         externalAppDragSessionActive = false
         AppDelegate.shared?.endExternalSystemDragSession()
     }

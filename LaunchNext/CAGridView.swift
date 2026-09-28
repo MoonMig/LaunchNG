@@ -161,6 +161,7 @@ final class CAGridView: NSView, CALayerDelegate, NSDraggingSource {
 
     // 跨页拖拽
     var edgeDragTimer: Timer?
+    var edgeDragTimerDirection: Int?
     let edgeDragThreshold: CGFloat = 60  // 边缘检测区域宽度
     let edgeDragDelay: TimeInterval = 0.4  // 触发翻页延迟
 
@@ -305,6 +306,10 @@ final class CAGridView: NSView, CALayerDelegate, NSDraggingSource {
             finishDragLanding()
             removeFolderCreationHighlight()
             resetFolderGlass()
+            // A torn-down view never gets AppKit's NSDraggingSession endedAt
+            // callback if one was in flight; without this, a future instance's
+            // mouse events would stay gated by a stuck flag on the app delegate.
+            endExternalAppDragSessionIfActive()
             // The display link retains its target, so invalidate it before deinit.
             displayLink?.invalidate()
             displayLink = nil
@@ -371,6 +376,23 @@ final class CAGridView: NSView, CALayerDelegate, NSDraggingSource {
         // 不再移除监听器 - 让它保持活跃，这样窗口重新显示时就能立即使用
         // removeScrollEventMonitor()
         wasWindowVisible = false
+        // The window can be hidden mid-drag (hot corner, trackpad gesture, or
+        // losing key status all bypass isDraggingItem) with no further
+        // mouseDragged/mouseUp ever delivered to this view. Left alone, the
+        // floating preview and hidden source icon would stay stuck until the
+        // app is relaunched, matching reports of drags "freezing".
+        longPressTimer?.invalidate()
+        longPressTimer = nil
+        cancelEdgeDragTimer()
+        isPageDragging = false
+        setPressedIndex(nil, animated: false)
+        // Same reasoning as above: if a system Dock-drag's endedAt callback was
+        // ever skipped, this flag would otherwise stay stuck and permanently
+        // block mouseDown/mouseDragged/mouseUp on this view.
+        endExternalAppDragSessionIfActive()
+        if isDraggingItem || isBatchDragging {
+            cancelDragging()
+        }
         finishFolderDissolve()
         finishDragLanding()
         removeFolderCreationHighlight()
