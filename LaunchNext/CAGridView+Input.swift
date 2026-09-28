@@ -1049,15 +1049,18 @@ extension CAGridView {
 
     func isPointInFolderDropZone(_ point: CGPoint, targetIndex: Int) -> Bool {
         guard let center = iconCenter(for: targetIndex) else { return false }
-        // Clamp against the actual cell pitch: at high folderDropZoneScale values,
-        // or in denser layouts (more columns/rows, Compact window), an unclamped
-        // zone can reach or exceed half the distance to the next cell. That leaves
-        // no point that resolves to an adjacent cell while sitting outside this
-        // cell's merge zone, so gridPositionAt()/updateDragging() can never emit an
-        // .insert preview next to an occupied cell — the neighboring icons never
-        // shift to open a gap. Reserve a minimum insertion band on each side.
-        let insertMargin: CGFloat = 10
-        let size = min(iconSize * folderDropZoneScale, maxFolderDropZoneSide - insertMargin * 2)
+        // Clamp against the actual cell width, not the full column stride
+        // (cell + spacing): gridPositionAt() hit-tests in stride-wide slabs
+        // that start at each cell's own origin, so a cell's icon center sits
+        // only cellWidth/2 from the boundary with the PREVIOUS (lower-index)
+        // cell's slab — not strideX/2. That near-side sliver is exactly what
+        // must stay free of this zone for "insert before this cell" (landing
+        // between this cell and its lower-index neighbor, e.g. two folders)
+        // to ever be reachable. Clamping against the full stride is too loose
+        // and still lets the zone swallow that sliver in denser layouts
+        // (Compact window, more columns/rows) or at higher folderDropZoneScale.
+        let insertMargin: CGFloat = 16
+        let size = min(iconSize * folderDropZoneScale, max(0, maxFolderDropZoneSide - insertMargin * 2))
         let rect = CGRect(x: center.x - size / 2,
                           y: center.y - size / 2,
                           width: size,
@@ -1072,9 +1075,7 @@ extension CAGridView {
         let totalRowSpacing = rowSpacing * CGFloat(max(rows - 1, 0))
         let cellWidth = max(0, availableWidth - totalColumnSpacing) / CGFloat(max(columns, 1))
         let cellHeight = max(0, availableHeight - totalRowSpacing) / CGFloat(max(rows, 1))
-        let strideX = cellWidth + columnSpacing
-        let strideY = cellHeight + rowSpacing
-        return min(strideX, strideY)
+        return min(cellWidth, cellHeight)
     }
 
     func iconCenter(for index: Int) -> CGPoint? {
@@ -1224,9 +1225,14 @@ extension CAGridView {
             }
             updateIconPositionsForDrag(hoverIndex: hoverIndex)
         } else if externalDragActive {
+            // resetIconPositions()'s fallback path (no captured hover positions,
+            // e.g. a handoff drag released before hoverUpdateTimer ever fired)
+            // restores the hidden source cell by reading draggingIndex, so it
+            // must still be set when this runs — nulling it first left that
+            // cell stuck at opacity 0 forever in that case.
+            resetIconPositions()
             externalDragActive = false
             draggingIndex = nil
-            resetIconPositions()
         }
     }
 
@@ -1549,7 +1555,21 @@ extension CAGridView {
     /// (an unrelated items refresh, e.g. icon cache invalidation or an app-folder
     /// rescan) knows to keep this cell hidden instead of redrawing it at full
     /// opacity next to the still-floating preview.
+    ///
+    /// Also covers `externalDragActive` (`updateExternalDragState`): a handoff
+    /// drag pulling an item out of an open folder drives its own floating
+    /// preview from SwiftUI (LaunchpadView's DragPreviewItem) and only asks
+    /// this view to hide the source cell by index — it never sets
+    /// isDraggingItem. Without this, a rebuild mid-handoff-drag would redraw
+    /// that cell at full opacity right next to the SwiftUI preview until the
+    /// next updateExternalDragState call happened to reassert it, which is
+    /// exactly the intermittent "duplicate icon" users saw when dragging out
+    /// of a folder.
     func isLiveDragSource(_ item: LaunchpadItem) -> Bool {
+        if externalDragActive, let draggingIndex, items.indices.contains(draggingIndex),
+           items[draggingIndex].id == item.id {
+            return true
+        }
         guard isDraggingItem else { return false }
         if isBatchDragging {
             if case .app(let app) = item { return batchDraggingAppPathsOrdered.contains(app.url.path) }

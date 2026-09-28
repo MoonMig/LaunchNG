@@ -2880,8 +2880,7 @@ extension LaunchpadView {
         let now = Date()
         if now.timeIntervalSince(Self.lastGeometryUpdate) < geometryCacheTimeout,
            let cached = Self.geometryCache[cacheKey] {
-            let scale = CGFloat(appStore.folderDropZoneScale)
-            let centerAreaSize = iconSize * scale
+            let centerAreaSize = clampedFolderDropZoneSize(iconSize: iconSize, columnWidth: columnWidth, appHeight: appHeight)
             let centerAreaRect = CGRect(
                 x: cached.x - centerAreaSize / 2,
                 y: cached.y - centerAreaSize / 2,
@@ -2890,24 +2889,45 @@ extension LaunchpadView {
             )
             return centerAreaRect.contains(point)
         }
-        
+
         let targetCenter = cellCenter(for: targetIndex, in: containerSize, pageIndex: pageIndex, columnWidth: columnWidth, appHeight: appHeight)
-        let scale = CGFloat(appStore.folderDropZoneScale)
-        let centerAreaSize = iconSize * scale
+        let centerAreaSize = clampedFolderDropZoneSize(iconSize: iconSize, columnWidth: columnWidth, appHeight: appHeight)
         let centerAreaRect = CGRect(
             x: targetCenter.x - centerAreaSize / 2,
             y: targetCenter.y - centerAreaSize / 2,
             width: centerAreaSize,
             height: centerAreaSize
         )
-        
+
         // 异步更新缓存，避免在视图更新期间修改状态
         DispatchQueue.main.async {
             Self.geometryCache[cacheKey] = targetCenter
             Self.lastGeometryUpdate = now
         }
-        
+
         return centerAreaRect.contains(point)
+    }
+
+    /// GeometryUtils.indexAt() hit-tests in slabs centered on each cell (it
+    /// offsets by spacing/2 before dividing), so the margin from a cell's
+    /// center to the boundary with either neighbor is columnWidth/2 +
+    /// columnSpacing/2 (and the equivalent on the row axis). An unclamped
+    /// merge/create-folder zone (iconSize * folderDropZoneScale) can reach or
+    /// exceed that margin — especially at higher scale settings, or in denser
+    /// layouts — leaving no point that resolves to a neighboring cell while
+    /// sitting outside this cell's own zone. That makes an .insert landing
+    /// between two occupied cells (e.g. two folders) unreachable. This is the
+    /// same fix as CAGridView+Input.swift's isPointInFolderDropZone, applied
+    /// to the Legacy engine's own drag math — including the handoff drag used
+    /// to pull an item out of an open folder, which reuses this code even
+    /// when the Next (Core Animation) engine renders the grid.
+    private func clampedFolderDropZoneSize(iconSize: CGFloat, columnWidth: CGFloat, appHeight: CGFloat) -> CGFloat {
+        let insertMargin: CGFloat = 16
+        let maxWidth = columnWidth + config.columnSpacing
+        let maxHeight = appHeight + config.rowSpacing
+        let maxSide = max(0, min(maxWidth, maxHeight) - insertMargin * 2)
+        let scale = CGFloat(appStore.folderDropZoneScale)
+        return min(iconSize * scale, maxSide)
     }
 }
 
