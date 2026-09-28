@@ -4,12 +4,12 @@
 
 ## 📥 Tải xuống
 
-**[Tải tại đây](https://github.com/RoversX/LaunchNext/releases/latest)** - Lấy phiên bản mới nhất
+**[Tải tại đây](https://github.com/moonmig/LaunchNext/releases/latest)** - Lấy phiên bản mới nhất
 
 🌐 **Website**: [closex.org/launchnext](https://closex.org/launchnext/)  
 📚 **Tài liệu**: [docs.closex.org/launchnext](https://docs.closex.org/launchnext/)
 
-⭐ Hãy xem xét gắn sao cho [LaunchNext](https://github.com/RoversX/LaunchNext) và đặc biệt là dự án gốc [LaunchNow](https://github.com/ggkevinnnn/LaunchNow)!
+⭐ Hãy xem xét gắn sao cho [LaunchNext](https://github.com/moonmig/LaunchNext) và đặc biệt là dự án gốc [LaunchNow](https://github.com/ggkevinnnn/LaunchNow)!
 
 | | |
 |:---:|:---:|
@@ -79,7 +79,7 @@ LaunchNext có thể đọc trực tiếp cơ sở dữ liệu Launchpad của h
 
 1. **Clone kho lưu trữ**
    ```bash
-   git clone https://github.com/RoversX/LaunchNext.git
+   git clone https://github.com/moonmig/LaunchNext.git
    cd LaunchNext
    ```
 
@@ -219,4 +219,4 @@ Khi Apple ngày càng rời xa các launcher có thể tùy biến, LaunchNext c
 
 - Hỗ trợ cử chỉ thử nghiệm được xây dựng trên [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) và fork của [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport).❤️
 
-![GitHub downloads](https://img.shields.io/github/downloads/RoversX/LaunchNext/total)
+![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNext/total)

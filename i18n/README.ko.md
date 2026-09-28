@@ -4,12 +4,12 @@
 
 ## 📥 다운로드
 
-**[눌러서 다운받기](https://github.com/RoversX/LaunchNext/releases/latest)** - 여기서 최신버전을 받을 수 있어요
+**[눌러서 다운받기](https://github.com/moonmig/LaunchNext/releases/latest)** - 여기서 최신버전을 받을 수 있어요
 
 🌐 **웹사이트**: [closex.org/launchnext](https://closex.org/launchnext/)  
 📚 **문서**: [docs.closex.org/launchnext](https://docs.closex.org/launchnext/)
 
-⭐ [LaunchNext](https://github.com/RoversX/LaunchNext)와 원본 프로젝트 [LaunchNow](https://github.com/ggkevinnnn/LaunchNow)에 star를 달아주세요!
+⭐ [LaunchNext](https://github.com/moonmig/LaunchNext)와 원본 프로젝트 [LaunchNow](https://github.com/ggkevinnnn/LaunchNow)에 star를 달아주세요!
 
 | | |
 |:---:|:---:|
@@ -80,7 +80,7 @@ LaunchNext는 시스템 Launchpad 데이터베이스를 직접 읽을 수 있어
 
 1. **저장소 복제**
    ```bash
-   git clone https://github.com/RoversX/LaunchNext.git
+   git clone https://github.com/moonmig/LaunchNext.git
    cd LaunchNext
    ```
 
@@ -220,4 +220,4 @@ Apple이 커스텀 런처에서 멀어지는 동안, LaunchNext는 현대 macOS�
 
 - 실험적 제스처 지원은 [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) 와 [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport) 포크를 기반으로 합니다.❤️
 
-![GitHub downloads](https://img.shields.io/github/downloads/RoversX/LaunchNext/total)
+![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNext/total)

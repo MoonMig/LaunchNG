@@ -4,12 +4,12 @@
 
 ## 📥 ダウンロード
 
-**[こちらからダウンロード](https://github.com/RoversX/LaunchNext/releases/latest)** - 最新版を入手
+**[こちらからダウンロード](https://github.com/moonmig/LaunchNext/releases/latest)** - 最新版を入手
 
 🌐 **公式サイト**: [closex.org/launchnext](https://closex.org/launchnext/)  
 📚 **ドキュメント**: [docs.closex.org/launchnext](https://docs.closex.org/launchnext/)
 
-⭐ [LaunchNext](https://github.com/RoversX/LaunchNext) と元プロジェクト [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) へのスターをお願いします！
+⭐ [LaunchNext](https://github.com/moonmig/LaunchNext) と元プロジェクト [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) へのスターをお願いします！
 
 | | |
 |:---:|:---:|
@@ -79,7 +79,7 @@ LaunchNext はシステム Launchpad データベースを直接読み取れま�
 
 1. **リポジトリをクローン**
    ```bash
-   git clone https://github.com/RoversX/LaunchNext.git
+   git clone https://github.com/moonmig/LaunchNext.git
    cd LaunchNext
    ```
 
@@ -219,4 +219,4 @@ Apple がカスタマイズ可能なランチャーから離れていく中で�
 
 - 実験的ジェスチャー機能は [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) と [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport) の fork をベースにしています。❤️
 
-![GitHub downloads](https://img.shields.io/github/downloads/RoversX/LaunchNext/total)
+![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNext/total)

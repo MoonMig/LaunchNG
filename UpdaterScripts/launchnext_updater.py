@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-REPO_OWNER = "RoversX"
+REPO_OWNER = "moonmig"
 REPO_NAME = "LaunchNext"
 DEFAULT_INSTALL = "/Applications/LaunchNext.app"
 DEFAULT_PATTERN = r"LaunchNext.*\.zip"

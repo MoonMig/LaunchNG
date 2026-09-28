@@ -2565,13 +2565,13 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
 
             HStack(spacing: 12) {
                 glassButton(title: appStore.localized(.aboutProjectLink), systemImage: "arrow.up.right.square") {
-                    openExternalLink("https://github.com/RoversX/LaunchNext")
+                    openExternalLink("https://github.com/moonmig/LaunchNext")
                 }
                 glassButton(title: appStore.localized(.aboutReportBug), systemImage: "exclamationmark.bubble") {
-                    openExternalLink("https://github.com/RoversX/LaunchNext/issues")
+                    openExternalLink("https://github.com/moonmig/LaunchNext/issues")
                 }
                 glassButton(title: appStore.localized(.aboutContribute), systemImage: "hands.sparkles") {
-                    openExternalLink("https://github.com/RoversX/LaunchNext")
+                    openExternalLink("https://github.com/moonmig/LaunchNext")
                 }
                 glassButton(title: appStore.localized(.aboutBlog), systemImage: "globe") {
                     openExternalLink("https://blog.closex.org")

@@ -7296,7 +7296,7 @@ final class AppStore: ObservableObject {
     }
 
     private func fetchLatestRelease() async throws -> GitHubRelease {
-        let url = URL(string: "https://api.github.com/repos/RoversX/LaunchNext/releases/latest")!
+        let url = URL(string: "https://api.github.com/repos/moonmig/LaunchNext/releases/latest")!
         var request = URLRequest(url: url)
         request.cachePolicy = .reloadIgnoringLocalCacheData
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")

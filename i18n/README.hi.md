@@ -4,12 +4,12 @@
 
 ## 📥 डाउनलोड
 
-**[यहाँ डाउनलोड करें](https://github.com/RoversX/LaunchNext/releases/latest)** - नवीनतम संस्करण प्राप्त करें
+**[यहाँ डाउनलोड करें](https://github.com/moonmig/LaunchNext/releases/latest)** - नवीनतम संस्करण प्राप्त करें
 
 🌐 **वेबसाइट**: [closex.org/launchnext](https://closex.org/launchnext/)  
 📚 **दस्तावेज़**: [docs.closex.org/launchnext](https://docs.closex.org/launchnext/)
 
-⭐ कृपया [LaunchNext](https://github.com/RoversX/LaunchNext) और विशेष रूप से मूल प्रोजेक्ट [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) को स्टार दें!
+⭐ कृपया [LaunchNext](https://github.com/moonmig/LaunchNext) और विशेष रूप से मूल प्रोजेक्ट [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) को स्टार दें!
 
 | | |
 |:---:|:---:|
@@ -79,7 +79,7 @@ LaunchNext सिस्टम Launchpad डेटाबेस को सीध�
 
 1. **रिपॉजिटरी क्लोन करें**
    ```bash
-   git clone https://github.com/RoversX/LaunchNext.git
+   git clone https://github.com/moonmig/LaunchNext.git
    cd LaunchNext
    ```
 
@@ -219,4 +219,4 @@ A: पहले सेटिंग्स में command line interface सक
 
 - प्रयोगात्मक gesture समर्थन [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) और [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport) के fork पर आधारित है।❤️
 
-![GitHub downloads](https://img.shields.io/github/downloads/RoversX/LaunchNext/total)
+![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNext/total)

@@ -4,12 +4,12 @@
 
 ## 📥 Download
 
-**[Hier herunterladen](https://github.com/RoversX/LaunchNext/releases/latest)** - Holen Sie sich die neueste Version
+**[Hier herunterladen](https://github.com/moonmig/LaunchNext/releases/latest)** - Holen Sie sich die neueste Version
 
 🌐 **Website**: [closex.org/launchnext](https://closex.org/launchnext/)  
 📚 **Dokumentation**: [docs.closex.org/launchnext](https://docs.closex.org/launchnext/)
 
-⭐ Bitte geben Sie [LaunchNext](https://github.com/RoversX/LaunchNext) und besonders dem ursprünglichen Projekt [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) einen Stern!
+⭐ Bitte geben Sie [LaunchNext](https://github.com/moonmig/LaunchNext) und besonders dem ursprünglichen Projekt [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) einen Stern!
 
 | | |
 |:---:|:---:|
@@ -79,7 +79,7 @@ LaunchNext kann die System-Launchpad-Datenbank direkt lesen:
 
 1. **Repository klonen**
    ```bash
-   git clone https://github.com/RoversX/LaunchNext.git
+   git clone https://github.com/moonmig/LaunchNext.git
    cd LaunchNext
    ```
 
@@ -219,4 +219,4 @@ Während Apple sich von anpassbaren App-Launchern entfernt, versucht LaunchNext,
 
 - Die experimentelle Gestenunterstützung basiert auf [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) und dem Fork von [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport).❤️
 
-![GitHub downloads](https://img.shields.io/github/downloads/RoversX/LaunchNext/total)
+![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNext/total)

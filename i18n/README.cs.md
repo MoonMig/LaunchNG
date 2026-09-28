@@ -4,12 +4,12 @@
 
 ## 📥 Stáhnout
 
-**[Stáhnout zde](https://github.com/RoversX/LaunchNext/releases/latest)** - Získejte nejnovější verzi
+**[Stáhnout zde](https://github.com/moonmig/LaunchNext/releases/latest)** - Získejte nejnovější verzi
 
 🌐 **Web**: [closex.org/launchnext](https://closex.org/launchnext/)  
 📚 **Dokumentace**: [docs.closex.org/launchnext](https://docs.closex.org/launchnext/)
 
-⭐ Zvažte označení hvězdičkou [LaunchNext](https://github.com/RoversX/LaunchNext) a zejména [LaunchNow](https://github.com/ggkevinnnn/LaunchNow)!
+⭐ Zvažte označení hvězdičkou [LaunchNext](https://github.com/moonmig/LaunchNext) a zejména [LaunchNow](https://github.com/ggkevinnnn/LaunchNow)!
 
 | | |
 |:---:|:---:|
@@ -79,7 +79,7 @@ LaunchNext může číst přímo ze systémové databáze Launchpadu:
 
 1. **Klonovat repozitář**
    ```bash
-   git clone https://github.com/RoversX/LaunchNext.git
+   git clone https://github.com/moonmig/LaunchNext.git
    cd LaunchNext
    ```
 
@@ -219,4 +219,4 @@ Jak se Apple vzdaluje od přizpůsobitelných launcherů aplikací, LaunchNext s
 
 - Experimentální podpora gest je postavená na [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) a forku od [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport).❤️
 
-![GitHub downloads](https://img.shields.io/github/downloads/RoversX/LaunchNext/total)
+![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNext/total)

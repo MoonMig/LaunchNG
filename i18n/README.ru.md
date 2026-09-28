@@ -4,12 +4,12 @@
 
 ## 📥 Скачать
 
-**[Скачать здесь](https://github.com/RoversX/LaunchNext/releases/latest)** - Получить последнюю версию
+**[Скачать здесь](https://github.com/moonmig/LaunchNext/releases/latest)** - Получить последнюю версию
 
 🌐 **Сайт**: [closex.org/launchnext](https://closex.org/launchnext/)  
 📚 **Документация**: [docs.closex.org/launchnext](https://docs.closex.org/launchnext/)
 
-⭐ Рассмотрите возможность поставить звезду [LaunchNext](https://github.com/RoversX/LaunchNext) и особенно оригинальному проекту [LaunchNow](https://github.com/ggkevinnnn/LaunchNow)!
+⭐ Рассмотрите возможность поставить звезду [LaunchNext](https://github.com/moonmig/LaunchNext) и особенно оригинальному проекту [LaunchNow](https://github.com/ggkevinnnn/LaunchNow)!
 
 | | |
 |:---:|:---:|
@@ -79,7 +79,7 @@ LaunchNext может напрямую читать системную базу 
 
 1. **Клонируйте репозиторий**
    ```bash
-   git clone https://github.com/RoversX/LaunchNext.git
+   git clone https://github.com/moonmig/LaunchNext.git
    cd LaunchNext
    ```
 
@@ -219,4 +219,4 @@ A: Сначала включите интерфейс командной стр�
 
 - Экспериментальная поддержка жестов построена на [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) и форке [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport).❤️
 
-![GitHub downloads](https://img.shields.io/github/downloads/RoversX/LaunchNext/total)
+![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNext/total)

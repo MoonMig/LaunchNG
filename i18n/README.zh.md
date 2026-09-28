@@ -4,12 +4,12 @@
 
 ## 📥 下载
 
-**[点此下载](https://github.com/RoversX/LaunchNext/releases/latest)** - 获取最新版本
+**[点此下载](https://github.com/moonmig/LaunchNext/releases/latest)** - 获取最新版本
 
 🌐 **网站**: [closex.org/launchnext](https://closex.org/launchnext/)  
 📚 **文档**: [docs.closex.org/launchnext](https://docs.closex.org/launchnext/)
 
-⭐ 请考虑为 [LaunchNext](https://github.com/RoversX/LaunchNext) 和原项目 [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) 点 star！
+⭐ 请考虑为 [LaunchNext](https://github.com/moonmig/LaunchNext) 和原项目 [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) 点 star！
 
 | | |
 |:---:|:---:|
@@ -79,7 +79,7 @@ LaunchNext 可以直接读取系统 Launchpad 数据库：
 
 1. **克隆仓库**
    ```bash
-   git clone https://github.com/RoversX/LaunchNext.git
+   git clone https://github.com/moonmig/LaunchNext.git
    cd LaunchNext
    ```
 
@@ -219,4 +219,4 @@ xcodebuild -project LaunchNext.xcodeproj -scheme LaunchNext -configuration Relea
 
 - 实验性手势支持基于 [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) 及其 [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport) 分支。❤️
 
-![GitHub downloads](https://img.shields.io/github/downloads/RoversX/LaunchNext/total)
+![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNext/total)
