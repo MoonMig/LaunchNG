@@ -6,7 +6,7 @@
 
 **[こちらからダウンロード](https://github.com/moonmig/LaunchNG/releases/latest)** - 最新版を入手
 
-⭐ [LaunchNG](https://github.com/moonmig/LaunchNG) と元プロジェクト [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) へのスターをお願いします！
+⭐ [LaunchNG](https://github.com/moonmig/LaunchNG) と元プロジェクト [LaunchNext](https://github.com/RoversX/LaunchNext) へのスターをお願いします！
 
 | | |
 |:---:|:---:|
@@ -15,9 +15,9 @@
 
 macOS Tahoe は Launchpad を削除しましたが、新しいインターフェースは使いにくく、Bio GPU を十分に活用できません。Apple よ、せめて元に戻すオプションを提供してください。それまでは、LaunchNG があります。
 
-*[LaunchNow](https://github.com/ggkevinnnn/LaunchNow)（ggkevinnnn）をベースに開発しました。原プロジェクトに心から感謝します！❤️*
+*[LaunchNext](https://github.com/RoversX/LaunchNext)（RoversX）をベースに開発しました。原プロジェクトに心から感謝します！❤️*
 
-*LaunchNow は GPL 3 ライセンスを選択しており、LaunchNG も同じライセンス条件に従います。*
+*LaunchNext は GPL 3 ライセンスを選択しており、LaunchNG も同じライセンス条件に従います。*
 
 ⚠️ **macOS がアプリをブロックする場合、ターミナルで実行してください：**
 ```bash

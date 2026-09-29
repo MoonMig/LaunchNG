@@ -6,7 +6,7 @@
 
 **[Скачать здесь](https://github.com/moonmig/LaunchNG/releases/latest)** - Получить последнюю версию
 
-⭐ Рассмотрите возможность поставить звезду [LaunchNG](https://github.com/moonmig/LaunchNG) и особенно оригинальному проекту [LaunchNow](https://github.com/ggkevinnnn/LaunchNow)!
+⭐ Рассмотрите возможность поставить звезду [LaunchNG](https://github.com/moonmig/LaunchNG) и особенно оригинальному проекту [LaunchNext](https://github.com/RoversX/LaunchNext)!
 
 | | |
 |:---:|:---:|
@@ -15,9 +15,9 @@
 
 macOS Tahoe убрала launchpad, и им так сложно пользоваться, он не использует ваш Bio GPU. Пожалуйста, Apple, хотя бы дайте людям возможность переключиться обратно. А пока, вот LaunchNG.
 
-*Создано на основе [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) от ggkevinnnn — огромное спасибо оригинальному проекту!❤️*
+*Создано на основе [LaunchNext](https://github.com/RoversX/LaunchNext) от RoversX — огромное спасибо оригинальному проекту!❤️*
 
-*LaunchNow выбрал лицензию GPL 3. LaunchNG следует тем же условиям лицензии.*
+*LaunchNext выбрал лицензию GPL 3. LaunchNG следует тем же условиям лицензии.*
 
 ⚠️ **Если macOS блокирует приложение, выполните это в Терминале:**
 ```bash

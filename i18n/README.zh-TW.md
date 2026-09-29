@@ -6,7 +6,7 @@
 
 **[按此下載](https://github.com/moonmig/LaunchNG/releases/latest)** - 取得最新版本
 
-⭐ 請考慮為 [LaunchNG](https://github.com/moonmig/LaunchNG) 和原專案 [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) 給 star！
+⭐ 請考慮為 [LaunchNG](https://github.com/moonmig/LaunchNG) 和原專案 [LaunchNext](https://github.com/RoversX/LaunchNext) 給 star！
 
 | | |
 |:---:|:---:|
@@ -15,9 +15,9 @@
 
 macOS Tahoe 移除了 Launchpad，新的介面很難用，也不能充分利用你的 Bio GPU。蘋果，至少給使用者一個切換回去的選項吧。在此之前，這裡是 LaunchNG。
 
-*基於 [LaunchNow](https://github.com/ggkevinnnn/LaunchNow)（作者 ggkevinnnn）開發——非常感謝原專案！❤️*
+*基於 [LaunchNext](https://github.com/RoversX/LaunchNext)（作者 RoversX）開發——非常感謝原專案！❤️*
 
-*LaunchNow 選擇了 GPL 3 授權條款，LaunchNG 遵循相同的授權條款。*
+*LaunchNext 選擇了 GPL 3 授權條款，LaunchNG 遵循相同的授權條款。*
 
 ⚠️ **如果 macOS 阻止 App 執行，請在終端機執行：**
 ```bash

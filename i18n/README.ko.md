@@ -6,7 +6,7 @@
 
 **[눌러서 다운받기](https://github.com/moonmig/LaunchNG/releases/latest)** - 여기서 최신버전을 받을 수 있어요
 
-⭐ [LaunchNG](https://github.com/moonmig/LaunchNG)와 원본 프로젝트 [LaunchNow](https://github.com/ggkevinnnn/LaunchNow)에 star를 달아주세요!
+⭐ [LaunchNG](https://github.com/moonmig/LaunchNG)와 원본 프로젝트 [LaunchNext](https://github.com/RoversX/LaunchNext)에 star를 달아주세요!
 
 | | |
 |:---:|:---:|
@@ -16,9 +16,9 @@
 macOS Tahoe는 런치패드가 사라졌고, 새로운 인터페이스는 비직관적이며 Bio GPU를 제대로 활용하지 못해요.
 Apple이 런치패드를 다시 제공하는날이 올때, 그때까지 LaunchNG를 사용해보세요.
 
-*[LaunchNow](https://github.com/ggkevinnnn/LaunchNow) (ggkevinnnn 제작)을 기반으로 개발되었어요. 원본 프로젝트에 진심으로 감사드려요!❤️*
+*[LaunchNext](https://github.com/RoversX/LaunchNext) (RoversX 제작)을 기반으로 개발되었어요. 원본 프로젝트에 진심으로 감사드려요!❤️*
 
-*LaunchNow는 GPL 3 라이선스를 선택했습니다. LaunchNG도 동일한 라이선스 조건을 따릅니다.*
+*LaunchNext는 GPL 3 라이선스를 선택했습니다. LaunchNG도 동일한 라이선스 조건을 따릅니다.*
 
 ⚠️ **macOS가 앱을 차단하면 터미널에서 실행하세요:**
 ```bash
