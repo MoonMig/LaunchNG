@@ -58,6 +58,9 @@ enum LocalizationKey: String {
     case rowsPerPage
     case iconHorizontalSpacing
     case iconVerticalSpacing
+    case folderIconHorizontalSpacing
+    case folderIconVerticalSpacing
+    case folderSpacingHint
     case labelFontSize
     case iconLabelFontWeight
     case folderDropZoneSize
@@ -613,6 +616,9 @@ final class LocalizationManager {
                 .rowsPerPage: "Rows per page",
                 .iconHorizontalSpacing: "Horizontal spacing",
                 .iconVerticalSpacing: "Vertical spacing",
+                .folderIconHorizontalSpacing: "Horizontal spacing (inside folders)",
+                .folderIconVerticalSpacing: "Vertical spacing (inside folders)",
+                .folderSpacingHint: "Separate from the main grid's spacing -- folder panels are smaller, so the same value can look right in one and cramped in the other.",
                 .labelFontSize: "Label font size",
                 .iconLabelFontWeight: "Icon label weight",
                 .folderDropZoneSize: "Folder drop zone size",
@@ -3654,6 +3660,9 @@ final class LocalizationManager {
                 .rowsPerPage: "Строк на страницу",
                 .iconHorizontalSpacing: "Горизонтальный промежуток",
                 .iconVerticalSpacing: "Вертикальный промежуток",
+                .folderIconHorizontalSpacing: "Горизонтальный промежуток (внутри папок)",
+                .folderIconVerticalSpacing: "Вертикальный промежуток (внутри папок)",
+                .folderSpacingHint: "Отдельно от главной сетки — панель папки меньше, и то же значение может выглядеть по-разному.",
                 .labelFontSize: "Размер шрифта подписи",
                 .iconLabelFontWeight: "Толщина шрифта подписи значка",
                 .folderDropZoneSize: "Размер зоны для создания папки",

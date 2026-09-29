@@ -101,8 +101,18 @@ final class CAFolderGridView: NSView {
         }
         return insets
     }
-    private let columnSpacing: CGFloat = 22
-    private let rowSpacing: CGFloat = 18
+    var columnSpacing: CGFloat = 22 {
+        didSet {
+            guard columnSpacing != oldValue else { return }
+            rebuildLayers()
+        }
+    }
+    var rowSpacing: CGFloat = 18 {
+        didSet {
+            guard rowSpacing != oldValue else { return }
+            rebuildLayers()
+        }
+    }
     private let dragOutInset: CGFloat = -14
     private let pageFlipEdgeWidth: CGFloat = 60
     private let pageFlipDelay: TimeInterval = 0.4

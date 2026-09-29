@@ -40,8 +40,16 @@ struct FolderView: View {
         FileManager.default.fileExists(atPath: app.url.path)
     }
     
-    // Tuned spacing and layout parameters
-    private let spacing: CGFloat = 30
+    // Tuned spacing and layout parameters.
+    // This engine uses one symmetric spacing value throughout (the grid, the
+    // hit-testing math in GeometryUtils.cellOrigin, everything) rather than
+    // separate horizontal/vertical figures like the Next Engine's folder
+    // grid, so a single blended value is what's achievable here without a
+    // larger geometry rewrite -- averaging keeps it responsive to both
+    // sliders instead of ignoring one of them.
+    private var spacing: CGFloat {
+        CGFloat((appStore.folderIconColumnSpacing + appStore.folderIconRowSpacing) / 2)
+    }
     // Dynamic column count, adapted to window width and the cell's minimum width
     @State private var columnsCount: Int = 4
     private let gridPadding: CGFloat = 16

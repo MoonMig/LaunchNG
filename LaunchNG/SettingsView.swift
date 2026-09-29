@@ -5395,6 +5395,40 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
             .font(.footnote)
             .foregroundStyle(.secondary)
             .padding(.top, 2)
+
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(appStore.localized(.folderIconHorizontalSpacing))
+                        .font(.headline)
+                    Spacer()
+                    Text("\(Int(appStore.folderIconColumnSpacing)) pt")
+                        .font(.callout.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                Slider(value: $appStore.folderIconColumnSpacing,
+                       in: AppStore.folderColumnSpacingRange,
+                       step: 1)
+            }
+            .padding(.top, 8)
+
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(appStore.localized(.folderIconVerticalSpacing))
+                        .font(.headline)
+                    Spacer()
+                    Text("\(Int(appStore.folderIconRowSpacing)) pt")
+                        .font(.callout.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                Slider(value: $appStore.folderIconRowSpacing,
+                       in: AppStore.folderRowSpacingRange,
+                       step: 1)
+            }
+
+            Text(appStore.localized(.folderSpacingHint))
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
         }
     }
 

@@ -377,6 +377,8 @@ final class AppStore: ObservableObject {
     static let gridRowsKey = "gridRowsPerPage"
     static let columnSpacingKey = "gridColumnSpacing"
     static let rowSpacingKey = "gridRowSpacing"
+    static let folderColumnSpacingKey = "folderGridColumnSpacing"
+    static let folderRowSpacingKey = "folderGridRowSpacing"
     static let iconLabelFontWeightKey = "iconLabelFontWeight"
     static let showQuickRefreshButtonKey = "showQuickRefreshButton"
     static let lockLayoutKey = "lockLayoutEnabled"
@@ -564,6 +566,8 @@ final class AppStore: ObservableObject {
     private static let defaultGridRowsPerPage = 5
     private static let defaultColumnSpacing: Double = 20
     private static let defaultRowSpacing: Double = 14
+    private static let defaultFolderColumnSpacing: Double = 22
+    private static let defaultFolderRowSpacing: Double = 18
     private static let defaultIconScale: Double = 0.95
     private static let defaultIconLabelFontSize: Double = 11.0
     static let defaultScrollSensitivity: Double = 0.2
@@ -571,6 +575,12 @@ final class AppStore: ObservableObject {
     static var gridRowRange: ClosedRange<Int> { minRowsPerPage...maxRowsPerPage }
     static var columnSpacingRange: ClosedRange<Double> { minColumnSpacing...maxColumnSpacing }
     static var rowSpacingRange: ClosedRange<Double> { minRowSpacing...maxRowSpacing }
+    // Folders reuse the main grid's min/max: same physical icon sizing, just
+    // a separate stored value and default so the two aren't forced in sync
+    // (a folder panel is much smaller than the main grid, so the same shared
+    // spacing number can look right in one and cramped/sparse in the other).
+    static var folderColumnSpacingRange: ClosedRange<Double> { minColumnSpacing...maxColumnSpacing }
+    static var folderRowSpacingRange: ClosedRange<Double> { minRowSpacing...maxRowSpacing }
     static let hoverMagnificationRange: ClosedRange<Double> = 1.0...1.4
     private static let defaultHoverMagnificationScale: Double = 1.1
     static let activePressScaleRange: ClosedRange<Double> = 0.85...1.0
@@ -871,6 +881,8 @@ final class AppStore: ObservableObject {
             Self.gridRowsKey: gridRowsPerPage,
             Self.columnSpacingKey: iconColumnSpacing,
             Self.rowSpacingKey: iconRowSpacing,
+            Self.folderColumnSpacingKey: folderIconColumnSpacing,
+            Self.folderRowSpacingKey: folderIconRowSpacing,
             Self.folderDropZoneScaleKey: folderDropZoneScale,
             Self.folderLiquidGlassKey: folderLiquidGlassEnabled,
             Self.folderPreviewHighResKey: enableHighResFolderPreviews,
@@ -943,6 +955,8 @@ final class AppStore: ObservableObject {
         defaults.set(Self.defaultGridRowsPerPage, forKey: Self.gridRowsKey)
         defaults.set(Self.defaultColumnSpacing, forKey: Self.columnSpacingKey)
         defaults.set(Self.defaultRowSpacing, forKey: Self.rowSpacingKey)
+        defaults.set(Self.defaultFolderColumnSpacing, forKey: Self.folderColumnSpacingKey)
+        defaults.set(Self.defaultFolderRowSpacing, forKey: Self.folderRowSpacingKey)
         defaults.set(true, forKey: "enableDropPrediction")
         defaults.set(true, forKey: "enableAnimations")
         defaults.set(false, forKey: Self.hoverMagnificationKey)
@@ -1020,6 +1034,8 @@ final class AppStore: ObservableObject {
         gridRowsPerPage = Self.clampRows(defaults.object(forKey: Self.gridRowsKey) as? Int ?? Self.defaultGridRowsPerPage)
         iconColumnSpacing = Self.clampColumnSpacing(defaults.object(forKey: Self.columnSpacingKey) as? Double ?? Self.defaultColumnSpacing)
         iconRowSpacing = Self.clampRowSpacing(defaults.object(forKey: Self.rowSpacingKey) as? Double ?? Self.defaultRowSpacing)
+        folderIconColumnSpacing = Self.clampColumnSpacing(defaults.object(forKey: Self.folderColumnSpacingKey) as? Double ?? Self.defaultFolderColumnSpacing)
+        folderIconRowSpacing = Self.clampRowSpacing(defaults.object(forKey: Self.folderRowSpacingKey) as? Double ?? Self.defaultFolderRowSpacing)
         enableDropPrediction = defaults.object(forKey: "enableDropPrediction") as? Bool ?? true
         enableAnimations = defaults.object(forKey: "enableAnimations") as? Bool ?? true
         enableHoverMagnification = defaults.object(forKey: Self.hoverMagnificationKey) as? Bool ?? false
@@ -1657,6 +1673,30 @@ final class AppStore: ObservableObject {
             guard iconRowSpacing != oldValue else { return }
             UserDefaults.standard.set(iconRowSpacing, forKey: Self.rowSpacingKey)
             triggerGridRefresh()
+        }
+    }
+
+    @Published var folderIconColumnSpacing: Double {
+        didSet {
+            let clamped = Self.clampColumnSpacing(folderIconColumnSpacing)
+            if folderIconColumnSpacing != clamped {
+                folderIconColumnSpacing = clamped
+                return
+            }
+            guard folderIconColumnSpacing != oldValue else { return }
+            UserDefaults.standard.set(folderIconColumnSpacing, forKey: Self.folderColumnSpacingKey)
+        }
+    }
+
+    @Published var folderIconRowSpacing: Double {
+        didSet {
+            let clamped = Self.clampRowSpacing(folderIconRowSpacing)
+            if folderIconRowSpacing != clamped {
+                folderIconRowSpacing = clamped
+                return
+            }
+            guard folderIconRowSpacing != oldValue else { return }
+            UserDefaults.standard.set(folderIconRowSpacing, forKey: Self.folderRowSpacingKey)
         }
     }
 
@@ -2929,6 +2969,17 @@ final class AppStore: ObservableObject {
         let clampedRowSpacing = Self.clampRowSpacing(storedRowSpacing)
         self.iconRowSpacing = clampedRowSpacing
         defaults.set(clampedRowSpacing, forKey: Self.rowSpacingKey)
+
+        let storedFolderColumnSpacing = defaults.object(forKey: Self.folderColumnSpacingKey) as? Double ?? Self.defaultFolderColumnSpacing
+        let clampedFolderColumnSpacing = Self.clampColumnSpacing(storedFolderColumnSpacing)
+        self.folderIconColumnSpacing = clampedFolderColumnSpacing
+        defaults.set(clampedFolderColumnSpacing, forKey: Self.folderColumnSpacingKey)
+
+        let storedFolderRowSpacing = defaults.object(forKey: Self.folderRowSpacingKey) as? Double ?? Self.defaultFolderRowSpacing
+        let clampedFolderRowSpacing = Self.clampRowSpacing(storedFolderRowSpacing)
+        self.folderIconRowSpacing = clampedFolderRowSpacing
+        defaults.set(clampedFolderRowSpacing, forKey: Self.folderRowSpacingKey)
+
         let storedDropZoneScale = defaults.object(forKey: Self.folderDropZoneScaleKey) as? Double ?? Self.defaultFolderDropZoneScale
         let clampedDropZoneScale = Self.clampFolderDropZoneScale(storedDropZoneScale)
         self.folderDropZoneScale = clampedDropZoneScale
@@ -5099,6 +5150,8 @@ final class AppStore: ObservableObject {
             Self.gridRowsKey,
             Self.columnSpacingKey,
             Self.rowSpacingKey,
+            Self.folderColumnSpacingKey,
+            Self.folderRowSpacingKey,
             "enableDropPrediction",
             Self.folderDropZoneScaleKey,
             "enableAnimations",
