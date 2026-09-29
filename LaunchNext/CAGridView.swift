@@ -487,8 +487,16 @@ final class CAGridView: NSView, CALayerDelegate, NSDraggingSource {
             guard self.isScrollEnabled else { return event }
             guard let window = self.window else { return event }
             
-            // 只在窗口可见且是 key window 时处理
-            guard window.isVisible && window.isKeyWindow else { return event }
+            // Scroll wheel targeting follows the cursor, not key-window status
+            // (unlike clicks) — AppKit still delivers it to whichever of our
+            // windows is under the pointer even while a different window
+            // (e.g. Settings) is key, or before this window has finished
+            // becoming key after being shown. Requiring isKeyWindow here
+            // made a scroll immediately after opening (before that
+            // activation finished, which can be genuinely asynchronous)
+            // silently do nothing; the bounds check below already scopes
+            // this to events actually over the grid.
+            guard window.isVisible else { return event }
             
             // 检查事件是否在视图范围内
             let locationInWindow = event.locationInWindow
