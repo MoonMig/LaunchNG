@@ -221,6 +221,19 @@ struct LaunchpadView: View {
         let items = draggingItem != nil ? visualItems : filteredItems
         return makePages(from: items)
     }
+
+    /// Trailing pages made up entirely of `.empty` placeholders — e.g. one
+    /// reserved by an edge-drag "create new page" that was never actually
+    /// dropped into — don't get their own dot or swipeable slot. A page with
+    /// at least one real app, folder or missing-app placeholder still counts,
+    /// even if the rest of it is empty.
+    private var visiblePageCount: Int {
+        var count = pages.count
+        while count > 1, pages[count - 1].allSatisfy({ if case .empty = $0 { return true }; return false }) {
+            count -= 1
+        }
+        return count
+    }
     
     private var currentItems: [LaunchpadItem] {
         draggingItem != nil ? visualItems : filteredItems
@@ -529,7 +542,14 @@ struct LaunchpadView: View {
         GeometryReader { geo in
             launchpadMainContent(in: geo)
         }
-        .padding()
+        // Was a plain, unconditional .padding() (system default on all four
+        // edges) around the whole window content — applies in Compact mode
+        // too, unlike config.bottomPadding above, which is fullscreen-only.
+        // Bottom split out and shrunk on its own; top/leading/trailing keep
+        // the previous default so side/top margins don't shift too.
+        .padding(.top)
+        .padding(.horizontal)
+        .padding(.bottom, 2)
         .launchpadBackgroundStyle(effectiveBackgroundStyle,
                                   cornerRadius: appStore.isFullscreenMode ? 0 : 30,
                                   forcedColor: appStore.developmentBackgroundOverride.color,
@@ -704,7 +724,7 @@ struct LaunchpadView: View {
 
             // 保持原有上下留白，去掉可见的分割线
             Spacer()
-                .frame(height: 16)
+                .frame(height: 30)
 
             GeometryReader { gridGeo in
                 gridRegion(in: gridGeo,
@@ -715,17 +735,21 @@ struct LaunchpadView: View {
             .scaleEffect(appStore.shouldShowOnboarding ? 1 : postOnboardingGridScale)
 
             // Shared by both renderers; hover material stays local to this row.
-            if !appStore.shouldShowOnboarding && pages.count > 1 {
-                LaunchpadPageIndicator(pageCount: pages.count,
+            // Always present (rather than removed via `if`) once past onboarding,
+            // even with a single visible page: its dots just go invisible then,
+            // so this row's own height keeps reserving the same space instead of
+            // the bottom spacing shifting depending on page count.
+            if !appStore.shouldShowOnboarding {
+                LaunchpadPageIndicator(pageCount: max(visiblePageCount, 1),
                                       currentPage: appStore.currentPage,
-                                      isActive: !isFolderOpen && isWindowVisible,
+                                      isActive: !isFolderOpen && isWindowVisible && visiblePageCount > 1,
                                       backgroundStyle: resolvedWallpaperControlStyle) { index in
                     navigateToPage(index)
                 }
                 .padding(.top, CGFloat(indicatorTopPadding))
                 .padding(.bottom, CGFloat(indicatorOffset))
-                .opacity(isFolderOpen ? 0.1 : 1)
-                .allowsHitTesting(!isFolderOpen)
+                .opacity(visiblePageCount > 1 ? (isFolderOpen ? 0.1 : 1) : 0)
+                .allowsHitTesting(visiblePageCount > 1 && !isFolderOpen)
             }
 
             // 在页面指示圆点下方添加动态padding
@@ -866,48 +890,75 @@ struct LaunchpadView: View {
                 let w = proxy.size.width
                 let h = proxy.size.height
                 let topSafe = max(0, headerTotalHeight)
-                let bottomPad = max(config.isFullscreen ? h * config.bottomPadding : 0, 24)
+                // Cover the page indicator row's real reserved height (top
+                // padding + its own 28pt frame + bottom offset — always
+                // present now even with its dots invisible, see
+                // visiblePageCount) plus the outer bottom padding below it,
+                // not just config.bottomPadding (fullscreen-only, 0 in
+                // Compact) floored to a flat 24pt. That flat 24pt used to
+                // leave a gap below the indicator row where a click hit
+                // neither an icon nor this catcher — not "outside" enough to
+                // close anything.
+                let indicatorReservedHeight = CGFloat(appStore.effectivePageIndicatorTopPadding(for: currentScreenID))
+                    + 28
+                    + CGFloat(appStore.effectivePageIndicatorOffset(for: currentScreenID))
+                    + (config.isFullscreen ? h * config.bottomPadding : 0)
+                    + 2
+                let bottomPad = max(indicatorReservedHeight, 24)
                 let sidePad = max(config.isFullscreen ? w * config.horizontalPadding : 0, 24)
 
-                // Header area: pass through.
-                VStack(spacing: 0) {
-                    Rectangle().fill(Color.clear)
-                        .frame(height: topSafe)
-                        .allowsHitTesting(false)
-                    Spacer()
-                    // 底部边距：点击关闭
-                    Rectangle().fill(Color.clear)
-                        .frame(height: bottomPad)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if appStore.openFolder == nil && !appStore.isFolderNameEditing {
-                                AppDelegate.shared?.hideWindow()
+                // These margin catchers are removed from the view tree
+                // entirely while a folder is open — structurally, the same
+                // way the folder dimming overlay above is conditional on
+                // isFolderOpen — rather than merely disabling their hit
+                // testing. A present-but-hitTesting-disabled SwiftUI shape
+                // still occupies its place in this ZStack; enlarging bottomPad
+                // to close the gap above made that shape's (inert) claim
+                // overlap the region CAFolderPresentation needs for its own
+                // outside-click-closes-folder handling, silently swallowing
+                // those clicks instead of letting them reach it. Removing the
+                // catchers outright avoids that regardless of size.
+                if appStore.openFolder == nil {
+                    // Header area: pass through.
+                    VStack(spacing: 0) {
+                        Rectangle().fill(Color.clear)
+                            .frame(height: topSafe)
+                            .allowsHitTesting(false)
+                        Spacer()
+                        // 底部边距：点击关闭
+                        Rectangle().fill(Color.clear)
+                            .frame(height: bottomPad)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                if !appStore.isFolderNameEditing {
+                                    AppDelegate.shared?.hideWindow()
+                                }
                             }
-                        }
-                }
-                .ignoresSafeArea()
+                    }
+                    .ignoresSafeArea()
 
-                // 左右边距：点击关闭
-                HStack(spacing: 0) {
-                    Rectangle().fill(Color.clear)
-                        .frame(width: sidePad)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if appStore.openFolder == nil && !appStore.isFolderNameEditing {
-                                AppDelegate.shared?.hideWindow()
+                    // 左右边距：点击关闭
+                    HStack(spacing: 0) {
+                        Rectangle().fill(Color.clear)
+                            .frame(width: sidePad)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                if !appStore.isFolderNameEditing {
+                                    AppDelegate.shared?.hideWindow()
+                                }
                             }
-                        }
-                    Spacer()
-                    Rectangle().fill(Color.clear)
-                        .frame(width: sidePad)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if appStore.openFolder == nil && !appStore.isFolderNameEditing {
-                                AppDelegate.shared?.hideWindow()
+                        Spacer()
+                        Rectangle().fill(Color.clear)
+                            .frame(width: sidePad)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                if !appStore.isFolderNameEditing {
+                                    AppDelegate.shared?.hideWindow()
+                                }
                             }
-                        }
+                    }
+                    .ignoresSafeArea()
                 }
-                .ignoresSafeArea()
             }
         }
     }
@@ -2224,7 +2275,7 @@ extension LaunchpadView {
         let horizontalPadding: CGFloat = 8
         let verticalPadding: CGFloat = 8
         let hasLabel = appStore.showLabels
-        let iconLabelSpacing: CGFloat = hasLabel ? 8 : 0
+        let iconLabelSpacing: CGFloat = hasLabel ? 6 : 0
 
         let iconRect = CGRect(
             x: rect.midX - iconSize / 2 + 16,
@@ -2818,7 +2869,7 @@ extension LaunchpadView {
         let verticalPadding: CGFloat = 8
         let labelWidth = columnWidth * 0.9
         let hasLabel = appStore.showLabels
-        let iconLabelSpacing: CGFloat = hasLabel ? 8 : 0
+        let iconLabelSpacing: CGFloat = hasLabel ? 6 : 0
         let contentWidth = min(columnWidth, max(iconSize, labelWidth) + horizontalPadding * 2)
         let rawLabelHeight = max(0, appHeight - iconSize - verticalPadding * 2 - iconLabelSpacing)
         let labelHeight = hasLabel ? rawLabelHeight : 0
@@ -2850,7 +2901,7 @@ extension LaunchpadView {
 
         let hasLabel = appStore.showLabels
         let verticalPadding: CGFloat = 8
-        let iconLabelSpacing: CGFloat = hasLabel ? 8 : 0
+        let iconLabelSpacing: CGFloat = hasLabel ? 6 : 0
         let contentHeight = iconSize + iconLabelSpacing + (hasLabel ? max(0, appHeight - iconSize - verticalPadding * 2 - iconLabelSpacing) : 0) + verticalPadding * 2
         let insetY = max(0, (appHeight - contentHeight) / 2)
 
@@ -3315,7 +3366,7 @@ struct GridConfig {
     
     var horizontalPadding: CGFloat { isFullscreen ? 0.04 : 0 }
     var topPadding: CGFloat { isFullscreen ? 0.035 : 0 }
-    var bottomPadding: CGFloat { isFullscreen ? 0.06 : 0 }
+    var bottomPadding: CGFloat { isFullscreen ? 0.024 : 0 }
     
     var gridItems: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: columnSpacing), count: columns)

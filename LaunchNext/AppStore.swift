@@ -481,6 +481,7 @@ final class AppStore: ObservableObject {
     private static let voiceFeedbackEnabledKey = "voiceFeedbackEnabled"
     static let folderDropZoneScaleKey = "folderDropZoneScale"
     static let pageIndicatorTopPaddingKey = "pageIndicatorTopPadding"
+    private static let pageIndicatorOffsetReducedV1Key = "pageIndicatorOffsetReducedV1"
     static let onboardingVersionKey = "onboardingVersionShown"
     static let currentOnboardingVersion = 1
     static let dockDragTriggerDistanceRange: ClosedRange<Double> = 8...72
@@ -1374,6 +1375,33 @@ final class AppStore: ObservableObject {
         settings[mode] = Self.normalizedAppearanceSettings(scoped)
         dualModeAppearanceSettings = settings
         persistDualModeAppearanceSettings()
+    }
+
+    /// One-time reduction of the page indicator's bottom offset to 40% of
+    /// its previous value, on direct user request. This is a persisted,
+    /// per-mode/per-display slider (`pageIndicatorOffset`, plus any
+    /// `pageIndicatorOverrides`) rather than a fixed layout constant, so an
+    /// already-launched install's stored value doesn't move just from
+    /// lowering a default — this rewrites the value already on disk, through
+    /// the normal scoped-settings path so every persistence layer (flat key,
+    /// dual-mode blob, per-display overrides) stays consistent. Runs once;
+    /// the marker also protects a value the user deliberately readjusts
+    /// afterward from being silently scaled down again on a later launch.
+    func reducePageIndicatorOffsetIfNeeded() {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: Self.pageIndicatorOffsetReducedV1Key) else { return }
+        defaults.set(true, forKey: Self.pageIndicatorOffsetReducedV1Key)
+        for mode in AppearanceLayoutMode.allCases {
+            updateScopedAppearanceSettings(for: mode) { scoped in
+                scoped.pageIndicatorOffset *= 0.4
+                for (screenID, override) in scoped.pageIndicatorOverrides {
+                    scoped.pageIndicatorOverrides[screenID] = PageIndicatorOverride(offset: override.offset * 0.4,
+                                                                                    topPadding: override.topPadding)
+                }
+            }
+        }
+        pageIndicatorOffset = dualModeAppearanceSettings[currentAppearanceLayoutMode].pageIndicatorOffset
+        pageIndicatorOverrides = dualModeAppearanceSettings[currentAppearanceLayoutMode].pageIndicatorOverrides
     }
 
     private func syncActiveAppearanceProxies(from mode: AppearanceLayoutMode) {
