@@ -65,6 +65,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSGestureR
     override init() {
         AppStore.migrateLegacyPreferencesIfNeeded()
         appStore = AppStore()
+        appStore.reducePageIndicatorOffsetIfNeeded()
         super.init()
     }
     
@@ -86,6 +87,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSGestureR
         let shouldSilentlyLaunch = launchedAtLogin && appStore.isStartOnLogin
 
         setupWindow(showImmediately: !shouldSilentlyLaunch)
+        NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+            self?.closeFolderIfClickFellThroughToBackground(event)
+            return event
+        }
         appStore.performInitialScanIfNeeded()
         appStore.startAutoRescan()
 
@@ -1600,6 +1605,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSGestureR
         contentView.layer?.masksToBounds = true
     }
     
+    /// AppKit's default hit-testing occasionally resolves a click to the plain
+    /// SwiftUI content host instead of `CAFolderPresentationHost`, even though
+    /// the latter's own `bounds` covers the full window — a timing gap between
+    /// SwiftUI's layout pass and the AppKit frame it has published to its
+    /// superview at the moment the click arrives. When that happens while a
+    /// folder is open, the click is silently dropped: the generic host has no
+    /// gesture bound to it, so nothing closes. This local monitor sees every
+    /// left-click before AppKit's dispatch, independent of that race, so it
+    /// can fall back to closing the folder itself whenever the resolved
+    /// target isn't part of the folder presentation's own view tree.
+    private func closeFolderIfClickFellThroughToBackground(_ event: NSEvent) {
+        guard appStore.openFolder != nil, let window, event.window === window,
+              let hit = window.contentView?.hitTest(event.locationInWindow) else { return }
+        var view: NSView? = hit
+        while let current = view {
+            if current is CAFolderPresentationHost || current is CAFolderGridView { return }
+            view = current.superview
+        }
+        appStore.openFolder = nil
+    }
+
     private func calculateContentRect(for screen: NSScreen) -> NSRect {
         CompactWindowLayout.frame(in: screen.visibleFrame, minimum: minimumContentSize,
                                   maximumWidth: appStore.compactWindowMaxWidth,

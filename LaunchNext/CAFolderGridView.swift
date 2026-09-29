@@ -718,7 +718,16 @@ final class CAFolderGridView: NSView {
         finishDropLanding()
         window?.makeFirstResponder(self)
         let point = convert(event.locationInWindow, from: nil)
-        guard let index = itemIndex(at: point) else { return }
+        guard let index = itemIndex(at: point) else {
+            // A click inside the folder panel but not on any icon — CAFolderPresentation's
+            // own outside-click handling only fires for clicks outside the panel's glass
+            // frame entirely, so this was previously a dead click: it neither closed the
+            // folder nor did anything else, unlike clicking genuinely outside the panel.
+            if presentationState?.allowsInteraction != false {
+                onClose?()
+            }
+            return
+        }
         pressedIndex = index
         dragStartPoint = point
         applyScale(at: index, animated: true)

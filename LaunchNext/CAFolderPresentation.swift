@@ -268,7 +268,22 @@ final class CAFolderPresentationHost: NSView {
             return
         }
         let point = convert(event.locationInWindow, from: nil)
-        if phase == .preparing || !presentedGlassFrame.contains(point) {
+        // Use the same stable, non-animated frame hitTest() already checks
+        // (hosting.frame, kept in sync with panelRect on every layout pass)
+        // rather than presentedGlassFrame, which reads the glass layer's
+        // CALayer *presentation* — its real-time, mid-animation geometry.
+        // The folder-open animation scales/translates in from the source
+        // icon's position, so a click soon after opening (before any
+        // lingering spring settling finishes, even though `phase` already
+        // flipped to .open) could see a presentation frame that doesn't yet
+        // match the final panel bounds on the edge furthest from that
+        // origin — most often the bottom edge, since folders commonly open
+        // from an icon lower in the grid. That made outside-click-closes
+        // unreliable in a way that depended on exact timing, not direction:
+        // sometimes closing on the first click, sometimes needing a second,
+        // sometimes not at all.
+        let panelFrame = hosting?.frame ?? presentedGlassFrame
+        if phase == .preparing || !panelFrame.contains(point) {
             onRequestClose?()
         }
     }
