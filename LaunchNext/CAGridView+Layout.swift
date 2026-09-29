@@ -339,7 +339,7 @@ extension CAGridView {
 
         let actualIconSize = iconSize
         let labelHeight: CGFloat = showLabels ? (labelFontSize + 8) : 0
-        let labelTopSpacing: CGFloat = showLabels ? 6 : 0
+        let labelTopSpacing: CGFloat = showLabels ? 4 : 0
 
         for (pageIndex, pageLayers) in iconLayers.enumerated() {
             for (localIndex, containerLayer) in pageLayers.enumerated() {

@@ -76,6 +76,39 @@ final class CAGridView: NSView, CALayerDelegate, NSDraggingSource {
     var currentPage: Int = 0
     var itemsPerPage: Int { columns * rows }
     var pageCount: Int { max(1, (items.count + itemsPerPage - 1) / itemsPerPage) }
+    /// pageCount, but trailing pages made up entirely of `.empty` placeholders
+    /// (e.g. one reserved by an edge-drag "create new page" that was never
+    /// actually dropped into) don't count. Mirrors LaunchpadView's
+    /// `visiblePageCount`, which trims the same way for the page-indicator
+    /// dots — this is what keeps ordinary scroll/swipe navigation (and the
+    /// rubber-band boundary while it's in progress) from being able to reach
+    /// those reserved pages at all, matching there being no dot for them.
+    /// Layer creation and page navigation while a drop target is a page edge
+    /// deliberately keep using the untrimmed `pageCount` instead — an active
+    /// drag is exactly when reaching a reserved empty page is the point.
+    var visiblePageCount: Int {
+        guard itemsPerPage > 0 else { return pageCount }
+        var count = pageCount
+        while count > 1 {
+            let start = (count - 1) * itemsPerPage
+            let end = min(count * itemsPerPage, items.count)
+            guard start < end else { break }
+            let pageIsEmpty = items[start..<end].allSatisfy {
+                if case .empty = $0 { return true }
+                return false
+            }
+            guard pageIsEmpty else { break }
+            count -= 1
+        }
+        return count
+    }
+    /// The page count ordinary navigation (scroll/swipe, wheel paging, page-
+    /// indicator dots, keyboard) should be clamped to. Drags get the full,
+    /// untrimmed pageCount so an edge-drag can still reach/reveal a reserved
+    /// empty page.
+    var navigablePageCount: Int {
+        (isDraggingItem || externalDragActive || isBatchDragging) ? pageCount : visiblePageCount
+    }
 
     // 滚动状态
     var scrollOffset: CGFloat = 0
@@ -170,7 +203,18 @@ final class CAGridView: NSView, CALayerDelegate, NSDraggingSource {
     var pendingHoverIndex: Int?
     var originalIconPositions: [Int: CGPoint] = [:]
     var hoverUpdateTimer: Timer?
-    let hoverUpdateDelay: TimeInterval = 0.15  // Delay before updating icon positions
+    // Debounces .insert previews against fast multi-cell sweeps (merge
+    // previews apply immediately instead — see requestDropPreview). Every
+    // index change restarts this wait from zero, so it's also the de facto
+    // dwell time needed to land an insert between two icons at all — too
+    // long (150ms) made merge (instant) feel much more reliable than insert
+    // for the same kind of deliberate, careful positioning; too short (50ms)
+    // let a normal drag *through* a folder toward the next cell spend enough
+    // time crossing the folder's own narrow insert sliver to trigger its
+    // partial "make space" nudge on the way past, reading as the folder
+    // grabbing/holding the pointer before finally stepping aside. 100ms is a
+    // middle ground; if either failure mode reappears, this is the knob.
+    let hoverUpdateDelay: TimeInterval = 0.1
 
     // 鼠标拖拽翻页
     var isPageDragging = false
@@ -658,7 +702,7 @@ final class CAGridView: NSView, CALayerDelegate, NSDraggingSource {
 
     func navigateToPage(_ page: Int, animated: Bool = true, revealDuration: TimeInterval? = nil) {
         layoutRevealPageMotion = nil
-        let newPage = max(0, min(pageCount - 1, page))
+        let newPage = max(0, min(navigablePageCount - 1, page))
         let pageChanged = newPage != currentPage
         if pageChanged, isDraggingItem, !isBatchDragging {
             // The previous page's highlight must not survive into a drop on

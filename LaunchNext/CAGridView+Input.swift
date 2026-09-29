@@ -165,7 +165,7 @@ extension CAGridView {
 
             // 橡皮筋效果：在边界处添加阻力
             let pageStride = bounds.width + pageSpacing
-            let minOffset = -CGFloat(pageCount - 1) * pageStride
+            let minOffset = -CGFloat(navigablePageCount - 1) * pageStride
             let maxOffset: CGFloat = 0
 
             if newOffset > maxOffset {
@@ -258,8 +258,6 @@ extension CAGridView {
         window?.makeFirstResponder(self)
 
         let location = convert(event.locationInWindow, from: nil)
-        // print("🖱️ [CAGrid] mouseDown at \(location)")
-
         if let (item, index) = itemAt(location) {
             // print("🖱️ [CAGrid] Hit item: \(item.name) at index \(index)")
             // Reopening a folder immediately after dismissal may be classified
@@ -802,27 +800,55 @@ extension CAGridView {
                 // Only affect items on current page
                 if hover >= pageStart && hover < pageStart + itemsPerPage {
                     
+                    // The hovered cell itself only gets a partial nudge (not the
+                    // full cell-width slide cells strictly between drag and
+                    // hover get) toward where it would end up: a full slide made
+                    // a mergeable app/folder visually "flee" a full cell away
+                    // from under the pointer while approaching it (the pointer
+                    // would then be hovering wherever it fled to, not the
+                    // target), but no nudge at all left nothing to see — with
+                    // an immediately-adjacent target, "cells strictly between"
+                    // is empty, so an insert preview was otherwise invisible
+                    // until the pointer pushed a second cell into the shift.
+                    // The nudge is small enough that the target stays under/near
+                    // the pointer and its own merge zone remains reachable. Its
+                    // actual post-drop position (if the drop lands as an insert,
+                    // not a merge) is still picked up and animated by the normal
+                    // landing/reuse path once the reorder actually commits.
+                    let boundaryNudgeFraction: CGFloat = 0.35
+                    func nudged(toward neighborPos: CGPoint) -> CGPoint {
+                        CGPoint(x: originalPos.x + (neighborPos.x - originalPos.x) * boundaryNudgeFraction,
+                                y: originalPos.y + (neighborPos.y - originalPos.y) * boundaryNudgeFraction)
+                    }
                     if dragInThisPage {
                         if dragLocalIndex < hoverLocalIndex {
-                            // Dragging forward: items between drag and hover shift left
-                            if localIndex > dragLocalIndex && localIndex <= hoverLocalIndex {
+                            // Dragging forward: items strictly between drag and hover shift left
+                            if localIndex > dragLocalIndex && localIndex < hoverLocalIndex {
                                 if let prevPos = originalIconPositions[pageStart + localIndex - 1] {
                                     targetPos = prevPos
                                 }
+                            } else if localIndex == hoverLocalIndex,
+                                      let prevPos = originalIconPositions[pageStart + localIndex - 1] {
+                                targetPos = nudged(toward: prevPos)
                             }
                         } else if dragLocalIndex > hoverLocalIndex {
-                            // Dragging backward: items between hover and drag shift right
-                            if localIndex >= hoverLocalIndex && localIndex < dragLocalIndex {
+                            // Dragging backward: items strictly between hover and drag shift right
+                            if localIndex > hoverLocalIndex && localIndex < dragLocalIndex {
                                 if let nextPos = originalIconPositions[pageStart + localIndex + 1] {
                                     targetPos = nextPos
                                 }
+                            } else if localIndex == hoverLocalIndex,
+                                      let nextPos = originalIconPositions[pageStart + localIndex + 1] {
+                                targetPos = nudged(toward: nextPos)
                             }
                         }
                     } else {
-                        // Dragging from another page: create a gap on the hover page by shifting items to the right.
-                        if localIndex >= hoverLocalIndex {
+                        // Dragging from another page: create a gap on the hover page by shifting later items to the right.
+                        if localIndex > hoverLocalIndex {
                             let targetGlobalIndex = pageStart + localIndex + 1
                             targetPos = gridCenterForGlobalIndex(targetGlobalIndex)
+                        } else if localIndex == hoverLocalIndex {
+                            targetPos = nudged(toward: gridCenterForGlobalIndex(pageStart + localIndex + 1))
                         }
                     }
                 }
@@ -898,7 +924,7 @@ extension CAGridView {
 
         let actualIconSize = iconSize
         let labelHeight: CGFloat = showLabels ? labelFontSize + 8 : 0
-        let labelTopSpacing: CGFloat = showLabels ? 6 : 0
+        let labelTopSpacing: CGFloat = showLabels ? 4 : 0
         let totalHeight = actualIconSize + labelTopSpacing + labelHeight
 
         let containerX = CGFloat(pageIndex) * pageStride + cellOriginX
@@ -1049,16 +1075,16 @@ extension CAGridView {
 
     func isPointInFolderDropZone(_ point: CGPoint, targetIndex: Int) -> Bool {
         guard let center = iconCenter(for: targetIndex) else { return false }
-        // Clamp against the actual cell width, not the full column stride
-        // (cell + spacing): gridPositionAt() hit-tests in stride-wide slabs
-        // that start at each cell's own origin, so a cell's icon center sits
-        // only cellWidth/2 from the boundary with the PREVIOUS (lower-index)
-        // cell's slab — not strideX/2. That near-side sliver is exactly what
-        // must stay free of this zone for "insert before this cell" (landing
-        // between this cell and its lower-index neighbor, e.g. two folders)
-        // to ever be reachable. Clamping against the full stride is too loose
-        // and still lets the zone swallow that sliver in denser layouts
-        // (Compact window, more columns/rows) or at higher folderDropZoneScale.
+        // Clamp against the cell stride (cell + spacing): gridPositionAt()
+        // now hit-tests with slab boundaries at the midpoint of the gap
+        // between two cells (see its comment), so a cell's icon center sits
+        // symmetrically at strideX/2 from either neighbor's boundary. That
+        // margin is exactly what must stay free of this zone on both sides
+        // for "insert before/after this cell" (landing between this cell and
+        // a neighbor, e.g. two folders) to be reachable from either
+        // direction. An unclamped zone can reach or exceed that margin in
+        // denser layouts (Compact window, more columns/rows) or at higher
+        // folderDropZoneScale.
         let insertMargin: CGFloat = 16
         let size = min(iconSize * folderDropZoneScale, max(0, maxFolderDropZoneSide - insertMargin * 2))
         let rect = CGRect(x: center.x - size / 2,
@@ -1075,7 +1101,9 @@ extension CAGridView {
         let totalRowSpacing = rowSpacing * CGFloat(max(rows - 1, 0))
         let cellWidth = max(0, availableWidth - totalColumnSpacing) / CGFloat(max(columns, 1))
         let cellHeight = max(0, availableHeight - totalRowSpacing) / CGFloat(max(rows, 1))
-        return min(cellWidth, cellHeight)
+        let strideX = cellWidth + columnSpacing
+        let strideY = cellHeight + rowSpacing
+        return min(strideX, strideY)
     }
 
     func iconCenter(for index: Int) -> CGPoint? {
@@ -1105,7 +1133,7 @@ extension CAGridView {
         let cellOriginY = pageHeight - contentInsets.top - CGFloat(row + 1) * cellHeight - CGFloat(row) * rowSpacing
 
         let labelHeight: CGFloat = showLabels ? (labelFontSize + 8) : 0
-        let labelTopSpacing: CGFloat = showLabels ? 6 : 0
+        let labelTopSpacing: CGFloat = showLabels ? 4 : 0
         let totalHeight = iconSize + labelTopSpacing + labelHeight
 
         let containerX = CGFloat(pageIndex) * pageStride + cellOriginX
@@ -1368,8 +1396,20 @@ extension CAGridView {
         let clampedX = max(0, min(localX, availableWidth - 1))
         let clampedY = max(0, min(localY, availableHeight - 1))
 
-        let col = Int(clampedX / strideX)
-        let row = Int(clampedY / strideY)
+        // Offset by half the spacing before dividing so the boundary between
+        // two cells sits at the midpoint of the gap between their icons, not
+        // at the next cell's own left/bottom edge. Without this, a column's
+        // hit-test slab was [its own left edge, next column's left edge) —
+        // all of column N's icon-to-icon spacing before column N+1 belonged
+        // to column N, none of it to N+1. Dragging rightward toward a folder
+        // then had to cross the entire visual gap AND part of the folder's
+        // own cell before hoverIndex changed at all, so nothing (like the
+        // "make space" gap) happened until the pointer was already deep
+        // inside the folder's footprint. Matches GeometryUtils.indexAt(),
+        // the Legacy engine's equivalent hit test, which already offsets by
+        // spacing/2 for the same reason.
+        let col = Int((clampedX + columnSpacing / 2) / strideX)
+        let row = Int((clampedY + rowSpacing / 2) / strideY)
 
         let clampedCol = max(0, min(col, columns - 1))
         let clampedRow = max(0, min(row, rows - 1))
@@ -1680,11 +1720,20 @@ extension CAGridView {
         let globalIndex = pageIndex * itemsPerPage + localIndex
 
         guard globalIndex < items.count else { return nil }
+        // An empty placeholder slot renders no icon, so it must behave like
+        // blank space for hit-testing purposes too — otherwise this still
+        // returns a non-nil (item, index) for its icon-sized hitbox exactly
+        // as it would for a real app/folder, so mouseDown treats a click
+        // there as "pressed an item" instead of starting the blank-area
+        // tap-to-close/page-drag gesture. Only the second symptom (dead
+        // click, not a wrong press effect) was reported, but both trace back
+        // to this same missing check.
+        if case .empty = items[globalIndex] { return nil }
 
         // 检查是否点击在图标+标签区域内（不是单元格的空白部分）
         let actualIconSize = iconSize
         let labelHeight: CGFloat = showLabels ? (labelFontSize + 8) : 0
-        let labelTopSpacing: CGFloat = showLabels ? 6 : 0
+        let labelTopSpacing: CGFloat = showLabels ? 4 : 0
         let totalItemHeight = actualIconSize + labelTopSpacing + labelHeight
 
         // 图标+标签区域居中于单元格
