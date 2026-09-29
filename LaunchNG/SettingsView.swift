@@ -249,7 +249,7 @@ struct SettingsView: View {
             syncLayoutModePreviewScopeToRuntime()
         }
         .onChange(of: selectedSection) { _, newSection in
-            guard newSection == .updates else { return }
+            guard newSection == .about else { return }
             guard appStore.updateState != .checking else { return }
 
             let now = Date()
@@ -575,7 +575,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
     // case aiOverlay
     case sound
     case gameController
-    case updates
     case about
 
     var id: String { rawValue }
@@ -595,7 +594,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
         case .backup: return "clock.arrow.trianglehead.counterclockwise.rotate.90"
         case .development: return "hammer"
         // case .aiOverlay: return "sparkles"
-        case .updates: return "arrow.down.circle"
         case .about: return "info.circle"
         }
     }
@@ -629,8 +627,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
             colors = [Color(red: 0.98, green: 0.58, blue: 0.16), Color(red: 0.96, green: 0.20, blue: 0.24)]
         // case .aiOverlay:
         //     colors = [Color(red: 0.39, green: 0.33, blue: 0.98), Color(red: 0.59, green: 0.73, blue: 0.99)]
-        case .updates:
-            colors = [Color(red: 0.22, green: 0.78, blue: 0.55), Color(red: 0.10, green: 0.62, blue: 0.91)]
         case .about:
             colors = [Color(red: 0.54, green: 0.55, blue: 0.70), Color(red: 0.42, green: 0.44, blue: 0.60)]
         }
@@ -652,7 +648,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
         case .backup: return .settingsSectionBackup
         case .development: return .settingsSectionDevelopment
         // case .aiOverlay: return .settingsSectionAIOverlay
-        case .updates: return .settingsSectionUpdates
         case .about: return .settingsSectionAbout
         }
     }
@@ -702,13 +697,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                 .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
             }
             .background(.ultraThinMaterial)
-            .overlay(alignment: .bottom) {
-                if section == .updates {
-                    updatesFloatingBar
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 16)
-                }
-            }
         }
     }
 
@@ -724,7 +712,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                 Spacer(minLength: 0)
             }
             .padding(.top, 12)
-            .padding(.bottom, section == .updates ? 92 : 0)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -758,8 +745,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
             soundSection
         case .gameController:
             gameControllerSection
-        case .updates:
-            updatesSection
         case .about:
             aboutSection
         }
@@ -2533,54 +2518,44 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                     .frame(maxWidth: .infinity)
                     .clipped()
 
-                VStack(spacing: 12) {
+                VStack(spacing: 1) {
                     headlineGlass
 
                     Text(String(format: appStore.localized(.versionLabelFormat),
                                 getVersion(fallback: appStore.localized(.versionFallback))))
-                        .font(.title2.weight(.semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white)
                 }
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
-                .padding(.vertical, 18)
+                .padding(.vertical, 6)
             }
             .frame(maxWidth: .infinity)
-            .frame(minHeight: 180, maxHeight: 200)
+            .frame(minHeight: 76, maxHeight: 88)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .stroke(Color.white.opacity(0.18), lineWidth: 1.4)
             )
-            .padding(.bottom, 12)
+            .padding(.bottom, 8)
 
-            HStack(alignment: .bottom, spacing: 12) {
-                TicTacToeBoard()
-                    .frame(width: 130)
+            updatesControlCard
 
-                infoCard
-            }
+            updatesStatusCard
 
-            Spacer()
+            infoCard
 
             HStack(spacing: 12) {
                 glassButton(title: appStore.localized(.aboutProjectLink), systemImage: "arrow.up.right.square") {
                     openExternalLink("https://github.com/moonmig/LaunchNG")
                 }
-                glassButton(title: appStore.localized(.aboutReportBug), systemImage: "exclamationmark.bubble") {
-                    openExternalLink("https://github.com/moonmig/LaunchNG/issues")
-                }
-                glassButton(title: appStore.localized(.aboutContribute), systemImage: "hands.sparkles") {
-                    openExternalLink("https://github.com/moonmig/LaunchNG")
-                }
-                glassButton(title: appStore.localized(.aboutBlog), systemImage: "globe") {
-                    openExternalLink("https://blog.closex.org")
+                glassButton(title: appStore.localized(.openUpdaterConfig), systemImage: "doc.text") {
+                    appStore.openUpdaterConfigFile()
                 }
             }
             .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity, minHeight: 550, alignment: .top)
-        .frame(maxHeight: .infinity, alignment: .top)
+        .frame(maxWidth: .infinity, alignment: .top)
     }
 
     private func openExternalLink(_ rawURL: String) {
@@ -2650,93 +2625,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
         }
         .buttonStyle(.plain)
         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-    }
-
-    // MARK: - Inline Games
-    private struct TicTacToeBoard: View {
-        private enum Mark: String {
-            case x = "X", o = "O", empty = ""
-        }
-
-        @State private var cells: [Mark] = Array(repeating: .empty, count: 9)
-        @State private var isPlayerTurn: Bool = true
-        @State private var statusText: String = "Your turn"
-        @State private var gameOver: Bool = false
-
-        var body: some View {
-            VStack(spacing: 12) {
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 3), spacing: 6) {
-                    ForEach(0..<9) { index in
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color.secondary.opacity(0.12))
-                            Text(cells[index].rawValue)
-                                .font(.system(size: 28, weight: .bold))
-                        }
-                        .aspectRatio(1, contentMode: .fit)
-                        .onTapGesture {
-                            guard !gameOver, isPlayerTurn, cells[index] == .empty else { return }
-                            makeMove(at: index, mark: .x)
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                aiTurn()
-                            }
-                        }
-                    }
-                }
-                Text(statusText)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-
-                Button(action: resetGame) {
-                    Label("Reset", systemImage: "arrow.counterclockwise")
-                }
-                .buttonStyle(.bordered)
-            }
-        }
-
-        private func makeMove(at index: Int, mark: Mark) {
-            cells[index] = mark
-            if let winner = evaluateWinner() {
-                statusText = winner == .x ? "You win!" : "AI wins!"
-                gameOver = true
-            } else if !cells.contains(.empty) {
-                statusText = "Draw"
-                gameOver = true
-            } else {
-                isPlayerTurn.toggle()
-                statusText = isPlayerTurn ? "Your turn" : "AI thinking..."
-            }
-        }
-
-        private func aiTurn() {
-            guard !gameOver else { return }
-            guard !isPlayerTurn else { return }
-
-            let emptyCells = cells.enumerated().filter { $0.element == .empty }.map { $0.offset }
-            guard let choice = emptyCells.randomElement() else { return }
-            makeMove(at: choice, mark: .o)
-        }
-
-        private func evaluateWinner() -> Mark? {
-            let lines = [
-                [0,1,2],[3,4,5],[6,7,8],
-                [0,3,6],[1,4,7],[2,5,8],
-                [0,4,8],[2,4,6]
-            ]
-            for line in lines {
-                let marks = line.map { cells[$0] }
-                if marks.allSatisfy({ $0 == .x }) { return .x }
-                if marks.allSatisfy({ $0 == .o }) { return .o }
-            }
-            return nil
-        }
-
-        private func resetGame() {
-            cells = Array(repeating: .empty, count: 9)
-            isPlayerTurn = true
-            statusText = "Your turn"
-            gameOver = false
-        }
     }
 
     private func currentMemoryUsageValue() -> String {
@@ -6176,23 +6064,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
     }
 
     // MARK: - Update Check Section
-    private var updatesSection: some View {
-        return VStack(alignment: .leading, spacing: 16) {
-            updatesHero
-
-            updatesControlCard
-
-            updatesStatusCard
-
-            updateControlButton(
-                title: appStore.localized(.openUpdaterConfig),
-                systemImage: "doc.text"
-            ) {
-                appStore.openUpdaterConfigFile()
-            }
-        }
-    }
-
     private var updatesStatusCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             let availableNotes: String? = {
@@ -6211,7 +6082,10 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
 
             switch appStore.updateState {
             case .idle:
-                EmptyView()
+                HStack {
+                    Spacer()
+                    checkForUpdatesButton
+                }
 
             case .checking:
                 HStack {
@@ -6219,6 +6093,8 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                         .scaleEffect(0.8)
                     Text(appStore.localized(.checkingForUpdates))
                         .foregroundStyle(.secondary)
+                    Spacer()
+                    checkForUpdatesButton
                 }
 
             case .upToDate:
@@ -6227,6 +6103,8 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                         .foregroundStyle(.green)
                     Text(appStore.localized(.upToDate))
                         .foregroundStyle(.secondary)
+                    Spacer()
+                    checkForUpdatesButton
                 }
 
             case .updateAvailable(let release):
@@ -6241,6 +6119,14 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                             .foregroundStyle(.secondary)
 
                         Spacer(minLength: 0)
+
+                        updateControlButton(
+                            title: appStore.localized(.downloadUpdate),
+                            systemImage: "arrow.down.circle",
+                            minWidth: 0
+                        ) {
+                            appStore.launchUpdater(for: release)
+                        }
                     }
 
                     if !availableNotesModel.blocks.isEmpty {
@@ -6267,6 +6153,8 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                             .foregroundStyle(.red)
                         Text(appStore.localized(.updateCheckFailed))
                             .font(.subheadline.weight(.medium))
+                        Spacer()
+                        checkForUpdatesButton
                     }
 
                     Text(error)
@@ -6284,62 +6172,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
         )
     }
 
-    private var updatesFloatingBar: some View {
-        let floatingBarShape = Capsule(style: .continuous)
-        return HStack(spacing: 12) {
-            updateControlButton(
-                title: appStore.updateState == .idle
-                    ? appStore.localized(.checkForUpdatesButton)
-                    : appStore.localized(.updatesRefreshButton),
-                systemImage: "arrow.clockwise",
-                isPrimary: true,
-                minWidth: 136
-            ) {
-                appStore.checkForUpdates()
-            }
-            .disabled(appStore.updateState == .checking)
-
-            if let release = currentAvailableRelease {
-                updateControlButton(
-                    title: appStore.localized(.downloadUpdate),
-                    systemImage: "arrow.down.circle",
-                    minWidth: 136
-                ) {
-                    appStore.launchUpdater(for: release)
-                }
-            }
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .modifier(ClearGlassBackground(shape: floatingBarShape))
-        .overlay(
-            floatingBarShape
-                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
-        )
-        .shadow(color: Color.black.opacity(0.08), radius: 18, x: 0, y: 8)
-    }
-
-    private struct ClearGlassBackground<S: Shape>: ViewModifier {
-        let shape: S
-
-        @ViewBuilder
-        func body(content: Content) -> some View {
-            if #available(macOS 26.0, iOS 18.0, *) {
-                content
-                    .glassEffect(.clear, in: shape)
-            } else {
-                content
-                    .background(.ultraThinMaterial, in: shape)
-            }
-        }
-    }
-
-    private var currentAvailableRelease: AppStore.UpdateRelease? {
-        if case .updateAvailable(let release) = appStore.updateState {
-            return release
-        }
-        return nil
-    }
 
     private var updatesControlCard: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -6358,6 +6190,20 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color(nsColor: .windowBackgroundColor))
         )
+    }
+
+    private var checkForUpdatesButton: some View {
+        updateControlButton(
+            title: appStore.updateState == .idle
+                ? appStore.localized(.checkForUpdatesButton)
+                : appStore.localized(.updatesRefreshButton),
+            systemImage: "arrow.clockwise",
+            isPrimary: true,
+            minWidth: 0
+        ) {
+            appStore.checkForUpdates()
+        }
+        .disabled(appStore.updateState == .checking)
     }
 
     private func updateControlButton(title: String, systemImage: String, isPrimary: Bool = false, minWidth: CGFloat = 160, action: @escaping () -> Void) -> some View {
@@ -6380,48 +6226,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
         )
     }
 
-    private var updatesHero: some View {
-        let statusText: String = {
-            switch appStore.updateState {
-            case .updateAvailable:
-                return appStore.localized(.updatesHeroUpdateAvailable)
-            case .upToDate:
-                return appStore.localized(.updatesHeroUpToDate)
-            default:
-                return String(format: appStore.localized(.versionLabelFormat),
-                              getVersion(fallback: appStore.localized(.versionFallback)))
-            }
-        }()
-
-        return ZStack(alignment: .center) {
-            Image("AboutBackground")
-                .resizable()
-                .interpolation(.high)
-                .aspectRatio(16.0/9.0, contentMode: .fill)
-                .frame(maxWidth: .infinity)
-                .clipped()
-
-            VStack(spacing: 12) {
-                headlineGlass
-
-                Text(statusText)
-                    .font(.title2.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.85))
-                    .padding(.top, 6)
-            }
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 18)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(minHeight: 180, maxHeight: 200)
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color.white.opacity(0.18), lineWidth: 1.4)
-        )
-        .padding(.bottom, 12)
-    }
 }
 
 // Commit on Return or focus loss so typing does not repeatedly resize the window.
