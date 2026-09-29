@@ -1,34 +1,31 @@
-# LaunchNext
+# LaunchNG
 
 **Sprachen**: [English](../README.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Русский](README.ru.md) | [हिन्दी](README.hi.md) | [Tiếng Việt](README.vi.md) | [Italiano](README.it.md) | [Čeština](README.cs.md)
 
 ## 📥 Download
 
-**[Hier herunterladen](https://github.com/moonmig/LaunchNext/releases/latest)** - Holen Sie sich die neueste Version
+**[Hier herunterladen](https://github.com/moonmig/LaunchNG/releases/latest)** - Holen Sie sich die neueste Version
 
-🌐 **Website**: [closex.org/launchnext](https://closex.org/launchnext/)  
-📚 **Dokumentation**: [docs.closex.org/launchnext](https://docs.closex.org/launchnext/)
-
-⭐ Bitte geben Sie [LaunchNext](https://github.com/moonmig/LaunchNext) und besonders dem ursprünglichen Projekt [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) einen Stern!
+⭐ Bitte geben Sie [LaunchNG](https://github.com/moonmig/LaunchNG) und besonders dem ursprünglichen Projekt [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) einen Stern!
 
 | | |
 |:---:|:---:|
 | ![](../public/banner.webp) | ![](../public/setting1.webp) |
 | ![](../public/setting2.webp) | ![](../public/setting3.webp) |
 
-macOS Tahoe hat das Launchpad entfernt, und es ist so schwer zu bedienen, es nutzt nicht Ihre Bio-GPU. Bitte Apple, gebt den Leuten wenigstens eine Option, zurückzuwechseln. Bis dahin ist hier LaunchNext.
+macOS Tahoe hat das Launchpad entfernt, und es ist so schwer zu bedienen, es nutzt nicht Ihre Bio-GPU. Bitte Apple, gebt den Leuten wenigstens eine Option, zurückzuwechseln. Bis dahin ist hier LaunchNG.
 
 *Aufbauend auf [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) von ggkevinnnn — ein riesiges Dankeschön an das Originalprojekt!❤️*
 
-*LaunchNow hat die GPL 3 Lizenz gewählt. LaunchNext folgt denselben Lizenzbedingungen.*
+*LaunchNow hat die GPL 3 Lizenz gewählt. LaunchNG folgt denselben Lizenzbedingungen.*
 
 ⚠️ **Wenn macOS die App blockiert, führen Sie dies im Terminal aus:**
 ```bash
-sudo xattr -r -d com.apple.quarantine /Applications/LaunchNext.app
+sudo xattr -r -d com.apple.quarantine /Applications/LaunchNG.app
 ```
 **Warum**: Ich kann mir Apples Entwicklerzertifikat nicht leisten ($99/Jahr), daher blockiert macOS unsignierte Apps. Dieser Befehl entfernt das Quarantäne-Flag, damit die App ausgeführt werden kann. **Verwenden Sie diesen Befehl nur bei vertrauenswürdigen Apps.**
 
-## Was LaunchNext bietet
+## Was LaunchNG bietet
 
 - ✅ **Ein-Klick-Import vom alten System-Launchpad** - liest direkt die native Launchpad-SQLite-Datenbank, um Ordner, App-Positionen und Layout wiederherzustellen
 - ✅ **Manuelle App-Organisation** - Apps verschieben, Ordner erstellen und das gewünschte Layout behalten
@@ -36,7 +33,7 @@ sudo xattr -r -d com.apple.quarantine /Applications/LaunchNext.app
 - ✅ **Kompakt- und Vollbildmodus** - mit Unterstützung für getrennte Einstellungen
 - ✅ **Tastaturorientierter Workflow** - schnelle Suche, Navigation und Starten
 - ✅ **CLI / TUI-Unterstützung** - Layouts direkt im Terminal prüfen und verwalten
-- ✅ **Aktivierung per Hot Corner und nativen Gesten** - mehrere globale Möglichkeiten zum Öffnen von LaunchNext
+- ✅ **Aktivierung per Hot Corner und nativen Gesten** - mehrere globale Möglichkeiten zum Öffnen von LaunchNG
 - ✅ **Apps direkt ins Dock ziehen** - verfügbar mit der Core-Animation-Engine
 - ✅ **Update-Center mit Markdown-Release-Notes** - reichhaltigere In-App-Update-Erfahrung
 - ✅ **Backup- und Wiederherstellungswerkzeuge** - sicherere Exporte und Wiederherstellung
@@ -56,12 +53,12 @@ sudo xattr -r -d com.apple.quarantine /Applications/LaunchNext.app
 Anwendungsdaten werden hier gespeichert:
 
 ```text
-~/Library/Application Support/LaunchNext/Data.store
+~/Library/Application Support/LaunchNG/Data.store
 ```
 
 ## Native Launchpad-Integration
 
-LaunchNext kann die System-Launchpad-Datenbank direkt lesen:
+LaunchNG kann die System-Launchpad-Datenbank direkt lesen:
 
 ```bash
 /private$(getconf DARWIN_USER_DIR)com.apple.dock.launchpad/db/db
@@ -79,13 +76,13 @@ LaunchNext kann die System-Launchpad-Datenbank direkt lesen:
 
 1. **Repository klonen**
    ```bash
-   git clone https://github.com/moonmig/LaunchNext.git
-   cd LaunchNext
+   git clone https://github.com/moonmig/LaunchNG.git
+   cd LaunchNG
    ```
 
 2. **In Xcode öffnen**
    ```bash
-   open LaunchNext.xcodeproj
+   open LaunchNG.xcodeproj
    ```
 
 3. **Bauen und ausführen**
@@ -97,19 +94,19 @@ LaunchNext kann die System-Launchpad-Datenbank direkt lesen:
 
 **Normaler Build:**
 ```bash
-xcodebuild -project LaunchNext.xcodeproj -scheme LaunchNext -configuration Release
+xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release
 ```
 
 **Universelles Binary (Intel + Apple Silicon):**
 ```bash
-xcodebuild -project LaunchNext.xcodeproj -scheme LaunchNext -configuration Release ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO clean build
+xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO clean build
 ```
 
 ## Verwendung
 
 ### Erste Schritte
 
-1. LaunchNext scannt beim ersten Start alle installierten Apps
+1. LaunchNG scannt beim ersten Start alle installierten Apps
 2. Importieren Sie Ihr altes Launchpad-Layout oder starten Sie mit einem leeren Layout
 3. Nutzen Sie Suche, Tastatur, Drag-and-Drop und Ordner, um Apps zu organisieren
 4. Öffnen Sie die Einstellungen, um Engine, Layoutmodus, Aktivierungsmethoden und Automatisierung zu konfigurieren
@@ -124,22 +121,22 @@ xcodebuild -project LaunchNext.xcodeproj -scheme LaunchNext -configuration Relea
 
 - **Legacy Engine** - behält den alten Rendering-Pfad für maximale Kompatibilität bei
 - **Next Engine + Core Animation** - empfohlen für das beste Gesamterlebnis und neuere Funktionen
-- **Kompakt / Vollbild** - LaunchNext unterstützt beide Modi und kann getrennte Einstellungen speichern
+- **Kompakt / Vollbild** - LaunchNG unterstützt beide Modi und kann getrennte Einstellungen speichern
 
 ## Wichtige Funktionen
 
 ### Aktivierung und Eingabe
 
-- **Hot-Corner-Unterstützung** - LaunchNext aus einer konfigurierbaren Bildschirmecke öffnen
+- **Hot-Corner-Unterstützung** - LaunchNG aus einer konfigurierbaren Bildschirmecke öffnen
 - **Experimentelle native Gestenunterstützung** - Vier-Finger-Pinch- / Tap-Aktionen
-- **Globale Tastenkürzel** - LaunchNext von überall öffnen
+- **Globale Tastenkürzel** - LaunchNG von überall öffnen
 - **Dock-Drag** - Apps mit der Core-Animation-Engine direkt an das macOS-Dock übergeben
 
 ### Automatisierung und Power-User-Workflow
 
 - **CLI / TUI-Unterstützung** - Layouts prüfen, Apps suchen, Ordner erstellen, Apps verschieben und Workflows automatisieren
 - **Agent-freundliche Workflows** - gut geeignet für terminalbasierte KI-Agenten und Shell-Automatisierung
-- **Kommandozeile aus den Einstellungen aktivieren** - den verwalteten `launchnext`-Befehl installieren oder entfernen
+- **Kommandozeile aus den Einstellungen aktivieren** - den verwalteten `launchng`-Befehl installieren oder entfernen
 
 ### Update-Erlebnis
 
@@ -156,7 +153,7 @@ xcodebuild -project LaunchNext.xcodeproj -scheme LaunchNext -configuration Relea
 ### Barrierefreiheit und Navigation
 
 - **Sprachunterstützung** - Apps und Ordner werden während der Navigation angesagt
-- **Controller-Unterstützung** - LaunchNext und Ordner mit einem Gamecontroller steuern
+- **Controller-Unterstützung** - LaunchNG und Ordner mit einem Gamecontroller steuern
 - **Tastaturorientierte Interaktion** - schnelle Suche und Navigation ohne Maus
 
 ## Leistung und Stabilität
@@ -177,7 +174,7 @@ A: Stellen Sie sicher, dass Sie macOS 26 oder neuer verwenden, entfernen Sie bei
 A: `Next Engine + Core Animation` wird für das beste Erlebnis empfohlen. Verwenden Sie `Legacy Engine` nur, wenn Sie den älteren Kompatibilitätspfad wirklich brauchen.
 
 **Q: Warum existiert der CLI-Befehl noch nicht?**  
-A: Aktivieren Sie zuerst die Kommandozeilenschnittstelle in den Einstellungen. LaunchNext kann den verwalteten `launchnext`-Shim für Sie installieren und entfernen.
+A: Aktivieren Sie zuerst die Kommandozeilenschnittstelle in den Einstellungen. LaunchNG kann den verwalteten `launchng`-Shim für Sie installieren und entfernen.
 
 ## Mitwirken
 
@@ -199,13 +196,13 @@ Beiträge sind willkommen.
 
 ## Die Zukunft der App-Verwaltung
 
-Während Apple sich von anpassbaren App-Launchern entfernt, versucht LaunchNext, manuelle Organisation, Benutzerkontrolle und schnellen Zugriff auf modernem macOS zu erhalten.
+Während Apple sich von anpassbaren App-Launchern entfernt, versucht LaunchNG, manuelle Organisation, Benutzerkontrolle und schnellen Zugriff auf modernem macOS zu erhalten.
 
-**LaunchNext** ist nicht nur ein Ersatz für Launchpad — es ist eine praktische Antwort auf eine Workflow-Regression.
+**LaunchNG** ist nicht nur ein Ersatz für Launchpad — es ist eine praktische Antwort auf eine Workflow-Regression.
 
 ---
 
-**LaunchNext** - Holen Sie sich die Kontrolle über Ihren App-Launcher zurück 🚀
+**LaunchNG** - Holen Sie sich die Kontrolle über Ihren App-Launcher zurück 🚀
 
 *Für macOS-Nutzer, die bei der Anpassbarkeit keine Kompromisse eingehen wollen.*
 
@@ -219,4 +216,4 @@ Während Apple sich von anpassbaren App-Launchern entfernt, versucht LaunchNext,
 
 - Die experimentelle Gestenunterstützung basiert auf [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) und dem Fork von [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport).❤️
 
-![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNext/total)
+![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNG/total)

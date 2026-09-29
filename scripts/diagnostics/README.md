@@ -28,12 +28,12 @@ The production-grid merge integration check below is an exception: it compiles
 the full app target with a replacement entry point, without shadow grid/model
 types. Its model callbacks still use fixtures rather than AppStore.
 
-Nothing here runs in CI, and none of it ships in LaunchNext.
+Nothing here runs in CI, and none of it ships in LaunchNG.
 
 ## Reveal a search result in the layout
 
 ```sh
-LAUNCHNEXT_LAYOUT_REVEAL_CHECK_ONLY=1 python3 scripts/diagnostics/run_folder_presentation_integration.py
+LAUNCHNG_LAYOUT_REVEAL_CHECK_ONLY=1 python3 scripts/diagnostics/run_folder_presentation_integration.py
 ```
 
 Uses the real `LaunchpadView`, AppStore navigation/search methods and CA grids
@@ -60,7 +60,7 @@ python3 scripts/diagnostics/run_folder_presentation_integration.py
 For the folder-internal reorder handoff alone:
 
 ```sh
-LAUNCHNEXT_REORDER_CHECK_ONLY=1 python3 scripts/diagnostics/run_folder_presentation_integration.py
+LAUNCHNG_REORDER_CHECK_ONLY=1 python3 scripts/diagnostics/run_folder_presentation_integration.py
 ```
 
 This mode clears the bitmap cache before each move and checks that paged and
@@ -130,10 +130,10 @@ images retained by visible layers and allocator/compositor overhead. Cache
 tests compile the production implementation directly:
 
 ```sh
-xcodebuild test -scheme LaunchNext -destination 'platform=macOS' \
-  -only-testing:LaunchNextTests/FolderIconBitmapCacheTests
-xcodebuild test -scheme LaunchNext -destination 'platform=macOS' \
-  -only-testing:LaunchNextTests/FolderPresentationMotionTests
+xcodebuild test -scheme LaunchNG -destination 'platform=macOS' \
+  -only-testing:LaunchNGTests/FolderIconBitmapCacheTests
+xcodebuild test -scheme LaunchNG -destination 'platform=macOS' \
+  -only-testing:LaunchNGTests/FolderPresentationMotionTests
 ```
 
 They cover reuse, source/scale/appearance separation, byte-budget eviction,
@@ -147,11 +147,11 @@ settling, bounded progress through 200 reversals, and native timing controls.
 Now covered by a real unit test against the same production source, not a probe:
 
 ```sh
-xcodebuild test -scheme LaunchNext -destination 'platform=macOS' \
-  -only-testing:LaunchNextTests/GridReorderPlanTests
+xcodebuild test -scheme LaunchNG -destination 'platform=macOS' \
+  -only-testing:LaunchNGTests/GridReorderPlanTests
 ```
 
-`LaunchNext/GridReorderPlan.swift` is compiled into the `LaunchNextTests` target
+`LaunchNG/GridReorderPlan.swift` is compiled into the `LaunchNGTests` target
 directly, so there is no copy of the algorithm to keep in sync. Covers trailing
 and interior hole compaction, forward/backward cascade, new-page creation,
 emptied-page removal, the final destination index, and an exhaustive sweep of
@@ -183,11 +183,11 @@ do not weaken the assertions to make it pass.
 
 ```sh
 xcrun swiftc -O -parse-as-library \
-  -module-cache-path /tmp/launchnext-glass-module-cache \
-  LaunchNext/FolderGlassOverlay.swift \
+  -module-cache-path /tmp/launchng-glass-module-cache \
+  LaunchNG/FolderGlassOverlay.swift \
   scripts/diagnostics/FolderGlassProbe.swift \
-  -o /tmp/launchnext-folder-glass-probe
-/tmp/launchnext-folder-glass-probe --check
+  -o /tmp/launchng-folder-glass-probe
+/tmp/launchng-folder-glass-probe --check
 ```
 
 Covers geometry, page reuse, bounded culling, nearby-batch invalidation,
@@ -207,8 +207,8 @@ alive in the drag group; that preview must retain its bitmap and placement.
 These state checks do not establish that the reported refraction flash is gone.
 
 Screenshot modes capture only the probe's own synthetic window via
-`SCShareableContent.currentProcess`, writing to `/tmp/launchnext-folder-*.png`.
-This capture code is compiled only into the probe, not into LaunchNext.
+`SCShareableContent.currentProcess`, writing to `/tmp/launchng-folder-*.png`.
+This capture code is compiled only into the probe, not into LaunchNG.
 
 | Flag | What it does |
 | --- | --- |
@@ -231,10 +231,10 @@ image — are what verify timing.
 ### Repeatable performance workload
 
 ```sh
-/tmp/launchnext-folder-glass-probe
-/tmp/launchnext-folder-glass-probe --glass
-/tmp/launchnext-folder-glass-probe --sparse
-/tmp/launchnext-folder-glass-probe --glass --sparse
+/tmp/launchng-folder-glass-probe
+/tmp/launchng-folder-glass-probe --glass
+/tmp/launchng-folder-glass-probe --sparse
+/tmp/launchng-folder-glass-probe --glass --sparse
 ```
 
 Run **sequentially**, with no build, profiler or other benchmark running. Keep
@@ -254,13 +254,13 @@ synthetic CPU result alone.
 
 ```sh
 xcrun swiftc -O -parse-as-library \
-  -module-cache-path /tmp/launchnext-glass-module-cache \
-  LaunchNext/GridDragDrop.swift \
-  LaunchNext/FolderGlassOverlay.swift \
-  LaunchNext/CAGridView+DragLanding.swift \
+  -module-cache-path /tmp/launchng-glass-module-cache \
+  LaunchNG/GridDragDrop.swift \
+  LaunchNG/FolderGlassOverlay.swift \
+  LaunchNG/CAGridView+DragLanding.swift \
   scripts/diagnostics/DragLandingProbe.swift \
-  -o /tmp/launchnext-drag-landing-probe
-/tmp/launchnext-drag-landing-probe
+  -o /tmp/launchng-drag-landing-probe
+/tmp/launchng-drag-landing-probe
 ```
 
 Covers classic/glass move and scale continuity, icon-versus-label geometry,
@@ -283,12 +283,12 @@ cannot judge how the animation feels.
 
 ```sh
 xcrun swiftc -O -parse-as-library \
-  -module-cache-path /tmp/launchnext-glass-module-cache \
-  LaunchNext/GridDragDrop.swift \
-  LaunchNext/CAGridView+DropPreview.swift \
+  -module-cache-path /tmp/launchng-glass-module-cache \
+  LaunchNG/GridDragDrop.swift \
+  LaunchNG/CAGridView+DropPreview.swift \
   scripts/diagnostics/DropPreviewProbe.swift \
-  -o /tmp/launchnext-drop-preview-probe
-/tmp/launchnext-drop-preview-probe
+  -o /tmp/launchng-drop-preview-probe
+/tmp/launchng-drop-preview-probe
 ```
 
 Covers insertion dwell, merge/insert transitions followed by immediate release,
@@ -341,8 +341,8 @@ repeated model publication, rejected merges, cancellation and layer cleanup.
 The callback deliberately compacts the fixture model to exercise a moving
 destination. Recording uses ScreenCaptureKit **only in this diagnostic entry
 point**, selecting its own process window. Video is written to
-`/tmp/launchnext-merge-integration.mp4`; build output goes to
-`/tmp/launchnext-folder-merge-integration-build.log`. The temporary project and
+`/tmp/launchng-merge-integration.mp4`; build output goes to
+`/tmp/launchng-folder-merge-integration-build.log`. The temporary project and
 binary are removed at exit.
 
 This goes beyond the simplified landing probe, but it still does not exercise

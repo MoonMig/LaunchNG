@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-LaunchNext is a native macOS (Tahoe/26+) SwiftUI + AppKit app that replaces the
+LaunchNG is a native macOS (Tahoe/26+) SwiftUI + AppKit app that replaces the
 Launchpad that Apple removed. It imports the user's existing Launchpad layout
 straight from the system SQLite database, then re-implements paging, folders,
 search, drag-and-drop reordering, and Dock integration on top of two
@@ -17,12 +17,12 @@ Requires Xcode 26 and macOS 26 (Tahoe). No paid Apple Developer account is
 needed for local builds.
 
 ```bash
-open LaunchNext.xcodeproj
+open LaunchNG.xcodeproj
 ```
 
 - To run with `⌘+R`, the run destination must be **My Mac**, not **Any Mac**
   (universal/"Any Mac" builds cannot launch for debugging).
-- Local signing: target **LaunchNext** → Signing & Capabilities → Team =
+- Local signing: target **LaunchNG** → Signing & Capabilities → Team =
   `None`, certificate = `Sign to Run Locally`, Hardened Runtime stays on.
   Xcode will mark the project file dirty after this — never include
   signing-only diffs in a PR.
@@ -30,19 +30,19 @@ open LaunchNext.xcodeproj
 Command-line build:
 
 ```bash
-xcodebuild -project LaunchNext.xcodeproj -scheme LaunchNext -configuration Release
+xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release
 # Universal binary:
-xcodebuild -project LaunchNext.xcodeproj -scheme LaunchNext -configuration Release \
+xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release \
   ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO clean build
 ```
 
-Unit tests (target `LaunchNextTests`):
+Unit tests (target `LaunchNGTests`):
 
 ```bash
-xcodebuild test -scheme LaunchNext -destination 'platform=macOS'
+xcodebuild test -scheme LaunchNG -destination 'platform=macOS'
 # Single test class:
-xcodebuild test -scheme LaunchNext -destination 'platform=macOS' \
-  -only-testing:LaunchNextTests/GridReorderPlanTests
+xcodebuild test -scheme LaunchNG -destination 'platform=macOS' \
+  -only-testing:LaunchNGTests/GridReorderPlanTests
 ```
 
 Release packaging lives in `scripts/`: `release.sh` (unsigned zip build) and
@@ -64,18 +64,18 @@ folder glass feature live in `Documentation/FolderLiquidGlass.md`.
 
 ### Targets
 
-- **LaunchNext** — the app (SwiftUI + AppKit, `@main` in `LaunchpadApp.swift`).
-- **LaunchNextTests** — XCTest bundle.
-- **LaunchNextContextMenuCore** — static library: pure app-context-menu model
+- **LaunchNG** — the app (SwiftUI + AppKit, `@main` in `LaunchpadApp.swift`).
+- **LaunchNGTests** — XCTest bundle.
+- **LaunchNGContextMenuCore** — static library: pure app-context-menu model
   logic (`AppContextMenuModel.swift`), split out so it's independently
   testable.
-- **LaunchNextWallpaperCore** — static library: wallpaper snapshot/identity/
+- **LaunchNGWallpaperCore** — static library: wallpaper snapshot/identity/
   caching logic used by the fullscreen background, also independently
   testable.
 
 `UpdaterScripts/` is a **separate Swift package** (`SwiftUpdater`, its own
 `Package.swift`), a standalone ncurses TUI updater binary bundled with
-releases — not part of the Xcode project graph. `UpdaterScripts/launchnext_updater.py`
+releases — not part of the Xcode project graph. `UpdaterScripts/launchng_updater.py`
 is the Python counterpart/legacy updater script.
 
 ### App lifecycle and window management
@@ -137,7 +137,7 @@ engine `AppStore` queries), `FuzzyMatcher.swift`, `CJKTransliterator.swift`
 
 `Gesture/` implements the experimental low-level trackpad gesture support
 (4/5-finger pinch/tap) built on the vendored `OpenMultitouchSupport` fork
-under `LaunchNext/ThirdParty/OpenMultitouchSupport/` (see `Config/OpenMultitouchSupport.xcconfig`).
+under `LaunchNG/ThirdParty/OpenMultitouchSupport/` (see `Config/OpenMultitouchSupport.xcconfig`).
 `GestureStateMachine.swift` is the core state machine; `GestureMonitor.swift`
 is what `AppDelegate` starts/stops. This is explicitly marked removable in
 code comments (`AppDelegate` flags every gesture-related property/method it
@@ -148,13 +148,13 @@ paths.
 
 ### CLI / TUI
 
-`LaunchNextCLI.swift` parses `CommandLine.arguments` into `LaunchNextRuntimeMode`
+`LaunchNGCLI.swift` parses `CommandLine.arguments` into `LaunchNGRuntimeMode`
 (`.gui` / `.tui` / `.cli`): no args in an interactive terminal → TUI; no args
 otherwise → normal GUI launch; `--cli <command> [args]` → one-shot headless
-command execution; `--gui`/`--tui` force a mode. `LaunchNextCLIIPC.swift` is
+command execution; `--gui`/`--tui` force a mode. `LaunchNGCLIIPC.swift` is
 the IPC transport a running GUI instance uses to accept CLI commands from a
-second invocation (so `launchnext --cli ...` can control an already-running
-app). The installable `launchnext` shell command is managed from in-app
+second invocation (so `launchng --cli ...` can control an already-running
+app). The installable `launchng` shell command is managed from in-app
 Settings, not installed by default.
 
 ### Wallpaper / background
@@ -164,8 +164,8 @@ background behind the fullscreen grid; `WallpaperContextMonitor.swift`,
 `WallpaperScreenCapture.swift`, `WallpaperDiagnostics.swift` support it in the
 app target, while the reusable, independently-tested logic (identity,
 frame-stability, cache budget, aerial-preview handling, image rendering) is
-factored out into the `LaunchNextWallpaperCore` static library and covered by
-`LaunchNextTests/Wallpaper*Tests.swift`.
+factored out into the `LaunchNGWallpaperCore` static library and covered by
+`LaunchNGTests/Wallpaper*Tests.swift`.
 
 ### Localization
 
@@ -184,7 +184,7 @@ render GitHub release notes in the in-app Update tab
 
 ## Conventions worth knowing
 
-- Data persists to `~/Library/Application Support/LaunchNext/Data.store`
+- Data persists to `~/Library/Application Support/LaunchNG/Data.store`
   (SwiftData) — never assume a fresh install has no state; `AppStore.migrateLegacyPreferencesIfNeeded()`
   runs before `AppStore()` is even constructed, so preference-schema changes
   need a migration path there.
@@ -195,4 +195,4 @@ render GitHub release notes in the in-app Update tab
 - Diagnostics/probe code in `scripts/diagnostics/` intentionally duplicates
   simplified model types to host production extensions in isolation; it can
   silently drift from production shape. It is not a substitute for the real
-  `LaunchNextTests` suite or manual acceptance on device.
+  `LaunchNGTests` suite or manual acceptance on device.

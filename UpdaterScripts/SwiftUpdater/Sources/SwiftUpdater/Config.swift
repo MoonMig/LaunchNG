@@ -16,7 +16,7 @@ enum ConfigManager {
         return fm.homeDirectoryForCurrentUser
             .appendingPathComponent("Library")
             .appendingPathComponent("Application Support")
-            .appendingPathComponent("LaunchNext")
+            .appendingPathComponent("LaunchNG")
             .appendingPathComponent("updates")
     }
 

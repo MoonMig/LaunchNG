@@ -1,49 +1,37 @@
-# LaunchNext
+# LaunchNG
 
 **Languages**: [English](README.md) | [简体中文](i18n/README.zh.md) | [繁體中文](i18n/README.zh-TW.md) | [日本語](i18n/README.ja.md) | [한국어](i18n/README.ko.md) | [Français](i18n/README.fr.md) | [Español](i18n/README.es.md) | [Deutsch](i18n/README.de.md) | [Русский](i18n/README.ru.md) | [हिन्दी](i18n/README.hi.md) | [Tiếng Việt](i18n/README.vi.md) | [Italiano](i18n/README.it.md) | [Čeština](i18n/README.cs.md)
 
 ## 📥 Download
 
-**[Download here](https://github.com/moonmig/LaunchNext/releases/latest)** - Get the latest release
+**[Download here](https://github.com/moonmig/LaunchNG/releases/latest)** - Get the latest release
 
-🌐 **Website**: [closex.org/launchnext](https://closex.org/launchnext/)  
-📚 **Docs**: [docs.closex.org/launchnext](https://docs.closex.org/launchnext/)
-
-⭐ Consider starring [LaunchNext](https://github.com/moonmig/LaunchNext) and especially [LaunchNow](https://github.com/ggkevinnnn/LaunchNow)!
+⭐ Consider starring [LaunchNG](https://github.com/moonmig/LaunchNG) and especially [LaunchNow](https://github.com/ggkevinnnn/LaunchNow)!
 
 | | |
 |:---:|:---:|
 | ![](./public/banner.webp) | ![](./public/setting1.webp) |
 | ![](./public/setting2.webp) | ![](./public/setting3.webp) |
 
-MacOS Tahoe removed launchpad,and it's so hard to use, it's doesn't use your Bio GPU, please apple, at least give people an option to switch back. Before that, here is LaunchNext
+MacOS Tahoe removed launchpad,and it's so hard to use, it's doesn't use your Bio GPU, please apple, at least give people an option to switch back. Before that, here is LaunchNG
 
 *Built upon [LaunchNow](https://github.com/ggkevinnnn/LaunchNow) by ggkevinnnn - huge thanks to the original project!❤️*
 
-*LaunchNow has chosen the GPL 3 license. LaunchNext follows the same licensing terms.*
-
-### Install with Homebrew 🍺
-
-```bash
-brew tap RoversX/homebrew-tap
-brew install --cask launchnext
-```
-
-LaunchNext includes its own updater. The Homebrew cask is mainly for installation and manual upgrades.
+*LaunchNow has chosen the GPL 3 license. LaunchNG follows the same licensing terms.*
 
 ⚠️ **If macOS blocks the app, run this in Terminal:**
 ```bash
-sudo xattr -r -d com.apple.quarantine /Applications/LaunchNext.app
+sudo xattr -r -d com.apple.quarantine /Applications/LaunchNG.app
 ```
 **Why**: ~~I can't afford Apple's developer certificate ($99/year), so macOS blocks unsigned apps.~~ This command removes the quarantine flag to let it run. **Only use this command on apps you trust.**
 
 ### Code Signing Status
 
-After tremendous effort, starting with LaunchNext 2.4.2, releases are signed and notarized by Apple. I'm trying this out for now—the membership only lasts a year, and keeping it active isn't cheap, so I may not renew it. If that happens, future releases will go back to unsigned/ad-hoc builds, which may not be a bad idea.
+Releases from this fork are currently unsigned/ad-hoc builds, hence the quarantine command above.
 
 Building from source? See [Configure local code signing](#configure-local-code-signing).
 
-### What LaunchNext Delivers
+### What LaunchNG Delivers
 - ✅ **One-click import from old system Launchpad** - directly reads your native Launchpad SQLite database (`/private$(getconf DARWIN_USER_DIR)com.apple.dock.launchpad/db/db`) to perfectly recreate your existing folders, app positions, and layout
 - ✅ **Classic Launchpad experience** - works exactly like the beloved original interface
 - ✅ **Multi-language support** - full internationalization with English, Simplified Chinese, Traditional Chinese, Japanese, French, Spanish, German, Russian, and more
@@ -52,7 +40,7 @@ Building from source? See [Configure local code signing](#configure-local-code-s
 - ✅ **Smart folder management** - create and organize folders just like before
 - ✅ **Fuzzy search and keyboard navigation** - find apps quickly, even with partial or imperfect input
 - ✅ **CLI / TUI support** - inspect and operate your layout from the terminal
-- ✅ **Hot Corner and native gesture support** - open LaunchNext with corners, trackpad gestures, and 4 / 5 finger options
+- ✅ **Hot Corner and native gesture support** - open LaunchNG with corners, trackpad gestures, and 4 / 5 finger options
 - ✅ **Drag apps directly to the Dock** - available in Next Engine + Core Animation
 - ✅ **Core Animation folders** - folder content supports paged and vertical scroll layouts
 - ✅ **Better context menus** - Show in Finder, Copy App Path, Rename Folder, and configured uninstall actions
@@ -70,7 +58,7 @@ Building from source? See [Configure local code signing](#configure-local-code-s
 ### Data Storage
 Application data is safely stored in:
 ```
-~/Library/Application Support/LaunchNext/Data.store
+~/Library/Application Support/LaunchNG/Data.store
 ```
 
 ### Native Launchpad Integration
@@ -90,24 +78,24 @@ Reads directly from the system Launchpad database:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/moonmig/LaunchNext.git
-   cd LaunchNext
+   git clone https://github.com/moonmig/LaunchNG.git
+   cd LaunchNG
    ```
 
 2. **Open in Xcode**
    ```bash
-   open LaunchNext.xcodeproj
+   open LaunchNG.xcodeproj
    ```
 
 3. <a name="configure-local-code-signing"></a>**Configure local code signing**
-   - A paid Apple Developer membership is not required to build or contribute to LaunchNext.
-   - Select the **LaunchNext target**, open **Signing & Capabilities**, set **Team** to `None`, and select `Sign to Run Locally` as the signing certificate.
+   - A paid Apple Developer membership is not required to build or contribute to LaunchNG.
+   - Select the **LaunchNG target**, open **Signing & Capabilities**, set **Team** to `None`, and select `Sign to Run Locally` as the signing certificate.
    - Keep Hardened Runtime enabled.
    - Xcode may mark the project file as modified after changing these local settings. Do not include signing-only changes in a pull request.
 
-   | **Xcode local signing settings for LaunchNext** | **Signed and notarized LaunchNext release** |
+   | **Xcode local signing settings for LaunchNG** | **Signed and notarized LaunchNG release** |
    | :---: | :---: |
-   | <img src="./public/local-code-signing.png" alt="Xcode local signing settings for LaunchNext" width="620"> | <img src="./public/notarized-release-status.png" alt="Signed and notarized LaunchNext release status" width="300"> |
+   | <img src="./public/local-code-signing.png" alt="Xcode local signing settings for LaunchNG" width="620"> | <img src="./public/notarized-release-status.png" alt="Signed and notarized LaunchNG release status" width="300"> |
 
 4. **Build and run**
    - To launch the app with `⌘+R`, select `My Mac` as the run destination—not `Any Mac`.
@@ -118,18 +106,18 @@ Reads directly from the system Launchpad database:
 
 **Regular Build:**
 ```bash
-xcodebuild -project LaunchNext.xcodeproj -scheme LaunchNext -configuration Release
+xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release
 ```
 
 **Universal Binary Build (Intel + Apple Silicon):**
 ```bash
-xcodebuild -project LaunchNext.xcodeproj -scheme LaunchNext -configuration Release ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO clean build
+xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO clean build
 ```
 
 ## Usage
 
 ### Getting Started
-1. **First Launch**: LaunchNext automatically scans all installed applications
+1. **First Launch**: LaunchNG automatically scans all installed applications
 2. **Select**: Click to select apps, double-click to launch
 3. **Search**: Type to instantly filter applications
 4. **Organize**: Drag apps to create folders and custom layouts
@@ -145,7 +133,7 @@ xcodebuild -project LaunchNext.xcodeproj -scheme LaunchNext -configuration Relea
 - **Compact**: Floating window with rounded corners
 - **Fullscreen**: Full-screen mode for maximum visibility
 - **Legacy Engine** and **Next Engine + Core Animation** are available in Settings
-- LaunchNext can keep separate settings for fullscreen and compact
+- LaunchNG can keep separate settings for fullscreen and compact
 - Optional fullscreen menu bar hiding is available; macOS also hides the Dock when this is enabled
 
 ## Advanced Features
@@ -167,8 +155,8 @@ xcodebuild -project LaunchNext.xcodeproj -scheme LaunchNext -configuration Relea
 - **Background Scanning**: Non-blocking app discovery
 
 ### Automation and Activation
-- **CLI / TUI**: Manage LaunchNext from the terminal
-- **Hot Corner**: Open LaunchNext from a configurable screen corner
+- **CLI / TUI**: Manage LaunchNG from the terminal
+- **Hot Corner**: Open LaunchNG from a configurable screen corner
 - **Experimental native gestures**: 4 / 5 finger pinch and tap actions, including external trackpad device selection
 - **Dock drag**: Drag apps directly into the macOS Dock in Next Engine + Core Animation
 
@@ -196,7 +184,7 @@ A: Ensure macOS 26.0+ and check system permissions.
 A: `Next Engine + Core Animation` is recommended for the best experience. `Legacy Engine` is still available if you need the older compatibility path.
 
 **Q: Why doesn't the CLI command exist yet?**
-A: Enable the command line interface in Settings first. LaunchNext can install and remove the managed `launchnext` command for you.
+A: Enable the command line interface in Settings first. LaunchNG can install and remove the managed `launchng` command for you.
 
 ## Contributing
 
@@ -222,22 +210,22 @@ We welcome contributions! Please:
 - [Grid diagnostics](scripts/diagnostics/README.md) — manual probes for the grid
   and glass overlay, with their commands and coverage limits.
 
-Unit tests live in `LaunchNextTests` and run with:
+Unit tests live in `LaunchNGTests` and run with:
 
 ```sh
-xcodebuild test -scheme LaunchNext -destination 'platform=macOS'
+xcodebuild test -scheme LaunchNG -destination 'platform=macOS'
 ```
 
 ## The Future of App Management
 
-As Apple moves away from customizable interfaces, LaunchNext represents a push toward user control and personalization. I still hope Apple brings Launchpad back.
+As Apple moves away from customizable interfaces, LaunchNG represents a push toward user control and personalization. I still hope Apple brings Launchpad back.
 
-**LaunchNext** isn't just a Launchpad replacement—it's a statement that user choice matters.
+**LaunchNG** isn't just a Launchpad replacement—it's a statement that user choice matters.
 
 
 ---
 
-**LaunchNext** - Reclaim Your App Launcher 🚀
+**LaunchNG** - Reclaim Your App Launcher 🚀
 
 *Built for macOS users who refuse to compromise on customization.*
 
@@ -254,4 +242,4 @@ As Apple moves away from customizable interfaces, LaunchNext represents a push t
 - Experimental gesture support is built on [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) and the fork by [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport).❤️
 
 
-![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNext/total)
+![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNG/total)

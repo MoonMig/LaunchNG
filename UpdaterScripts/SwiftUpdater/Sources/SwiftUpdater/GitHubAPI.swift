@@ -26,7 +26,7 @@ struct ReleaseMetadata: Decodable {
 
 enum GitHubClient {
     static let owner = "moonmig"
-    static let repo = "LaunchNext"
+    static let repo = "LaunchNG"
 
     static func latestRelease(tag overrideTag: String?, token: String?) async throws -> ReleaseMetadata {
         let url: URL
