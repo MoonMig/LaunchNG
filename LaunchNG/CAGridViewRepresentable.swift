@@ -6,7 +6,7 @@ import LaunchNGContextMenuCore
 
 struct CAGridViewRepresentable: NSViewRepresentable {
     @ObservedObject var appStore: AppStore
-    var items: [LaunchpadItem]  // 支持传入过滤后的 items
+    var items: [LaunchpadItem]  // Supports passing in already-filtered items
     var iconSize: CGFloat
     var columnSpacing: CGFloat
     var rowSpacing: CGFloat
@@ -21,7 +21,7 @@ struct CAGridViewRepresentable: NSViewRepresentable {
     var backgroundLabelSample: BackgroundLabelContrast? = nil
     var backgroundLabelTints: [BackgroundLabelContrast.Tint] = []
 
-    // 监听这些触发器来强制刷新
+    // Observe these triggers to force a refresh
     var gridRefreshTrigger: UUID { appStore.gridRefreshTrigger }
     var folderUpdateTrigger: UUID { appStore.folderUpdateTrigger }
     var iconCacheRefreshTrigger: UUID { appStore.iconCacheRefreshTrigger }
@@ -82,23 +82,23 @@ struct CAGridViewRepresentable: NSViewRepresentable {
         }
 
         view.onItemClicked = { item, index in
-            // 单击打开应用或文件夹
+            // A single click opens the app or folder
             switch item {
             case .app(let app):
                 launchApp(app)
             case .folder(let folder):
                 onOpenFolder?(folder)
             case .missingApp:
-                // 丢失的应用，不处理
+                // Missing app, do nothing
                 break
             case .empty:
-                // 空白位置，不做任何操作（和真实Launchpad一致）
-                // 只有点击网格外的空白区域才关闭窗口
+                // Empty slot, do nothing (matches real Launchpad behavior)
+                // Only clicking the blank area outside the grid closes the window
                 break
             }
         }
         view.onItemDoubleClicked = { item, index in
-            // 双击也处理（兼容）
+            // Also handle double-click (for compatibility)
         }
 
         view.onPageChanged = { page in
@@ -110,11 +110,11 @@ struct CAGridViewRepresentable: NSViewRepresentable {
         }
 
         view.onFPSUpdate = { fps in
-            // 可以在这里更新 FPS 显示
+            // FPS display could be updated here
         }
 
         view.onEmptyAreaClicked = {
-            // 点击空白区域关闭窗口
+            // Clicking the empty area closes the window
             AppDelegate.shared?.hideWindow()
         }
 
@@ -128,14 +128,14 @@ struct CAGridViewRepresentable: NSViewRepresentable {
             }
         }
 
-        // 拖拽创建文件夹
+        // Drag to create a folder
         view.onCreateFolder = { dragApp, targetApp, insertAt in
             DispatchQueue.main.async {
                 _ = appStore.createFolder(with: [dragApp, targetApp], insertAt: insertAt)
             }
         }
 
-        // 拖拽移入文件夹
+        // Drag into a folder
         view.onMoveToFolder = { app, folder in
             DispatchQueue.main.async {
                 appStore.addAppToFolder(app, folder: folder)
@@ -155,7 +155,7 @@ struct CAGridViewRepresentable: NSViewRepresentable {
             }
         }
 
-        // 请求创建新页面（拖拽到右边缘时）
+        // Request a new page (when dragged to the right edge)
         view.onRequestNewPage = {
             DispatchQueue.main.async {
                 let itemsPerPage = appStore.gridColumnsPerPage * appStore.gridRowsPerPage
@@ -191,10 +191,10 @@ struct CAGridViewRepresentable: NSViewRepresentable {
         folderPresentation?.backdrop = backdrop
         folderPresentation?.grid = nsView
         // print("🔄 [CAGrid #\(nsView.debugInstanceId)] updateNSView, window=\(nsView.window != nil), isVisible=\(nsView.window?.isVisible ?? false)")
-        // 确保滚轮事件监听器已安装（窗口重新显示时需要）
+        // Make sure the scroll event monitor is installed (needed after the window is shown again)
         nsView.ensureScrollMonitorInstalled()
 
-        // 更新配置
+        // Update configuration
         let configChanged = nsView.columns != appStore.gridColumnsPerPage ||
                             nsView.rows != appStore.gridRowsPerPage ||
                             nsView.iconSize != iconSize ||
@@ -244,7 +244,7 @@ struct CAGridViewRepresentable: NSViewRepresentable {
         nsView.contextMenuConfiguration = makeContextMenuConfiguration(allowsBatchSelection: allowsBatchSelection)
         nsView.allowsBatchSelectionMode = allowsBatchSelection
 
-        // 检查刷新触发器是否变化（文件夹创建/修改会触发）
+        // Check whether the refresh triggers changed (folder creation/edits fire this)
         let triggerChanged = context.coordinator.lastGridRefreshTrigger != gridRefreshTrigger ||
                              context.coordinator.lastFolderUpdateTrigger != folderUpdateTrigger
 
@@ -262,7 +262,7 @@ struct CAGridViewRepresentable: NSViewRepresentable {
             nsView.items = items
             didUpdateItems = true
         } else if itemsChanged(nsView.items, items) {
-            // 更新 items - 始终检查完整变化（包括文件夹名称等）
+            // Update items - always check for a full change (including folder names etc.)
             // print("🔄 [CAGrid] Updating items: \(nsView.items.count) -> \(items.count)")
             nsView.items = items
             didUpdateItems = true
@@ -278,7 +278,7 @@ struct CAGridViewRepresentable: NSViewRepresentable {
             }
         }
 
-        // 同步页面
+        // Sync the page
         if nsView.currentPage != appStore.currentPage {
             // print("📄 [CAGrid] Page sync: \(nsView.currentPage) -> \(appStore.currentPage)")
             nsView.navigateToPage(appStore.currentPage, animated: appStore.enableAnimations)
@@ -348,23 +348,23 @@ struct CAGridViewRepresentable: NSViewRepresentable {
         var lastIconCacheRefreshTrigger: UUID = UUID()
     }
 
-    // 检查 items 是否变化（完整比较所有 item 的 id 和名称）
+    // Check whether items changed (a full comparison of every item's id and name)
     private func itemsChanged(_ old: [LaunchpadItem], _ new: [LaunchpadItem]) -> Bool {
         guard old.count == new.count else { return true }
         guard !old.isEmpty else { return !new.isEmpty }
 
-        // 完整比较每个 item
+        // Fully compare each item
         for i in 0..<old.count {
             let oldItem = old[i]
             let newItem = new[i]
 
-            // 比较 id
+            // Compare id
             if oldItem.id != newItem.id { return true }
 
-            // 比较名称（文件夹改名后需要刷新）
+            // Compare name (needs a refresh after a folder is renamed)
             if oldItem.name != newItem.name { return true }
 
-            // 对于文件夹，还要比较内部应用数量
+            // For folders, also compare the number of apps inside
             if case .folder(let oldFolder) = oldItem, case .folder(let newFolder) = newItem {
                 if oldFolder.apps.count != newFolder.apps.count { return true }
             }

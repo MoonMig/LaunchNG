@@ -3,7 +3,7 @@ import AppKit
 import SwiftData
 import SQLite3
 
-/// 直接从 macOS 原生 Launchpad 数据库导入布局
+/// Imports the layout directly from macOS's native Launchpad database
 class NativeLaunchpadImporter {
     private let modelContext: ModelContext
 
@@ -71,25 +71,25 @@ class NativeLaunchpadImporter {
         return false
     }
 
-    /// 从原生 Launchpad 数据库导入布局
+    /// Import the layout from the native Launchpad database
     func importFromNativeLaunchpad() throws -> ImportResult {
         let nativeLaunchpadDB = try getNativeLaunchpadDatabasePath()
 
-        // 检查数据库是否存在和可访问
+        // Check that the database exists and is accessible
         guard FileManager.default.fileExists(atPath: nativeLaunchpadDB) else {
             throw ImportError.databaseNotFound("Native Launchpad database not found")
         }
 
-        // 解析数据库
+        // Parse the database
         let launchpadData = try parseLaunchpadDatabase(at: nativeLaunchpadDB)
 
-        // 转换并保存到 LaunchNG 格式
+        // Convert and save into LaunchNG's format
         let result = try convertAndSave(launchpadData: launchpadData)
 
         return result
     }
 
-    /// 从指定的数据库路径导入（适配旧版 apps/groups/items 架构）
+    /// Import from a specified database path (supports the legacy apps/groups/items schema)
     func importFromDatabasePath(_ dbPath: String) throws -> ImportResult {
         guard FileManager.default.fileExists(atPath: dbPath) else {
             throw ImportError.databaseNotFound("Database not found: \(dbPath)")
@@ -98,17 +98,17 @@ class NativeLaunchpadImporter {
         return try convertAndSave(launchpadData: data)
     }
 
-    /// 从旧版归档（.lmy/.zip）导入：归档中包含名为 db 的 SQLite 文件
+    /// Import from a legacy archive (.lmy/.zip): the archive contains a SQLite file named db
     func importFromLegacyArchive(at url: URL) throws -> ImportResult {
         let fm = FileManager.default
         let ext = url.pathExtension.lowercased()
 
-        // 如果直接给的是 SQLite 文件
+        // If we were handed a SQLite file directly
         if ext == "db" {
             return try importFromDatabasePath(url.path)
         }
 
-        // 仅支持 .lmy/.zip
+        // Only .lmy/.zip are supported
         guard ext == "lmy" || ext == "zip" else {
             throw ImportError.systemError("Unsupported file type: .\(ext)")
         }
@@ -117,7 +117,7 @@ class NativeLaunchpadImporter {
         try fm.createDirectory(at: tmpDir, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: tmpDir) }
 
-        // 使用系统 unzip 解压
+        // Extract using the system's unzip
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
         task.arguments = ["-o", url.path, "-d", tmpDir.path]
@@ -138,9 +138,9 @@ class NativeLaunchpadImporter {
         return try importFromDatabasePath(dbPath)
     }
 
-    // MARK: - 私有方法
+    // MARK: - Private methods
 
-    /// 获取原生 Launchpad 数据库路径
+    /// Get the native Launchpad database path
     private func getNativeLaunchpadDatabasePath() throws -> String {
         try Self.nativeLaunchpadDatabasePath()
     }
@@ -152,10 +152,10 @@ class NativeLaunchpadImporter {
         }
         defer { sqlite3_close(db) }
 
-        // 打印数据库里有哪些表，便于兼容不同 macOS 版本
+        // Print which tables exist in the database, to help with compatibility across macOS versions
         logAllTables(in: db)
 
-        // 快速自检：检查我们依赖的三张表是否存在
+        // Quick self-check: verify the three tables we depend on exist
         let hasLegacySchema =
             tableExists(in: db, name: "apps") &&
             tableExists(in: db, name: "groups") &&
@@ -165,22 +165,22 @@ class NativeLaunchpadImporter {
             throw ImportError.databaseError("Non-legacy schema detected. Please provide table list for adaptation.")
         }
 
-        // 解析应用
+        // Parse apps
         let apps = try parseApps(from: db)
         print("📱 Found \(apps.count) apps")
 
-        // 解析文件夹
+        // Parse folders
         let groups = try parseGroups(from: db)
         print("📁 Found \(groups.count) folders")
 
-        // 解析层级结构
+        // Parse the hierarchy
         let items = try parseItems(from: db)
         print("🗂 Found \(items.count) layout items")
 
         return LaunchpadData(apps: apps, groups: groups, items: items)
     }
 
-    // MARK: - 数据库结构探测
+    // MARK: - Database schema detection
     private func logAllTables(in db: OpaquePointer?) {
         let query = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
         var stmt: OpaquePointer?
@@ -225,7 +225,7 @@ class NativeLaunchpadImporter {
         while sqlite3_step(stmt) == SQLITE_ROW {
             let itemId = String(sqlite3_column_int(stmt, 0))
 
-            // 安全获取字符串，处理 NULL 值
+            // Safely read the string, handling NULL values
             let title = sqlite3_column_text(stmt, 1) != nil
                 ? String(cString: sqlite3_column_text(stmt, 1))
                 : "Unknown App"
@@ -308,21 +308,21 @@ class NativeLaunchpadImporter {
     private func convertAndSave(launchpadData: LaunchpadData) throws -> ImportResult {
         print("🔄 Start converting data...")
 
-        // 为便于定位，先构建父子索引
+        // Build a parent->children index up front, to make lookups easier
         var childrenByParent: [Int: [LaunchpadDBItem]] = [:]
         for item in launchpadData.items { childrenByParent[item.parentId, default: []].append(item) }
         for key in childrenByParent.keys { childrenByParent[key]?.sort { $0.ordering < $1.ordering } }
 
-        // 1) 顶层容器（即顶层页组）：parent_id = 1, type = 3
+        // 1) Top-level containers (i.e. top-level page groups): parent_id = 1, type = 3
         let topContainers = launchpadData.items
             .filter { $0.type == 3 && $0.parentId == 1 }
             .sorted { $0.ordering < $1.ordering }
 
         #if DEBUG
-        print("🧭 顶层容器顺序: \(topContainers.map{ $0.rowId }.joined(separator: ", "))")
+        print("🧭 Top-level container order: \(topContainers.map{ $0.rowId }.joined(separator: ", "))")
         #endif
 
-        // 清空现有数据
+        // Clear the existing data
         try clearExistingData()
         print("🗑 Clearing existing layout data")
 
@@ -330,14 +330,14 @@ class NativeLaunchpadImporter {
         var convertedFolders = 0
         var failedApps: [String] = []
 
-        // 2) 逐个顶层容器构建页面
+        // 2) Build a page from each top-level container in turn
         for (pageIndex, container) in topContainers.enumerated() {
             let containerId = Int(container.rowId) ?? 0
             let direct = (childrenByParent[containerId] ?? [])
             let directApps = direct.filter { $0.type == 4 }
             let folderPages = direct.filter { $0.type == 2 }
 
-            // 本页最大位置 = 两类条目的 ordering 最大值
+            // This page's max position = the max ordering across both kinds of entries
             let maxPos = max(directApps.map{ $0.ordering }.max() ?? -1,
                              folderPages.map{ $0.ordering }.max() ?? -1)
 
@@ -345,7 +345,7 @@ class NativeLaunchpadImporter {
 
             var occupied = Set<Int>()
 
-            // 2.1) 放置直接应用
+            // 2.1) Place the direct apps
             for appItem in directApps {
                 if let app = launchpadData.apps[appItem.rowId],
                    let appInfo = findLocalApp(bundleId: app.bundleId, title: app.title) {
@@ -359,7 +359,7 @@ class NativeLaunchpadImporter {
                 }
             }
 
-            // 2.2) 放置文件夹（由子页 type=2 表示）
+            // 2.2) Place the folders (represented by child pages of type=2)
             for page in folderPages {
                 let folderNameRaw = (launchpadData.groups[page.rowId]?.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                 let pageId = Int(page.rowId) ?? 0
@@ -377,7 +377,7 @@ class NativeLaunchpadImporter {
 
                 let finalName: String
                 if isPlaceholderFolderTitle(folderNameRaw) {
-                    // 用 DB 内的应用标题生成
+                    // Generate one from the app titles in the DB
                     var names: [String] = []
                     for sc in slotContainers {
                         let scId = Int(sc.rowId) ?? 0
@@ -402,7 +402,7 @@ class NativeLaunchpadImporter {
                 convertedFolders += 1
             }
 
-            // 2.3) 补齐空位
+            // 2.3) Fill in the remaining empty slots
             if maxPos >= 0 {
                 for pos in 0...maxPos where !occupied.contains(pos) {
                     try saveEmptySlot(pageIndex: pageIndex, position: pos)
@@ -420,12 +420,12 @@ class NativeLaunchpadImporter {
     }
 
     private func buildHierarchy(from data: LaunchpadData) -> LaunchpadHierarchy {
-        // 说明（旧版 schema 结构）：
-        // 层级关系为 Root(type=1) → TopContainers(type=3) → Pages(type=2) → Slots(type=3) → Apps(type=4)
-        // 页面顺序应当按：TopContainers 的 ordering，再按各 TopContainer 下 Pages 的 ordering 依次展开。
-        // 槽位顺序：按 Page 的直接子项 Slots(type=3) 的 ordering。
+        // Note (legacy schema structure):
+        // The hierarchy is Root(type=1) → TopContainers(type=3) → Pages(type=2) → Slots(type=3) → Apps(type=4).
+        // Page order should follow: TopContainers' ordering, then each TopContainer's Pages' ordering in turn.
+        // Slot order: by the ordering of the Page's direct Slots(type=3) children.
 
-        // 构建 parent -> children 的索引，便于快速查找
+        // Build a parent -> children index, to make lookups fast
         var childrenByParent: [Int: [LaunchpadDBItem]] = [:]
         for item in data.items {
             childrenByParent[item.parentId, default: []].append(item)
@@ -434,38 +434,38 @@ class NativeLaunchpadImporter {
             childrenByParent[key]?.sort { $0.ordering < $1.ordering }
         }
 
-        // 寻找 Root 节点（可能存在多个 type=1，仅取作父级的那些）
+        // Find the Root node(s) (there may be several type=1 rows; keep only the ones acting as a parent)
         let roots = data.items.filter { $0.type == 1 }
         let rootIds: [Int]
         if roots.isEmpty {
-            rootIds = [1] // 兜底：典型旧库中 root 为 1
+            rootIds = [1] // Fallback: in a typical legacy DB, root is 1
         } else {
-            // 按 ordering 排序（若无意义，则自然顺序）
+            // Sort by ordering (falls back to natural order if it's not meaningful)
             rootIds = roots.sorted { $0.ordering < $1.ordering }.map { intValue($0.rowId) }
         }
 
-        // Top-level 容器（直接隶属于 Root 的 type=3）
+        // Top-level containers (type=3, direct children of Root)
         var topContainers: [(rootIndex: Int, container: LaunchpadDBItem)] = []
         for (idx, rootId) in rootIds.enumerated() {
             let containers = (childrenByParent[rootId] ?? []).filter { $0.type == 3 }
             for c in containers { topContainers.append((rootIndex: idx, container: c)) }
         }
-        // 仅保留“真正承载页面”的容器（其直接子项包含 type=2）
+        // Keep only containers that actually hold pages (their direct children include type=2)
         topContainers = topContainers.filter { entry in
             let pid = intValue(entry.container.rowId)
             return (childrenByParent[pid] ?? []).contains(where: { $0.type == 2 })
         }
-        // 以 (rootIndex, container.ordering) 排序，保持各 Root 内部顺序
+        // Sort by (rootIndex, container.ordering), preserving each Root's internal order
         topContainers.sort { lhs, rhs in
             if lhs.rootIndex == rhs.rootIndex { return lhs.container.ordering < rhs.container.ordering }
             return lhs.rootIndex < rhs.rootIndex
         }
         #if DEBUG
         let tcIds = topContainers.map { $0.container.rowId }
-        print("🧭 顶层容器顺序: \(tcIds.joined(separator: ", "))")
+        print("🧭 Top-level container order: \(tcIds.joined(separator: ", "))")
         #endif
 
-        // 计算页面顺序：每个 topContainer 下的 pages(type=2) 依次追加
+        // Compute page order: append each topContainer's pages(type=2) in turn
         var orderedPages: [LaunchpadDBItem] = []
         for entry in topContainers {
             let parentId = intValue(entry.container.rowId)
@@ -474,10 +474,10 @@ class NativeLaunchpadImporter {
         }
         #if DEBUG
         let pageIds = orderedPages.map { $0.rowId }
-        print("🧭 页面顺序: \(pageIds.joined(separator: ", "))")
+        print("🧭 Page order: \(pageIds.joined(separator: ", "))")
         #endif
 
-        // 槽位（每页的直接子项 type=3）
+        // Slots (each page's direct type=3 children)
         var pages: [LaunchpadPage] = []
         for page in orderedPages {
             let pid = intValue(page.rowId)
@@ -485,7 +485,7 @@ class NativeLaunchpadImporter {
             pages.append(LaunchpadPage(items: slots))
         }
 
-        // 文件夹映射：任意 containerId(type=3) → 其子应用(type=4)
+        // Folder mapping: any containerId(type=3) → its child apps(type=4)
         var slotIdToApps: [String: [LaunchpadDBItem]] = [:]
         for item in data.items where item.type == 4 {
             slotIdToApps[String(item.parentId), default: []].append(item)
@@ -502,14 +502,14 @@ class NativeLaunchpadImporter {
     }
 
     private func findLocalApp(bundleId: String, title: String) -> AppInfo? {
-        // 优先使用 NSWorkspace 查找
+        // Prefer looking it up via NSWorkspace
         if let appPath = NSWorkspace.shared.absolutePathForApplication(withBundleIdentifier: bundleId) {
             return AppInfo.from(url: URL(fileURLWithPath: appPath),
                                 preferredName: title,
                                 loadIcon: PerformanceMode.current == .full)
         }
 
-        // 备用方案：在常见路径中搜索
+        // Fallback: search common paths
         let searchPaths = [
             "/Applications",
             "/System/Applications",
@@ -537,13 +537,13 @@ class NativeLaunchpadImporter {
         for case let url as URL in enumerator {
             if url.pathExtension == "app" {
                 if let bundle = Bundle(url: url) {
-                    // 精确匹配 bundle ID
+                    // Exact bundle ID match
                     if bundle.bundleIdentifier == bundleId {
                         return AppInfo.from(url: url,
                                             preferredName: title,
                                             loadIcon: PerformanceMode.current == .full)
                     }
-                    // 备用：名称匹配
+                    // Fallback: name match
                     if let appName = bundle.infoDictionary?["CFBundleName"] as? String,
                        appName == title {
                         return AppInfo.from(url: url,
@@ -562,7 +562,7 @@ class NativeLaunchpadImporter {
         var apps: [AppInfo] = []
 
         for item in folderItems {
-            if item.type == 4, // 应用
+            if item.type == 4, // app
                let app = launchpadData.apps[item.rowId],
                let appInfo = findLocalApp(bundleId: app.bundleId, title: app.title) {
                 apps.append(appInfo)
@@ -573,8 +573,8 @@ class NativeLaunchpadImporter {
     }
 
     private func findSingleApp(inContainerId containerId: String, launchpadData: LaunchpadData, hierarchy: LaunchpadHierarchy) -> AppInfo? {
-        // 旧版 schema：单个应用的顶层项通常是一个 type=3 的容器，
-        // 其下挂着一个 type=4 的应用项。这里取第一个 app 子项。
+        // Legacy schema: a single app's top-level item is usually a type=3 container
+        // with one type=4 app item hanging under it. We take the first app child here.
         if let items = hierarchy.folderItems[containerId] {
             if let appItem = items.first, let app = launchpadData.apps[appItem.rowId] {
                 return findLocalApp(bundleId: app.bundleId, title: app.title)
@@ -670,7 +670,7 @@ class NativeLaunchpadImporter {
     }
 }
 
-// MARK: - 数据模型 (复用之前的)
+// MARK: - Data models (reused from before)
 
 struct LaunchpadData {
     let apps: [String: LaunchpadDBApp]
@@ -745,7 +745,7 @@ enum ImportError: LocalizedError {
     }
 }
 
-// MARK: - 扩展
+// MARK: - Extensions
 
 extension Array {
     func chunked(into size: Int) -> [[Element]] {

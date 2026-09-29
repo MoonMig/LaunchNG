@@ -16,12 +16,12 @@ extension CAGridView {
         return true
     }
 
-    // 确保视图接受第一次鼠标点击就能响应
+    // Make sure the view responds to the very first mouse click
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
         return true
     }
 
-    // 确保视图可以接收鼠标事件
+    // Make sure the view can receive mouse events
     override func hitTest(_ point: NSPoint) -> NSView? {
         let result = frame.contains(point) ? self : nil
         return result
@@ -72,7 +72,7 @@ extension CAGridView {
             super.scrollWheel(with: event)
             return
         }
-        // 当本地 monitor 存在时，避免双重处理
+        // Avoid double-handling when the local monitor is present
         if scrollEventMonitor != nil {
             return
         }
@@ -95,18 +95,18 @@ extension CAGridView {
 
         if !isPrecise {
             /*
-            // 旧版滚轮跟手 + 定时器 snap 逻辑（保留注释，便于后续对比）
+            // Old follow-the-finger wheel + timer snap logic (kept commented out for later comparison)
             wheelSnapTimer?.invalidate()
 
-            // 累积滚动量
-            wheelAccumulatedDelta += scaledDelta * 8  // 放大系数，让跟手效果更明显
+            // Accumulate the scroll amount
+            wheelAccumulatedDelta += scaledDelta * 8  // Amplification factor, to make the follow effect more noticeable
 
-            // 计算临时偏移（带橡皮筋效果）
+            // Compute the temporary offset (with a rubber-band effect)
             let pageStride = bounds.width + pageSpacing
             let baseOffset = -CGFloat(currentPage) * pageStride
             var newOffset = baseOffset + wheelAccumulatedDelta
 
-            // 橡皮筋效果：边界阻力
+            // Rubber-band effect: resistance at the boundary
             let minOffset = -CGFloat(pageCount - 1) * pageStride
             let maxOffset: CGFloat = 0
             if newOffset > maxOffset {
@@ -117,7 +117,7 @@ extension CAGridView {
                 newOffset = minOffset + rubberBand(overscroll, limit: bounds.width * 0.15)
             }
 
-            // 更新显示
+            // Update the display
             scrollOffset = newOffset
             CATransaction.begin()
             CATransaction.setDisableActions(true)
@@ -125,11 +125,11 @@ extension CAGridView {
             syncFolderGlass(geometryChanged: false)
             CATransaction.commit()
 
-            // 设置定时器，停止滚动后决定翻页或弹回
+            // Set up a timer to decide whether to page or snap back once scrolling stops
             wheelSnapTimer = Timer.scheduledTimer(withTimeInterval: wheelSnapDelay, repeats: false) { [weak self] _ in
                 guard let self = self else { return }
 
-                let threshold = self.bounds.width * 0.15  // 15% 触发翻页
+                let threshold = self.bounds.width * 0.15  // 15% triggers a page flip
                 var targetPage = self.currentPage
 
                 if self.wheelAccumulatedDelta < -threshold {
@@ -148,7 +148,7 @@ extension CAGridView {
             return
         }
 
-        // 触控板滑动
+        // Trackpad swipe
         switch event.phase {
         case .began:
             isDragging = true
@@ -160,27 +160,27 @@ extension CAGridView {
         case .changed:
             accumulatedDelta += scaledDelta
 
-            // 计算新的偏移量
+            // Compute the new offset
             var newOffset = dragStartOffset + accumulatedDelta
 
-            // 橡皮筋效果：在边界处添加阻力
+            // Rubber-band effect: add resistance at the boundary
             let pageStride = bounds.width + pageSpacing
             let minOffset = -CGFloat(navigablePageCount - 1) * pageStride
             let maxOffset: CGFloat = 0
 
             if newOffset > maxOffset {
-                // 超出左边界
+                // Past the left boundary
                 let overscroll = newOffset - maxOffset
                 newOffset = maxOffset + rubberBand(overscroll, limit: bounds.width * 0.2)
             } else if newOffset < minOffset {
-                // 超出右边界
+                // Past the right boundary
                 let overscroll = newOffset - minOffset
                 newOffset = minOffset + rubberBand(overscroll, limit: bounds.width * 0.2)
             }
 
             scrollOffset = newOffset
 
-            // 性能优化：使用 CATransaction 批量更新
+            // Performance optimization: batch the update using CATransaction
             CATransaction.begin()
             CATransaction.setDisableActions(true)
             CATransaction.setAnimationDuration(0)
@@ -191,13 +191,13 @@ extension CAGridView {
         case .ended, .cancelled:
             isDragging = false
 
-            // 根据滑动距离和速度确定目标页面
+            // Determine the target page from the swipe distance and velocity
             let velocity = (abs(deltaX) > abs(deltaY) ? deltaX : verticalDelta) * sensitivityScale
-            let threshold = (bounds.width + pageSpacing) * 0.15  // 15% 即可触发翻页
+            let threshold = (bounds.width + pageSpacing) * 0.15  // 15% is enough to trigger a page flip
             let velocityThreshold: CGFloat = 30
             var targetPage = currentPage
 
-            // 根据累计滑动方向决定翻页
+            // Decide the page flip direction from the accumulated swipe direction
             if accumulatedDelta < -threshold || velocity < -velocityThreshold {
                 targetPage = currentPage + 1
             } else if accumulatedDelta > threshold || velocity > velocityThreshold {
@@ -222,7 +222,7 @@ extension CAGridView {
         wheelLastDirection = direction
         wheelAccumulatedDelta += abs(scaledDelta)
 
-        // 固定阈值，灵敏度变化已反映在 scaledDelta
+        // Fixed threshold; sensitivity changes are already reflected in scaledDelta
         let threshold: CGFloat = 2.0
         guard wheelAccumulatedDelta >= threshold else { return }
 
@@ -254,7 +254,7 @@ extension CAGridView {
         guard !externalAppDragSessionActive else { return }
         finishFolderDissolve()
         finishDragLanding()
-        // 确保成为第一响应者，这样后续的滚轮事件才能被接收
+        // Make sure to become first responder, so later scroll wheel events can be received
         window?.makeFirstResponder(self)
 
         let location = convert(event.locationInWindow, from: nil)
@@ -265,12 +265,12 @@ extension CAGridView {
             let isFolder: Bool
             if case .folder = item { isFolder = true } else { isFolder = false }
             if event.clickCount == 1 || isFolder {
-                // 添加点击效果动画
+                // Add the press effect animation
                 setPressedIndex(index)
                 dragStartPoint = location
 
-                // 启动长按计时器（用于开始拖拽）
-                // 注意：必须添加到 .common 模式，否则在鼠标追踪期间不会触发
+                // Start the long-press timer (used to begin a drag)
+                // Note: must be added to the .common mode, otherwise it won't fire during mouse tracking
                 longPressTimer?.invalidate()
                 let timer = Timer(timeInterval: longPressDuration, repeats: false) { [weak self] _ in
                     self?.startDragging(item: item, index: index, at: location)
@@ -279,7 +279,7 @@ extension CAGridView {
                 longPressTimer = timer
             }
         } else {
-            // 点击空白区域 - 开始页面拖拽模式
+            // Clicked an empty area - start page-drag mode
             // print("🖱️ [CAGrid] Hit empty area, starting page drag")
             isPageDragging = true
             pageDragStartX = location.x
@@ -292,12 +292,12 @@ extension CAGridView {
         if externalAppDragSessionActive { return }
         let location = convert(event.locationInWindow, from: nil)
 
-        // 页面拖拽模式
+        // Page-drag mode
         if isPageDragging {
             let deltaX = location.x - pageDragStartX
             var newOffset = pageDragStartOffset + deltaX
 
-            // 橡皮筋效果 - 在边界处添加阻力
+            // Rubber-band effect - add resistance at the boundary
             let pageStride = bounds.width + pageSpacing
             let minOffset = -CGFloat(pageCount - 1) * pageStride
             let maxOffset: CGFloat = 0
@@ -325,7 +325,7 @@ extension CAGridView {
             if isLayoutLocked { return }
             let distance = hypot(location.x - dragStartPoint.x, location.y - dragStartPoint.y)
             if distance > 10 {
-                // 取消长按计时器，立即开始拖拽
+                // Cancel the long-press timer, start dragging immediately
                 longPressTimer?.invalidate()
                 longPressTimer = nil
                 if let item = items[safe: idx] {
@@ -334,7 +334,7 @@ extension CAGridView {
             }
         }
 
-        // 更新拖拽位置
+        // Update the drag position
         if isDraggingItem {
             let dragDelta = CGPoint(x: location.x - dragCurrentPoint.x,
                                     y: location.y - dragCurrentPoint.y)
@@ -353,27 +353,27 @@ extension CAGridView {
         if externalAppDragSessionActive { return }
         let location = convert(event.locationInWindow, from: nil)
 
-        // 取消长按计时器
+        // Cancel the long-press timer
         longPressTimer?.invalidate()
         longPressTimer = nil
 
-        // 结束页面拖拽
+        // End page-drag mode
         if isPageDragging {
             isPageDragging = false
 
             let totalDrag = location.x - pageDragStartX
-            let threshold = (bounds.width + pageSpacing) * 0.15  // 15% 即可触发翻页
+            let threshold = (bounds.width + pageSpacing) * 0.15  // 15% is enough to trigger a page flip
 
             var targetPage = currentPage
             if totalDrag < -threshold {
-                // 向左拖 -> 下一页
+                // Dragged left -> next page
                 targetPage = min(currentPage + 1, pageCount - 1)
             } else if totalDrag > threshold {
-                // 向右拖 -> 上一页
+                // Dragged right -> previous page
                 targetPage = max(currentPage - 1, 0)
             }
 
-            // 如果没有实际拖动（只是点击），则关闭窗口
+            // If there was no real drag (just a click), close the window
             if abs(totalDrag) < 5 {
                 onEmptyAreaClicked?()
                 return
@@ -384,13 +384,13 @@ extension CAGridView {
         }
 
         if isDraggingItem {
-            // 结束拖拽
+            // End the drag
             endDragging(at: location)
         } else if let idx = pressedIndex {
-            // 恢复点击效果
+            // Restore the press effect
             setPressedIndex(nil)
 
-            // 检查是否在同一个 item 上释放
+            // Check whether it was released on the same item
             if let (item, index) = itemAt(location), index == idx {
                 if isBatchSelectionMode {
                     if case .app(let app) = item {
@@ -401,7 +401,7 @@ extension CAGridView {
                         onItemClicked?(item, index)
                         return
                     }
-                    // 延迟一点点再触发，让动画效果更明显
+                    // Trigger it with a small delay, to make the animation more noticeable
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
                         self?.onItemClicked?(item, index)
                     }
@@ -463,7 +463,7 @@ extension CAGridView {
         draggingItem = item
         dragCurrentPoint = point
 
-        // 恢复按压效果
+        // Restore the press effect
         if pressedIndex != nil {
             setPressedIndex(nil)
         }
@@ -472,7 +472,7 @@ extension CAGridView {
         // animation would leave the old CA icon visible beneath the new glass.
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        // 隐藏原图标
+        // Hide the original icon
         let pageIndex = index / itemsPerPage
         let localIndex = index % itemsPerPage
         if pageIndex < iconLayers.count, localIndex < iconLayers[pageIndex].count {
@@ -490,7 +490,7 @@ extension CAGridView {
             }
         }
 
-        // 创建拖拽图层
+        // Create the dragging layer
         createDraggingLayer(for: item, at: point)
         CATransaction.commit()
 
@@ -1282,26 +1282,27 @@ extension CAGridView {
         }
     }
 
-    // MARK: - 边缘翻页检测
+    // MARK: - Edge page-flip detection
     func checkEdgeDrag(at point: CGPoint) {
         let leftEdge = point.x < edgeDragThreshold
         let rightEdge = point.x > bounds.width - edgeDragThreshold
 
         if leftEdge && currentPage > 0 {
-            // 左边缘 - 翻到上一页
+            // Left edge - flip to the previous page
             startEdgeDragTimer(direction: -1)
         } else if rightEdge {
-            // 右边缘 - 翻到下一页（可能创建新页）
+            // Right edge - flip to the next page (may create a new page)
             startEdgeDragTimer(direction: 1)
         } else {
-            // 离开边缘区域 - 取消计时器
+            // Left the edge zone - cancel the timer
             cancelEdgeDragTimer()
         }
     }
 
     func startEdgeDragTimer(direction: Int) {
-        // 如果已有相同方向的计时器，不重复创建；但相反方向必须取消旧计时器后重新开始，
-        // 否则在边界反向拖拽时会卡在旧方向上，翻页变得没有反应。
+        // Don't create a duplicate timer if one already exists for the same direction; but the
+        // opposite direction must cancel the old timer and restart, otherwise a reversed drag at
+        // the boundary gets stuck on the old direction and page flipping stops responding.
         if edgeDragTimer != nil {
             guard edgeDragTimerDirection != direction else { return }
             cancelEdgeDragTimer()
@@ -1312,9 +1313,9 @@ extension CAGridView {
             guard let self = self else { return }
             let targetPage = self.currentPage + direction
 
-            // 检查是否需要创建新页面
+            // Check whether a new page needs to be created
             if direction > 0 && targetPage >= self.pageCount {
-                // 通知创建新页面
+                // Notify that a new page should be created
                 self.onRequestNewPage?()
             }
 
@@ -1322,7 +1323,7 @@ extension CAGridView {
             self.edgeDragTimer = nil
             self.edgeDragTimerDirection = nil
 
-            // 翻页后继续检测
+            // Keep detecting after the page flip
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
                 guard let self = self, self.isDraggingItem else { return }
                 self.checkEdgeDrag(at: self.dragCurrentPoint)
@@ -1362,17 +1363,17 @@ extension CAGridView {
         wheelLastFlipAt = nil
     }
 
-    /// 计算点击位置对应的网格位置（即使是空白区域）
+    /// Compute the grid position corresponding to a click point (even in an empty area)
     func gridPositionAt(_ point: CGPoint) -> Int? {
         let pageWidth = bounds.width
         let pageHeight = bounds.height
         let adjustedX = point.x - scrollOffset
 
-        // 计算点击的页面
+        // Compute the clicked page
         let pageStride = pageWidth + pageSpacing
         let pageIndex = Int(floor(adjustedX / pageStride))
         guard pageIndex >= 0 else { return nil }
-        // 允许拖拽到最后一页之后（会创建新页）
+        // Allow dragging past the last page (this will create a new page)
         let effectivePageIndex = min(pageIndex, max(0, pageCount - 1))
 
         let availableWidth = max(0, pageWidth - contentInsets.left - contentInsets.right)
@@ -1386,13 +1387,13 @@ extension CAGridView {
         let strideX = cellWidth + columnSpacing
         let strideY = cellHeight + rowSpacing
 
-        // 计算点击位置相对于当前页的坐标
+        // Compute the click position's coordinates relative to the current page
         let pageX = adjustedX - CGFloat(effectivePageIndex) * pageStride
         guard pageX >= 0, pageX <= pageWidth else { return nil }
         let localX = pageX - contentInsets.left
         let localY = pageHeight - point.y - contentInsets.top
 
-        // 钳制到有效范围
+        // Clamp to the valid range
         let clampedX = max(0, min(localX, availableWidth - 1))
         let clampedY = max(0, min(localY, availableHeight - 1))
 
@@ -1421,7 +1422,7 @@ extension CAGridView {
     }
 
     func highlightDropTarget(at index: Int) {
-        // 清除之前的高亮
+        // Clear the previous highlight
         if let oldTarget = dropTargetIndex, oldTarget != index {
             dropTargetIndex = nil
             applyScaleForIndex(oldTarget, animated: true)
@@ -1678,7 +1679,7 @@ extension CAGridView {
         let pageHeight = bounds.height
         let adjustedX = point.x - scrollOffset
 
-        // 计算点击的页面
+        // Compute the clicked page
         let pageStride = pageWidth + pageSpacing
         let pageIndex = Int(floor(adjustedX / pageStride))
         guard pageIndex >= 0 && pageIndex < pageCount else { return nil }
@@ -1694,7 +1695,7 @@ extension CAGridView {
         let strideX = cellWidth + columnSpacing
         let strideY = cellHeight + rowSpacing
 
-        // 计算点击位置相对于当前页的坐标
+        // Compute the click position's coordinates relative to the current page
         let pageX = adjustedX - CGFloat(pageIndex) * pageStride
         guard pageX >= 0, pageX <= pageWidth else { return nil }
         let localX = pageX - contentInsets.left
@@ -1730,19 +1731,19 @@ extension CAGridView {
         // to this same missing check.
         if case .empty = items[globalIndex] { return nil }
 
-        // 检查是否点击在图标+标签区域内（不是单元格的空白部分）
+        // Check whether the click is within the icon+label area (not the cell's blank margin)
         let actualIconSize = iconSize
         let labelHeight: CGFloat = showLabels ? (labelFontSize + 8) : 0
         let labelTopSpacing: CGFloat = showLabels ? 4 : 0
         let totalItemHeight = actualIconSize + labelTopSpacing + labelHeight
 
-        // 图标+标签区域居中于单元格
+        // The icon+label area is centered within the cell
         let itemStartX = (cellWidth - actualIconSize) / 2
         let itemEndX = itemStartX + actualIconSize
         let itemStartY = (cellHeight - totalItemHeight) / 2
         let itemEndY = itemStartY + totalItemHeight
 
-        // 检查是否在图标+标签区域内
+        // Check whether it's within the icon+label area
         guard cellLocalX >= itemStartX && cellLocalX <= itemEndX else { return nil }
         guard cellLocalY >= itemStartY && cellLocalY <= itemEndY else { return nil }
 
