@@ -73,10 +73,20 @@ struct CAGridViewRepresentable: NSViewRepresentable {
 
         let launchApp: (AppInfo) -> Void = { app in
             onOpenApp?(app)
-            AppDelegate.shared?.hideWindow()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                if !NSWorkspace.shared.open(app.url) {
-                    NSSound.beep()
+            // See the matching comment in LaunchpadView.launchApp: launch first
+            // and only hide LaunchNG's own window once that's confirmed, not the
+            // other way around -- hiding first with just a blind short delay
+            // left a gap where no app was cleanly "active", which crashed some
+            // apps' own window setup (confirmed with Transmission) in a way
+            // launching the same app from Finder never did.
+            let configuration = NSWorkspace.OpenConfiguration()
+            NSWorkspace.shared.openApplication(at: app.url, configuration: configuration) { _, error in
+                DispatchQueue.main.async {
+                    if error != nil {
+                        NSSound.beep()
+                        return
+                    }
+                    AppDelegate.shared?.hideWindow()
                 }
             }
         }

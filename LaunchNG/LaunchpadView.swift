@@ -1357,10 +1357,26 @@ struct LaunchpadView: View {
     }
 
     private func launchApp(_ app: AppInfo) {
-        AppDelegate.shared?.hideWindow()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            if !NSWorkspace.shared.open(app.url) {
-                NSSound.beep()
+        // Launch first, hide LaunchNG's own window only once that's confirmed --
+        // not the other way around. Some apps (confirmed with Transmission, via
+        // Console logs: an NSInternalInconsistencyException inside AppKit's own
+        // NSToolbar/SF Symbol rendering while it builds its window) crash on
+        // launch specifically when LaunchNG hides itself first with only a
+        // blind short delay before the real launch call: that leaves a brief
+        // window where neither LaunchNG nor the app being launched is properly
+        // the active app, which is exactly the kind of gap Finder's own launch
+        // (LaunchNG stays active and visible the whole time, right up until the
+        // new app's window is ready to take over) never creates. Launching the
+        // same app straight from Finder never reproduced the crash; launching
+        // it the old way here did, reliably.
+        let configuration = NSWorkspace.OpenConfiguration()
+        NSWorkspace.shared.openApplication(at: app.url, configuration: configuration) { _, error in
+            DispatchQueue.main.async {
+                if error != nil {
+                    NSSound.beep()
+                    return
+                }
+                AppDelegate.shared?.hideWindow()
             }
         }
     }
