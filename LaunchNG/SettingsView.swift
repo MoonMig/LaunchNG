@@ -1245,39 +1245,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                 .font(.footnote)
                 .foregroundStyle(.secondary)
 
-            HStack(spacing: 8) {
-                Text(appStore.localized(.developmentQuarantineRemovalTitle))
-                    .font(.subheadline.weight(.semibold))
-                Button {
-                    showQuarantineRemovalInfoPopover.toggle()
-                } label: {
-                    Image(systemName: "info.circle")
-                        .font(.subheadline.weight(.regular))
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .popover(isPresented: $showQuarantineRemovalInfoPopover, arrowEdge: .top) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(appStore.localized(.developmentQuarantineRemovalInfoTitle))
-                            .font(.headline)
-                        Text(appStore.localized(.developmentQuarantineRemovalInfoBody))
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .textSelection(.enabled)
-                    }
-                    .padding(12)
-                    .frame(width: 390, alignment: .leading)
-                }
-                Spacer()
-                Toggle("", isOn: $appStore.showQuarantineRemovalAction)
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            Divider()
-
             Toggle(appStore.localized(.developmentWallpaperDiagnosticsTitle),
                    isOn: $appStore.wallpaperDiagnosticsEnabled)
                 .font(.subheadline.weight(.semibold))
@@ -1289,75 +1256,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
 
             Divider()
 
-            updateControlButton(
-                title: appStore.localized(.developmentForceOnboardingButton),
-                systemImage: "rectangle.stack.badge.play",
-                isPrimary: true
-            ) {
-                appStore.forceShowOnboarding()
-            }
-            .disabled(!appStore.isFullscreenMode)
-            .opacity(appStore.isFullscreenMode ? 1 : 0.45)
-            Text(appStore.localized(.developmentForceOnboardingHint))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            updateControlButton(
-                title: "Force update check (Sparkle)",
-                systemImage: "bell.badge"
-            ) {
-                SparkleUpdaterController.shared.checkForUpdates()
-            }
-
-            Divider()
-
-            updateControlButton(
-                title: appStore.localized(.developmentResetIconCacheButton),
-                systemImage: "arrow.triangle.2.circlepath"
-            ) {
-                appStore.resetIconCache()
-            }
-            Text(appStore.localized(.developmentResetIconCacheHint))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Screenshot background")
-                    .font(.headline)
-
-                updateControlButton(
-                    title: "Pure White",
-                    systemImage: "sun.max.fill"
-                ) {
-                    appStore.developmentBackgroundOverride = .solidWhite
-                }
-
-                updateControlButton(
-                    title: "Pure Black",
-                    systemImage: "moon.fill"
-                ) {
-                    appStore.developmentBackgroundOverride = .solidBlack
-                }
-
-                updateControlButton(
-                    title: "Clear",
-                    systemImage: "arrow.counterclockwise"
-                ) {
-                    appStore.developmentBackgroundOverride = .none
-                }
-
-                Text("Development-only preview override, not persisted.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            HStack(spacing: 6) {
-                Image(systemName: "memorychip")
-                Text(currentMemoryUsageString())
-            }
-            .font(.caption.monospacedDigit())
-            .foregroundStyle(.secondary)
-
             Toggle(appStore.localized(.showFPSOverlay), isOn: $appStore.showFPSOverlay)
                 .toggleStyle(.switch)
             Text(appStore.localized(.showFPSOverlayDisclaimer))
@@ -1365,25 +1263,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                 .foregroundStyle(.secondary)
             Text(appStore.localized(.showFPSOverlayWarning))
                 .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Divider()
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text(appStore.localized(.importLegacy))
-                    .font(.headline)
-                Button { importLegacyArchive() } label: {
-                    Label(appStore.localized(.importLegacy), systemImage: "clock.arrow.circlepath")
-                }
-                Text(appStore.localized(.importTip))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-
-            Divider()
-
-            Text(appStore.localized(.modifiedFrom))
-                .font(.footnote)
                 .foregroundStyle(.secondary)
         }
     }
@@ -2464,6 +2343,11 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                 }
             }
             .frame(maxWidth: .infinity)
+
+            Text(appStore.localized(.modifiedFrom))
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .center)
         }
         .frame(maxWidth: .infinity, alignment: .top)
     }
@@ -2537,28 +2421,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
-    private func currentMemoryUsageValue() -> String {
-        var info = task_vm_info_data_t()
-        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size) / 4
-        let kern = withUnsafeMutablePointer(to: &info) { pointer -> kern_return_t in
-            pointer.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
-            }
-        }
-
-        guard kern == KERN_SUCCESS else { return "--" }
-
-        let usedBytes = info.phys_footprint
-        let formatter = ByteCountFormatter()
-        formatter.allowedUnits = [.useMB, .useGB]
-        formatter.countStyle = .memory
-        return formatter.string(fromByteCount: Int64(usedBytes))
-    }
-
-    private func currentMemoryUsageString() -> String {
-        "Memory: \(currentMemoryUsageValue())"
-    }
-
     private var generalSection: some View {
         VStack(alignment: .leading, spacing: 24) {
             appearanceModeCard
@@ -2581,7 +2443,47 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .padding(.top, -15)
+
+            quarantineRemovalCard
         }
+    }
+
+    private var quarantineRemovalCard: some View {
+        HStack(spacing: 8) {
+            Text(appStore.localized(.developmentQuarantineRemovalTitle))
+                .font(.subheadline.weight(.semibold))
+            Button {
+                showQuarantineRemovalInfoPopover.toggle()
+            } label: {
+                Image(systemName: "info.circle")
+                    .font(.subheadline.weight(.regular))
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $showQuarantineRemovalInfoPopover, arrowEdge: .top) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(appStore.localized(.developmentQuarantineRemovalInfoTitle))
+                        .font(.headline)
+                    Text(appStore.localized(.developmentQuarantineRemovalInfoBody))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
+                }
+                .padding(12)
+                .frame(width: 390, alignment: .leading)
+            }
+            Spacer()
+            Toggle("", isOn: $appStore.showQuarantineRemovalAction)
+                .labelsHidden()
+                .toggleStyle(.switch)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(nsColor: .windowBackgroundColor))
+        )
     }
 
     private var generalActions: some View {
@@ -2885,6 +2787,21 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                     Label(appStore.localized(.layoutPresetApplyButton), systemImage: "square.grid.3x3.topleft.filled")
                 }
                 .buttonStyle(.bordered)
+            }
+
+            HStack(spacing: 10) {
+                Button { importLegacyArchive() } label: {
+                    Label(appStore.localized(.importLegacy), systemImage: "clock.arrow.circlepath")
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    appStore.resetIconCache()
+                } label: {
+                    Label(appStore.localized(.developmentResetIconCacheButton), systemImage: "arrow.triangle.2.circlepath")
+                }
+                .buttonStyle(.bordered)
+                .help(appStore.localized(.developmentResetIconCacheHint))
             }
         }
         .padding(12)

@@ -81,33 +81,28 @@ private extension View {
     @ViewBuilder
     func launchpadBackgroundStyle(_ style: AppStore.BackgroundStyle,
                                   cornerRadius: CGFloat,
-                                  forcedColor: Color? = nil,
                                   maskColor: Color? = nil) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-        if let forcedColor {
-            self.background(forcedColor, in: shape)
-        } else {
-            switch style {
-            case .glass:
-                let base = self.liquidGlass(in: shape)
-                if let maskColor {
-                    base.background(maskColor, in: shape)
-                } else {
-                    base
-                }
-            case .blur:
-                let base = self.background(.ultraThinMaterial, in: shape)
-                if let maskColor {
-                    base.background(maskColor, in: shape)
-                } else {
-                    base
-                }
-            case .unfiltered:
-                if let maskColor {
-                    self.background(maskColor, in: shape)
-                } else {
-                    self
-                }
+        switch style {
+        case .glass:
+            let base = self.liquidGlass(in: shape)
+            if let maskColor {
+                base.background(maskColor, in: shape)
+            } else {
+                base
+            }
+        case .blur:
+            let base = self.background(.ultraThinMaterial, in: shape)
+            if let maskColor {
+                base.background(maskColor, in: shape)
+            } else {
+                base
+            }
+        case .unfiltered:
+            if let maskColor {
+                self.background(maskColor, in: shape)
+            } else {
+                self
             }
         }
     }
@@ -522,7 +517,6 @@ struct LaunchpadView: View {
         .padding(.bottom, 2)
         .launchpadBackgroundStyle(effectiveBackgroundStyle,
                                   cornerRadius: appStore.isFullscreenMode ? 0 : 30,
-                                  forcedColor: appStore.developmentBackgroundOverride.color,
                                   maskColor: appStore.backgroundMaskColor(for: colorScheme))
     }
 
@@ -539,8 +533,7 @@ struct LaunchpadView: View {
     }
 
     private var displayedBackgroundImage: CGImage? {
-        guard appStore.backgroundImageEnabled,
-              appStore.developmentBackgroundOverride.color == nil else {
+        guard appStore.backgroundImageEnabled else {
             return nil
         }
         return backgroundImageController.content?.image

@@ -253,25 +253,6 @@ final class AppStore: ObservableObject {
         }
     }
 
-    enum DevelopmentBackgroundOverride: String, CaseIterable, Identifiable {
-        case none
-        case solidWhite
-        case solidBlack
-
-        var id: String { rawValue }
-
-        var color: Color? {
-            switch self {
-            case .none:
-                return nil
-            case .solidWhite:
-                return .white
-            case .solidBlack:
-                return .black
-            }
-        }
-    }
-
     enum SidebarIconPreset: String, CaseIterable, Identifiable {
         case large
         case medium
@@ -705,9 +686,6 @@ final class AppStore: ObservableObject {
             UserDefaults.standard.set(customBackgroundImagePath, forKey: Self.customBackgroundImagePathKey)
         }
     }
-
-    // Development-only override to capture flat screenshots quickly.
-    @Published var developmentBackgroundOverride: DevelopmentBackgroundOverride = .none
 
     @Published var developmentEnableCLICode: Bool = {
         if UserDefaults.standard.object(forKey: AppStore.developmentEnableCLICodeKey) == nil { return false }
@@ -3405,25 +3383,6 @@ final class AppStore: ObservableObject {
     func completeOnboarding() {
         UserDefaults.standard.set(Self.currentOnboardingVersion, forKey: Self.onboardingVersionKey)
         shouldShowOnboarding = false
-    }
-
-    func forceShowOnboarding() {
-        guard isFullscreenMode else { return }
-
-        if isSetting {
-            isSetting = false
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { [weak self] in
-                guard let self else { return }
-                self.shouldShowOnboarding = false
-                self.shouldShowOnboarding = true
-            }
-            return
-        }
-
-        shouldShowOnboarding = false
-        DispatchQueue.main.async { [weak self] in
-            self?.shouldShowOnboarding = true
-        }
     }
 
     private func evaluateOnboardingGate() {
