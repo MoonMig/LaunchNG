@@ -51,28 +51,31 @@ final class SparkleUpdaterController: NSObject, SPUStandardUserDriverDelegate, S
         set { controller.updater.automaticallyChecksForUpdates = newValue }
     }
 
-    // MARK: - Shared window-hiding
+    // MARK: - Shared window-leveling
 
     /// LaunchNG's own window normally floats above everything (it can even
     /// sit above the menu bar) so it stays reachable as a launcher -- which
     /// also means it renders in front of Sparkle's own windows, which use a
-    /// standard window level. Called synchronously, inline (never dispatched
-    /// async -- deferring this to a later main-queue turn was the original
-    /// bug: by the time that queued block ran, Sparkle had already shown and
-    /// finished presenting its window on the same turn).
+    /// standard window level. The fix is *not* to hide or close anything --
+    /// the user explicitly does not want the main window disappearing --
+    /// just to temporarily drop its window level so Sparkle's window can
+    /// render above it, restoring the level once Sparkle is done. Called
+    /// synchronously, inline (never dispatched async -- deferring this to a
+    /// later main-queue turn was an earlier bug: by the time a queued block
+    /// ran, Sparkle had already shown and finished presenting its window on
+    /// the same turn).
     @MainActor
-    private func getOutOfTheWay(reason: String) {
-        let windowVisible = AppDelegate.shared?.launchpadWindow?.isVisible ?? false
-        let windowLevel = AppDelegate.shared?.launchpadWindow?.level.rawValue ?? -1
-        let isSetting = AppDelegate.shared?.appStore.isSetting ?? false
-        sparkleDebugLog("getOutOfTheWay(\(reason)): windowVisible=\(windowVisible) windowLevel=\(windowLevel) isSetting=\(isSetting)")
-        // Settings is a SwiftUI sheet attached to the main window.
-        // hideWindow() only clears isSetting once its own fade-out animation
-        // finishes, which can leave the sheet's separate child window still
-        // on top of Sparkle's alert in the meantime. Close it immediately
-        // instead of waiting for that animation.
-        AppDelegate.shared?.appStore.isSetting = false
-        AppDelegate.shared?.hideWindow()
+    private func stepAside(reason: String) {
+        guard let window = AppDelegate.shared?.launchpadWindow else { return }
+        sparkleDebugLog("stepAside(\(reason)): windowLevel=\(window.level.rawValue) -> normal")
+        window.level = .normal
+    }
+
+    @MainActor
+    private func stepBack(reason: String) {
+        guard let window = AppDelegate.shared?.launchpadWindow else { return }
+        sparkleDebugLog("stepBack(\(reason)): windowLevel=\(window.level.rawValue) -> floating")
+        window.level = .floating
     }
 
     // MARK: - SPUStandardUserDriverDelegate
@@ -88,12 +91,15 @@ final class SparkleUpdaterController: NSObject, SPUStandardUserDriverDelegate, S
     nonisolated func standardUserDriverWillShowModalAlert() {
         sparkleDebugLog("standardUserDriverWillShowModalAlert fired, isMainThread=\(Thread.isMainThread)")
         MainActor.assumeIsolated {
-            getOutOfTheWay(reason: "willShowModalAlert")
+            stepAside(reason: "willShowModalAlert")
         }
     }
 
     nonisolated func standardUserDriverDidShowModalAlert() {
         sparkleDebugLog("standardUserDriverDidShowModalAlert fired")
+        MainActor.assumeIsolated {
+            stepBack(reason: "didShowModalAlert")
+        }
     }
 
     /// The actual hook for the "update available" window: called right
@@ -103,7 +109,17 @@ final class SparkleUpdaterController: NSObject, SPUStandardUserDriverDelegate, S
     nonisolated func standardUserDriverWillHandleShowingUpdate(_ handleShowingUpdate: Bool, forUpdate update: SUAppcastItem, state: SPUUserUpdateState) {
         sparkleDebugLog("standardUserDriverWillHandleShowingUpdate fired, handleShowingUpdate=\(handleShowingUpdate) userInitiated=\(state.userInitiated)")
         MainActor.assumeIsolated {
-            getOutOfTheWay(reason: "willHandleShowingUpdate")
+            stepAside(reason: "willHandleShowingUpdate")
+        }
+    }
+
+    /// Called once Sparkle's update session ends (dismissed, skipped,
+    /// errored, or installed) -- the matching restore point for stepAside(),
+    /// regardless of which of the hooks above triggered it.
+    nonisolated func standardUserDriverWillFinishUpdateSession() {
+        sparkleDebugLog("standardUserDriverWillFinishUpdateSession fired")
+        MainActor.assumeIsolated {
+            stepBack(reason: "willFinishUpdateSession")
         }
     }
 
