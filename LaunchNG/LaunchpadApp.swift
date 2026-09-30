@@ -1558,6 +1558,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSGestureR
     func quitWithFade() {
         guard !isTerminating else { NSApp.terminate(nil); return }
         isTerminating = true
+        // An open Settings sheet is attached to `window`; fading/ordering out
+        // the parent while it's still presented (e.g. Sparkle relaunching
+        // the app to install an update) can leave the sheet stuck on screen
+        // instead of closing along with it. Dismiss it explicitly first.
+        appStore.isSetting = false
         if let window = window {
             pendingShow = false
             pendingHide = false
