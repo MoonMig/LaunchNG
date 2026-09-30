@@ -10,7 +10,11 @@ macOS Tahoe (26) removed Launchpad outright. LaunchNG brings it back as a native
 
 If you find this useful, a star on the repo is appreciated. LaunchNG began as a fork of [LaunchNext](https://github.com/RoversX/LaunchNext) by RoversX — the original project is worth a star too.
 
-<!-- Screenshots go here — see Contributing if you'd like to submit current ones. -->
+| | |
+|:---:|:---:|
+| ![](./public/banner.png) | ![](./public/settings.png) |
+
+*Generated illustrations of the grid and Settings, not literal screenshots — see [Contributing](#contributing) if you'd like to submit real ones from your own install.*
 
 ### If macOS blocks the app on first launch
 
@@ -142,7 +146,7 @@ A few things that help review go smoothly:
   xcodebuild test -scheme LaunchNG -destination 'platform=macOS'
   ```
 
-Fresh, current screenshots (main grid, a couple of Settings tabs) are also genuinely useful contributions — see the placeholder near the top of this file.
+Real screenshots (main grid, a couple of Settings tabs) to replace the generated illustrations near the top of this file are also genuinely useful contributions.
 
 ### Further documentation
 
