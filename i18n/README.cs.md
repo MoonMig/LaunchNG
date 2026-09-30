@@ -2,63 +2,61 @@
 
 **Jazyky**: [English](../README.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Русский](README.ru.md) | [हिन्दी](README.hi.md) | [Tiếng Việt](README.vi.md) | [Italiano](README.it.md) | [Čeština](README.cs.md)
 
-## 📥 Stáhnout
+macOS Tahoe (26) zcela odstranil Launchpad. LaunchNG ho vrací zpět jako nativní aplikaci: při prvním spuštění načte vaše stávající rozvržení Launchpadu přímo z vlastní databáze macOS a poté sám implementuje stránkování, složky, vyhledávání a přeuspořádávání přetažením nad mřížkou vykreslovanou pomocí Core Animation, s integrací do Docku, přiloženým CLI/TUI a podepsaným automatickým aktualizátorem přímo v aplikaci.
 
-**[Stáhnout zde](https://github.com/moonmig/LaunchNG/releases/latest)** - Získejte nejnovější verzi
+## Stáhnout
 
-⭐ Zvažte označení hvězdičkou [LaunchNG](https://github.com/moonmig/LaunchNG) a zejména [LaunchNext](https://github.com/RoversX/LaunchNext)!
+**[Získat nejnovější verzi](https://github.com/moonmig/LaunchNG/releases/latest)**
 
-| | |
-|:---:|:---:|
-| ![](../public/banner.webp) | ![](../public/setting1.webp) |
-| ![](../public/setting2.webp) | ![](../public/setting3.webp) |
+Pokud vám aplikace přijde užitečná, oceníme hvězdičku na repozitáři. LaunchNG vznikl jako fork [LaunchNext](https://github.com/RoversX/LaunchNext) od RoversX — i původní projekt si hvězdičku zaslouží.
 
-macOS Tahoe odstranil launchpad a je tak těžký k použití, nevyužívá vaše Bio GPU, prosím Apple, alespoň dejte lidem možnost přepnout zpět. Než k tomu dojde, zde je LaunchNG
+<!-- Zde budou screenshoty — pokud chcete přispět aktuálními, podívejte se do sekce Přispívání. -->
 
-*Postaveno na [LaunchNext](https://github.com/RoversX/LaunchNext) od RoversX — obrovské díky původnímu projektu!❤️*
+### Pokud macOS blokuje spuštění aplikace
 
-*LaunchNext si vybral licenci GPL 3. LaunchNG následuje stejné licenční podmínky.*
+Vydání jsou nepodepsané/ad-hoc buildy (tento fork nepoužívá placený Apple Developer účet), takže Gatekeeper odmítne aplikaci otevřít, dokud jednou neodstraníte příznak karantény:
 
-⚠️ **Pokud macOS zablokuje aplikaci, spusťte toto v Terminálu:**
 ```bash
 sudo xattr -r -d com.apple.quarantine /Applications/LaunchNG.app
 ```
-**Proč**: Nemohu si dovolit Apple vývojářský certifikát ($99/rok), takže macOS blokuje nepodepsané aplikace. Tento příkaz odstraní karanténní příznak a umožní spuštění. **Používejte tento příkaz pouze u aplikací, kterým důvěřujete.**
 
-## Co LaunchNG přináší
+Tento příkaz spouštějte jen u aplikací, kterým skutečně důvěřujete — vypíná pro danou aplikaci kontrolu karantény stažených souborů v macOS.
 
-- ✅ **Import jedním kliknutím ze starého systémového Launchpadu** - přímo čte nativní SQLite databázi Launchpadu a obnovuje složky, pozice aplikací a rozložení
-- ✅ **Ruční organizace aplikací** - přesouvejte aplikace, vytvářejte složky a udržujte rozložení podle sebe
-- ✅ **Dvě renderovací cesty** - `Legacy Engine` pro kompatibilitu a `Next Engine + Core Animation` pro nejlepší zážitek
-- ✅ **Kompaktní a celoobrazovkový režim** - s podporou oddělených nastavení
-- ✅ **Pracovní postup zaměřený na klávesnici** - rychlé vyhledávání, navigace a spouštění
-- ✅ **Podpora CLI / TUI** - kontrolujte a spravujte rozložení z terminálu
-- ✅ **Aktivace přes Hot Corner a nativní gesta** - více způsobů, jak LaunchNG globálně otevřít
-- ✅ **Přetahování aplikací přímo do Docku** - dostupné s renderovacím motorem Core Animation
-- ✅ **Centrum aktualizací s Markdown poznámkami k vydání** - bohatší aktualizace přímo v aplikaci
-- ✅ **Nástroje pro zálohu a obnovení** - bezpečnější export a návrat dat
-- ✅ **Přístupnost a podpora ovladače** - vylepšená hlasová odezva i navigace ovladačem
-- ✅ **Vícejazyčná podpora** - široké pokrytí lokalizací
+Sestavujete ze zdrojového kódu? Podívejte se níže na [Nastavení lokálního podepisování kódu](#configure-local-code-signing); tento příkaz nebudete potřebovat.
+
+## Co LaunchNG nabízí
+
+- **Import na jedno kliknutí z reálné databáze Launchpadu** — přímo čte `/private$(getconf DARWIN_USER_DIR)com.apple.dock.launchpad/db/db` a přesně obnoví vaše stávající složky, pozice a stránky
+- **Klasický zážitek stránkované mřížky** — vyhledávání, navigace klávesnicí, přeuspořádávání přetažením, vytváření složek přetažením jedné ikony na druhou
+- **Vykreslování skrz naskrz pomocí Core Animation**, včetně přetahování přímo do Docku a nativních ikon složek Liquid Glass na macOS 26
+- **Rozvržení složek**: stránkované (jako originál) nebo svislé posouvání, podle vaší preference
+- **Fuzzy vyhledávání** s CJK (pchin-jin/romanizace) shodou, takže i částečný nebo nepřesný vstup najde správnou aplikaci
+- **Aktivace aktivním rohem a gesty trackpadu**, včetně experimentální podpory sevření a poklepání 4/5 prsty
+- **CLI a TUI** pro kontrolu nebo skriptování rozvržení z terminálu
+- **Podepsané automatické aktualizace** přes [Sparkle](https://sparkle-project.org), s běžným tlačítkem „Zkontrolovat aktualizace" v aplikaci
+- **Lokální zálohy** do vámi zvolené složky, se spravovanou historií, ze které lze obnovit
+- **Skrytí popisků ikon aplikací, změna velikosti ikon, úprava rozestupů** — nezávisle pro hlavní mřížku a pro obsah složek
+- **13 jazyků** s kompletním překladem uživatelského rozhraní (viz seznam jazyků výše)
+- **Rozšířené kontextové nabídky** — zobrazit ve Finderu, kopírovat cestu k aplikaci, přejmenovat složky a (volitelně) zkratka pro odstranění karantény Gatekeeperu u jiných důvěryhodných aplikací
+- **Podpora ovladače a hlasové zpětné vazby** pro konfigurace zaměřené na přístupnost
 
 ## Co macOS Tahoe vzal
 
-- ❌ Žádná vlastní organizace aplikací
-- ❌ Žádné uživatelem vytvořené složky
-- ❌ Žádné přizpůsobení přetažením
-- ❌ Žádná vizuální správa aplikací
-- ❌ Vynucené kategoriální seskupení
+- Žádné uživatelem vytvořené složky ani vlastní organizace
+- Žádné přeuspořádávání přetažením
+- Vůbec žádná vizuální správa aplikací — jen automaticky generovaná, abecedně seřazená mřížka, na kterou nelze sáhnout
 
-## Ukládání dat
+LaunchNG existuje proto, že jde o skutečný krok zpět, ne o rozumné výchozí chování.
 
-Data aplikace jsou uložená zde:
+## Kde žijí vaše data
 
-```text
+Vlastní rozvržení, předvolby a cache LaunchNG žijí v:
+
+```
 ~/Library/Application Support/LaunchNG/Data.store
 ```
 
-## Nativní integrace Launchpadu
-
-LaunchNG může číst přímo ze systémové databáze Launchpadu:
+Nikam se nic neodesílá. Jedinou síťovou aktivitou je kontrola feedu aktualizací a — pokud se rozhodnete pro import — čtení vlastní databáze Launchpadu od Applu na:
 
 ```bash
 /private$(getconf DARWIN_USER_DIR)com.apple.dock.launchpad/db/db
@@ -69,151 +67,94 @@ LaunchNG může číst přímo ze systémové databáze Launchpadu:
 ### Požadavky
 
 - macOS 26 (Tahoe) nebo novější
-- Procesor Apple Silicon nebo Intel
-- Xcode 26 (pro sestavení ze zdrojového kódu)
+- Apple Silicon nebo Intel
+- Xcode 26, pokud sestavujete ze zdrojového kódu
 
 ### Sestavení ze zdrojového kódu
 
-1. **Klonovat repozitář**
-   ```bash
-   git clone https://github.com/moonmig/LaunchNG.git
-   cd LaunchNG
-   ```
+```bash
+git clone https://github.com/moonmig/LaunchNG.git
+cd LaunchNG
+open LaunchNG.xcodeproj
+```
 
-2. **Otevřít v Xcode**
-   ```bash
-   open LaunchNG.xcodeproj
-   ```
+<a name="configure-local-code-signing"></a>**Nastavení lokálního podepisování kódu** (není potřeba placený Apple Developer účet):
 
-3. **Sestavit a spustit**
-   - Vyberte cílové zařízení
-   - Stiskněte `⌘+R` pro sestavení a spuštění
-   - Nebo `⌘+B` pouze pro sestavení
+- Vyberte target **LaunchNG** → **Signing & Capabilities** → nastavte **Team** na `None`, certifikát na `Sign to Run Locally`. Hardened Runtime nechte zapnutý.
+- Xcode poté označí soubor projektu jako změněný — tyto změny týkající se pouze podepisování do pull requestu nezahrnujte.
+
+Pro spuštění pomocí `⌘R` musí být cílem **My Mac** — univerzální cíl/„Any Mac" lze sestavit a archivovat, ale nelze ho spustit pro ladění. `⌘B` jen pro sestavení.
 
 ### Sestavení z příkazové řádky
 
-**Běžné sestavení:**
 ```bash
 xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release
+
+# Univerzální binárka (Apple Silicon + Intel):
+xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release \
+  ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO clean build
 ```
 
-**Univerzální binárka (Intel + Apple Silicon):**
-```bash
-xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO clean build
-```
+## Používání
 
-## Použití
+1. **Při prvním spuštění** se automaticky naskenují vaše nainstalované aplikace.
+2. **Nastavení → General → Import System Launchpad** jedním kliknutím naimportuje vaše stávající rozvržení, složky a pozice.
+3. Klikněte pro výběr, dvojklik (nebo Return) pro spuštění; pište kdekoliv pro okamžité vyhledávání.
+4. Přetáhněte jednu aplikaci na druhou pro vytvoření složky; přetahujte aplikace pro jejich přeuspořádání.
+5. Volitelně povolte CLI v Nastavení, pokud chcete rozvržení skriptovat z terminálu.
 
-### Začínáme
+### Celá obrazovka vs. kompaktní
 
-1. LaunchNG při prvním spuštění naskenuje všechny nainstalované aplikace
-2. Importujte staré rozložení Launchpadu nebo začněte s prázdným rozložením
-3. Používejte vyhledávání, klávesnici, drag-and-drop a složky pro organizaci aplikací
-4. Otevřete Nastavení pro konfiguraci enginu, režimu rozložení, aktivace a automatizace
+- **Celá obrazovka** pokrývá celou obrazovku, nejblíže originálnímu Launchpadu.
+- **Kompaktní** je plovoucí okno se zaoblenými rohy, které lze měnit velikost.
+- Nastavení vzhledu (měřítko ikon, rozestupy, pozice indikátoru stránky a další) se sledují odděleně pro každý režim.
+- Celá obrazovka může volitelně skrýt panel nabídek; macOS při tom automaticky skryje i Dock.
 
-### Import vašeho Launchpadu
+## Pozoruhodná nastavení
 
-1. Otevřete Nastavení
-2. Klikněte na **Import Launchpad**
-3. Vaše existující rozložení a složky se automaticky importují
-
-### Enginy a režimy rozložení
-
-- **Legacy Engine** - zachovává starou renderovací cestu pro maximální kompatibilitu
-- **Next Engine + Core Animation** - doporučeno pro nejlepší celkový zážitek a novější funkce
-- **Kompaktní / Celá obrazovka** - LaunchNG podporuje oba režimy a může uchovávat oddělená nastavení
-
-## Klíčové funkce
-
-### Aktivace a vstup
-
-- **Podpora Hot Corner** - otevřete LaunchNG z konfigurovatelného rohu obrazovky
-- **Experimentální podpora nativních gest** - čtyřprsté pinch / tap akce
-- **Podpora globálních zkratek** - otevřete LaunchNG odkudkoli
-- **Přetažení do Docku** - předávejte aplikace přímo do macOS Docku s Core Animation enginem
-
-### Automatizace a pokročilý workflow
-
-- **Podpora CLI / TUI** - kontrolujte rozložení, vyhledávejte aplikace, vytvářejte složky, přesouvejte aplikace a automatizujte workflow
-- **Workflow vhodný pro agenty** - funguje dobře s AI agenty v terminálu a shell automatizací
-- **Povolení příkazové řádky z Nastavení** - můžete nainstalovat nebo odstranit spravovaný příkaz `launchng`
-
-### Aktualizace
-
-- **Centrum aktualizací v aplikaci** - kontrolujte aktualizace bez opuštění aplikace
-- **Markdown poznámky k vydání** - bohatší zobrazení přímo v Nastavení
-- **Moderní API oznámení** - aktualizované doručování oznámení pro novější verze macOS
-
-### Záloha a obnovení
-
-- Vytvářejte a obnovujte zálohy z Nastavení
-- Spolehlivější export záloh
-- Bezpečnější práce s dočasnými soubory a úklidem
-
-### Přístupnost a navigace
-
-- **Hlasová odezva** - během navigace oznamuje aplikace a složky
-- **Podpora ovladače** - ovládejte LaunchNG a složky gamepadem
-- **Interakce zaměřená na klávesnici** - rychlé vyhledávání a navigace bez myši
-
-## Výkon a stabilita
-
-- Inteligentní cache ikon pro plynulé procházení
-- Líné načítání a skenování na pozadí pro velké knihovny
-- Lepší synchronizace stavu mezi Nastavením a navigací
-- Vyšší spolehlivost aktualizací, exportu záloh a obnovy gest
+- **Vzhled**: měřítko ikon, velikost a viditelnost popisků, rozestupy mřížky — s odděleným nastavením pro obsah složek — plus styl pozadí (rozmazání, nativní Liquid Glass, nebo pozadí odvozené z živé plochy)
+- **Vyhledávání**: přepínač fuzzy shody a doba zpoždění vyhledávání
+- **Skryté aplikace**: udržujte konkrétní aplikace mimo mřížku, aniž byste je odinstalovali
+- **Záloha**: vyberte složku, vytvářejte zálohy s časovým razítkem, obnovujte nebo mažte staré ze seznamu
+- **Zkratka a gesta**: globální zkratka, aktivní roh a (experimentální) vazby gest trackpadu
+- **Aktualizace**: přepínač automatické kontroly a ruční tlačítko „Zkontrolovat aktualizace", obojí postavené na Sparkle
 
 ## Řešení problémů
 
-### Běžné problémy
+**Aplikace se nespustí.** Ověřte, že máte macOS 26.0 nebo novější a že byl odstraněn příznak karantény (viz výše).
 
-**Q: Aplikace se nespustí?**  
-A: Ujistěte se, že používáte macOS 26 nebo novější, případně odstraňte quarantine a používejte pouze důvěryhodný build.
+**„Zkontrolovat aktualizace" hlásí problém.** LaunchNG používá Sparkle s podepsaným feedem aktualizací; ruční kontrola by měla vždy během několika minut odrážet nejnovější vydanou verzi.
 
-**Q: Který engine mám použít?**  
-A: `Next Engine + Core Animation` je doporučený pro nejlepší zážitek. `Legacy Engine` používejte jen tehdy, pokud opravdu potřebujete starou cestu kompatibility.
-
-**Q: Proč příkaz CLI ještě neexistuje?**  
-A: Nejdřív povolte rozhraní příkazové řádky v Nastavení. LaunchNG za vás může nainstalovat i odstranit spravovaný shim `launchng`.
+**Terminálový příkaz `launchng` chybí.** Je volitelný — nejprve povolte rozhraní příkazové řádky v Nastavení a LaunchNG si sám nainstaluje (a později může i odstranit) spravovaný shim.
 
 ## Přispívání
 
-Příspěvky jsou vítány.
-
 1. Forkněte repozitář
-2. Vytvořte feature branch (`git checkout -b feature/amazing-feature`)
-3. Commitněte změny (`git commit -m 'Add amazing feature'`)
-4. Pushněte branch (`git push origin feature/amazing-feature`)
-5. Otevřete Pull Request
+2. Vytvořte feature branch (`git checkout -b feature/vase-funkce`)
+3. Commitněte změny s jasnou zprávou
+4. Pushněte branch a otevřete pull request
 
-### Pokyny pro vývoj
+Několik věcí, které pomohou hladkému průběhu revize:
+- Nezahrnujte do diffu změny Xcode projektu týkající se pouze podepisování (viz lokální podepisování kódu výše)
+- Pokud upravujete mřížku Core Animation, nejprve zkontrolujte `GridReorderPlan.swift` — logika přeuspořádávání/stránkování patří tam, ne duplikovaná v jednotlivých pohledech
+- Před otevřením PR spusťte testovací sadu:
+  ```bash
+  xcodebuild test -scheme LaunchNG -destination 'platform=macOS'
+  ```
 
-- Dodržujte konvence stylu Swift
-- Přidávejte smysluplné komentáře ke složité logice
-- Pokud možno testujte na více verzích macOS
-- Nerozmisťujte experimentální funkce do nesouvisejících souborů
-- Odnímatelné integrace držte pokud možno odděleně
+Aktuální a přesné screenshoty (hlavní mřížka, pár záložek Nastavení) jsou také opravdu užitečným příspěvkem — viz zástupný symbol na začátku tohoto souboru.
 
-## Budoucnost správy aplikací
+### Další dokumentace
 
-Jak se Apple vzdaluje od přizpůsobitelných launcherů aplikací, LaunchNG se snaží zachovat ruční organizaci, uživatelskou kontrolu a rychlý přístup i na moderním macOS.
+- [Folder Liquid Glass](../Documentation/FolderLiquidGlass.md) — designová omezení za skleněnými ikonami složek, co je ověřeno a co ještě potřebuje akceptační testování
+- [Grid diagnostics](../scripts/diagnostics/README.md) — manuální sondy pro mřížku a skleněný overlay, s jejich přesným pokrytím a limity
 
-**LaunchNG** není jen náhrada Launchpadu — je to praktická odpověď na regresi workflow.
+## Licence a atribuce
+
+LaunchNG je fork [LaunchNext](https://github.com/RoversX/LaunchNext) od RoversX, který sám sahá zpět k širší komunitní snaze o náhradu Launchpadu. Oba projekty jsou licencovány pod GPL-3.0 a LaunchNG dodržuje stejné podmínky — viz [LICENSE](../LICENSE).
+
+Experimentální podpora gest trackpadu je postavena na [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) a forku od [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport).
 
 ---
-
-**LaunchNG** - Získejte zpět kontrolu nad svým spouštěčem aplikací 🚀
-
-*Pro uživatele macOS, kteří nechtějí dělat kompromisy v přizpůsobení.*
-
-## Vývojové nástroje
-
-- Claude Code
-- Cursor
-- OpenAI Codex CLI
-- Perplexity
-- Google
-
-- Experimentální podpora gest je postavená na [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) a forku od [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport).❤️
 
 ![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNG/total)

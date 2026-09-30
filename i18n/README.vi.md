@@ -2,63 +2,61 @@
 
 **Ngôn ngữ**: [English](../README.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Русский](README.ru.md) | [हिन्दी](README.hi.md) | [Tiếng Việt](README.vi.md) | [Italiano](README.it.md) | [Čeština](README.cs.md)
 
-## 📥 Tải xuống
+macOS Tahoe (26) đã loại bỏ hoàn toàn Launchpad. LaunchNG mang nó trở lại dưới dạng một ứng dụng gốc: khi khởi chạy lần đầu, nó đọc trực tiếp bố cục Launchpad hiện có của bạn từ chính cơ sở dữ liệu của macOS, sau đó tự triển khai lại tính năng phân trang, thư mục, tìm kiếm và sắp xếp lại bằng kéo-thả trên một lưới được render bằng Core Animation, cùng với tích hợp Dock, một CLI/TUI đi kèm, và tính năng tự động cập nhật đã ký ngay trong ứng dụng.
 
-**[Tải tại đây](https://github.com/moonmig/LaunchNG/releases/latest)** - Lấy phiên bản mới nhất
+## Tải xuống
 
-⭐ Hãy xem xét gắn sao cho [LaunchNG](https://github.com/moonmig/LaunchNG) và đặc biệt là dự án gốc [LaunchNext](https://github.com/RoversX/LaunchNext)!
+**[Lấy bản phát hành mới nhất](https://github.com/moonmig/LaunchNG/releases/latest)**
 
-| | |
-|:---:|:---:|
-| ![](../public/banner.webp) | ![](../public/setting1.webp) |
-| ![](../public/setting2.webp) | ![](../public/setting3.webp) |
+Nếu bạn thấy hữu ích, một sao trên repository sẽ rất được trân trọng. LaunchNG khởi đầu là một fork của [LaunchNext](https://github.com/RoversX/LaunchNext) bởi RoversX — dự án gốc cũng xứng đáng nhận một sao.
 
-macOS Tahoe đã loại bỏ launchpad, và rất khó sử dụng, nó không sử dụng GPU Bio của bạn. Xin lỗi Apple, ít nhất hãy cho mọi người một tùy chọn để chuyển đổi trở lại. Trước đó, đây là LaunchNG.
+<!-- Ảnh chụp màn hình sẽ ở đây — xem phần Đóng góp nếu bạn muốn gửi những ảnh mới nhất. -->
 
-*Được xây dựng dựa trên [LaunchNext](https://github.com/RoversX/LaunchNext) bởi RoversX — xin gửi lời cảm ơn rất lớn đến dự án gốc!❤️*
+### Nếu macOS chặn ứng dụng khi mở lần đầu
 
-*LaunchNext đã chọn giấy phép GPL 3. LaunchNG tuân theo các điều khoản cấp phép tương tự.*
+Các bản phát hành là bản build không ký/ad-hoc (fork này không dùng tài khoản Apple Developer trả phí), vì vậy Gatekeeper sẽ từ chối mở ứng dụng cho đến khi bạn gỡ cờ cách ly một lần:
 
-⚠️ **Nếu macOS chặn ứng dụng, hãy chạy lệnh này trong Terminal:**
 ```bash
 sudo xattr -r -d com.apple.quarantine /Applications/LaunchNG.app
 ```
-**Tại sao**: Tôi không đủ tiền mua chứng chỉ nhà phát triển của Apple ($99/năm), vì vậy macOS chặn các ứng dụng không được ký. Lệnh này loại bỏ cờ cách ly để cho phép ứng dụng chạy. **Chỉ sử dụng lệnh này cho các ứng dụng đáng tin cậy.**
 
-## LaunchNG mang lại điều gì
+Chỉ chạy lệnh này với các ứng dụng bạn thực sự tin tưởng — nó vô hiệu hóa việc kiểm tra cách ly tải xuống của macOS đối với ứng dụng đó.
 
-- ✅ **Nhập một cú nhấp từ Launchpad hệ thống cũ** - đọc trực tiếp cơ sở dữ liệu SQLite Launchpad gốc để khôi phục thư mục, vị trí ứng dụng và bố cục
-- ✅ **Tổ chức ứng dụng thủ công** - di chuyển ứng dụng, tạo thư mục và giữ bố cục theo ý bạn
-- ✅ **Hai đường dẫn render** - `Legacy Engine` cho tương thích và `Next Engine + Core Animation` cho trải nghiệm tốt nhất
-- ✅ **Chế độ gọn và toàn màn hình** - với hỗ trợ lưu cài đặt riêng
-- ✅ **Workflow ưu tiên bàn phím** - tìm kiếm, điều hướng và mở ứng dụng nhanh
-- ✅ **Hỗ trợ CLI / TUI** - kiểm tra và quản lý bố cục từ terminal
-- ✅ **Kích hoạt bằng Hot Corner và cử chỉ gốc** - nhiều cách mở LaunchNG toàn cục
-- ✅ **Kéo ứng dụng trực tiếp vào Dock** - có sẵn với engine Core Animation
-- ✅ **Trung tâm cập nhật với release notes Markdown** - trải nghiệm cập nhật trong ứng dụng phong phú hơn
-- ✅ **Công cụ sao lưu và khôi phục** - xuất và phục hồi an toàn hơn
-- ✅ **Hỗ trợ trợ năng và tay cầm** - cải thiện phản hồi giọng nói và điều hướng bằng controller
-- ✅ **Hỗ trợ đa ngôn ngữ** - phạm vi bản địa hóa rộng hơn
+Đang build từ mã nguồn? Xem [Cấu hình ký mã cục bộ](#configure-local-code-signing) bên dưới; bạn sẽ không cần lệnh này.
 
-## Những gì macOS Tahoe đã lấy mất
+## LaunchNG làm được gì
 
-- ❌ Không có tổ chức ứng dụng tùy chỉnh
-- ❌ Không có thư mục do người dùng tạo
-- ❌ Không có tùy chỉnh kéo và thả
-- ❌ Không có quản lý ứng dụng trực quan
-- ❌ Nhóm phân loại bắt buộc
+- **Nhập bố cục chỉ với một cú nhấp từ cơ sở dữ liệu Launchpad thật** — đọc trực tiếp `/private$(getconf DARWIN_USER_DIR)com.apple.dock.launchpad/db/db` và khôi phục chính xác các thư mục, vị trí và trang hiện có của bạn
+- **Trải nghiệm lưới phân trang cổ điển** — tìm kiếm, điều hướng bằng bàn phím, sắp xếp lại bằng kéo-thả, tạo thư mục bằng cách kéo một biểu tượng lên biểu tượng khác
+- **Render hoàn toàn bằng Core Animation**, bao gồm kéo-thả thẳng vào Dock và biểu tượng thư mục Liquid Glass gốc trên macOS 26
+- **Bố cục thư mục**: phân trang (như bản gốc) hoặc cuộn dọc, tùy theo sở thích của bạn
+- **Tìm kiếm mờ (fuzzy)** với khớp phiên âm CJK (bính âm, v.v.), để đầu vào một phần hoặc không chính xác vẫn tìm ra đúng ứng dụng
+- **Kích hoạt bằng góc nóng và cử chỉ trackpad**, bao gồm hỗ trợ thử nghiệm chụm/chạm bằng 4/5 ngón tay
+- **Một CLI và TUI** để kiểm tra hoặc viết script cho bố cục của bạn từ terminal
+- **Cập nhật tự động đã ký** thông qua [Sparkle](https://sparkle-project.org), với nút "Kiểm tra cập nhật" thông thường trong ứng dụng
+- **Sao lưu cục bộ** vào một thư mục bạn chọn, với lịch sử được quản lý để khôi phục
+- **Ẩn nhãn biểu tượng ứng dụng, thay đổi kích thước biểu tượng, điều chỉnh khoảng cách** — độc lập cho lưới chính và nội dung thư mục
+- **13 ngôn ngữ** với bản dịch giao diện đầy đủ (xem danh sách ngôn ngữ ở trên)
+- **Menu ngữ cảnh nâng cao** — hiện trong Finder, sao chép đường dẫn ứng dụng, đổi tên thư mục, và (tùy chọn) một phím tắt để gỡ cách ly Gatekeeper cho các ứng dụng khác mà bạn tin tưởng
+- **Hỗ trợ tay cầm điều khiển và phản hồi giọng nói** cho các thiết lập hướng đến khả năng tiếp cận
 
-## Lưu trữ dữ liệu
+## Những gì macOS Tahoe đã lấy đi
 
-Dữ liệu ứng dụng được lưu tại:
+- Không có thư mục do người dùng tạo hay tổ chức tùy chỉnh
+- Không thể sắp xếp lại bằng kéo-thả
+- Hoàn toàn không có quản lý ứng dụng trực quan — chỉ là một lưới được tạo tự động, sắp xếp theo bảng chữ cái, mà bạn không thể chạm vào
 
-```text
+LaunchNG tồn tại vì đó là một bước lùi thực sự, không phải một mặc định hợp lý.
+
+## Dữ liệu của bạn được lưu ở đâu
+
+Bố cục, tùy chọn và bộ nhớ đệm riêng của LaunchNG được lưu tại:
+
+```
 ~/Library/Application Support/LaunchNG/Data.store
 ```
 
-## Tích hợp Launchpad gốc
-
-LaunchNG có thể đọc trực tiếp cơ sở dữ liệu Launchpad của hệ thống:
+Không có gì được gửi đi đâu cả. Hoạt động mạng duy nhất là kiểm tra feed cập nhật và, khi bạn chọn nhập, đọc chính cơ sở dữ liệu Launchpad của Apple tại:
 
 ```bash
 /private$(getconf DARWIN_USER_DIR)com.apple.dock.launchpad/db/db
@@ -69,151 +67,94 @@ LaunchNG có thể đọc trực tiếp cơ sở dữ liệu Launchpad của h�
 ### Yêu cầu
 
 - macOS 26 (Tahoe) trở lên
-- Bộ xử lý Apple Silicon hoặc Intel
-- Xcode 26 (để build từ mã nguồn)
+- Apple Silicon hoặc Intel
+- Xcode 26, nếu build từ mã nguồn
 
-### Xây dựng từ mã nguồn
+### Build từ mã nguồn
 
-1. **Clone kho lưu trữ**
-   ```bash
-   git clone https://github.com/moonmig/LaunchNG.git
-   cd LaunchNG
-   ```
+```bash
+git clone https://github.com/moonmig/LaunchNG.git
+cd LaunchNG
+open LaunchNG.xcodeproj
+```
 
-2. **Mở bằng Xcode**
-   ```bash
-   open LaunchNG.xcodeproj
-   ```
+<a name="configure-local-code-signing"></a>**Cấu hình ký mã cục bộ** (không cần tài khoản Apple Developer trả phí):
 
-3. **Build và chạy**
-   - Chọn thiết bị đích
-   - Nhấn `⌘+R` để build và chạy
-   - Hoặc `⌘+B` để chỉ build
+- Chọn target **LaunchNG** → **Signing & Capabilities** → đặt **Team** thành `None`, chứng chỉ thành `Sign to Run Locally`. Giữ Hardened Runtime bật.
+- Xcode sẽ đánh dấu file dự án là đã sửa đổi sau bước này — đừng đưa các thay đổi chỉ liên quan đến ký mã vào pull request.
 
-### Build dòng lệnh
+Để chạy bằng `⌘R`, đích chạy phải là **My Mac** — đích universal/"Any Mac" có thể build và archive nhưng không thể chạy để debug. `⌘B` chỉ để build.
 
-**Build thông thường:**
+### Build từ dòng lệnh
+
 ```bash
 xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release
+
+# Binary universal (Apple Silicon + Intel):
+xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release \
+  ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO clean build
 ```
 
-**Build universal binary (Intel + Apple Silicon):**
-```bash
-xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO clean build
-```
+## Cách sử dụng
 
-## Sử dụng
+1. **Khi khởi chạy lần đầu** sẽ tự động quét các ứng dụng đã cài đặt của bạn.
+2. **Settings → General → Import System Launchpad** nhập bố cục, thư mục và vị trí hiện có của bạn chỉ với một cú nhấp.
+3. Nhấp để chọn, nhấp đúp (hoặc Return) để mở; gõ ở bất kỳ đâu để tìm kiếm ngay lập tức.
+4. Kéo một ứng dụng lên ứng dụng khác để tạo thư mục; kéo các ứng dụng để sắp xếp lại.
+5. Tùy chọn bật CLI trong Settings nếu bạn muốn viết script cho bố cục từ terminal.
 
-### Bắt đầu
+### Toàn màn hình so với thu gọn
 
-1. LaunchNG quét các ứng dụng đã cài đặt ở lần khởi chạy đầu tiên
-2. Nhập bố cục Launchpad cũ hoặc bắt đầu từ bố cục trống
-3. Dùng tìm kiếm, bàn phím, kéo thả và thư mục để sắp xếp ứng dụng
-4. Mở Cài đặt để cấu hình engine, chế độ bố cục, cách kích hoạt và tự động hóa
+- **Toàn màn hình** phủ kín toàn bộ màn hình, gần giống Launchpad gốc nhất.
+- **Thu gọn** là một cửa sổ nổi, bo góc mà bạn có thể thay đổi kích thước.
+- Các cài đặt giao diện (tỷ lệ biểu tượng, khoảng cách, vị trí chỉ báo trang, v.v.) được lưu riêng cho từng chế độ.
+- Chế độ toàn màn hình có thể tùy chọn ẩn thanh menu; macOS sẽ tự động ẩn Dock khi bật tính năng đó.
 
-### Nhập Launchpad của bạn
+## Cài đặt đáng chú ý
 
-1. Mở Cài đặt
-2. Nhấn **Import Launchpad**
-3. Bố cục và thư mục hiện có của bạn sẽ được nhập tự động
-
-### Engine và chế độ bố cục
-
-- **Legacy Engine** - giữ đường dẫn render cũ để ưu tiên khả năng tương thích
-- **Next Engine + Core Animation** - được khuyến nghị cho trải nghiệm tốt nhất và các tính năng mới hơn
-- **Gọn / Toàn màn hình** - LaunchNG hỗ trợ cả hai chế độ và có thể lưu cài đặt riêng cho từng chế độ
-
-## Tính năng chính
-
-### Kích hoạt và đầu vào
-
-- **Hỗ trợ Hot Corner** - mở LaunchNG từ một góc màn hình có thể cấu hình
-- **Hỗ trợ cử chỉ gốc thử nghiệm** - hành động pinch / tap bằng bốn ngón tay
-- **Hỗ trợ phím tắt toàn cục** - mở LaunchNG từ bất cứ đâu
-- **Kéo vào Dock** - chuyển ứng dụng trực tiếp vào Dock của macOS bằng engine Core Animation
-
-### Tự động hóa và workflow nâng cao
-
-- **Hỗ trợ CLI / TUI** - xem bố cục, tìm ứng dụng, tạo thư mục, di chuyển ứng dụng và tự động hóa workflow
-- **Workflow thân thiện với agent** - hoạt động tốt với AI agent dựa trên terminal và shell automation
-- **Bật dòng lệnh từ Cài đặt** - cài đặt hoặc gỡ lệnh được quản lý `launchng`
-
-### Trải nghiệm cập nhật
-
-- **Trung tâm cập nhật trong ứng dụng** - kiểm tra cập nhật mà không rời ứng dụng
-- **Release notes Markdown** - hiển thị phong phú hơn ngay trong Cài đặt
-- **API thông báo hiện đại** - đường dẫn thông báo được cập nhật cho các phiên bản macOS mới hơn
-
-### Sao lưu và khôi phục
-
-- Tạo và khôi phục bản sao lưu từ Cài đặt
-- Hành vi xuất backup đáng tin cậy hơn
-- Xử lý an toàn hơn với tệp tạm và quy trình dọn dẹp
-
-### Trợ năng và điều hướng
-
-- **Hỗ trợ phản hồi giọng nói** - đọc tên ứng dụng và thư mục khi điều hướng
-- **Hỗ trợ tay cầm** - điều khiển LaunchNG và thư mục bằng game controller
-- **Tương tác ưu tiên bàn phím** - tìm kiếm và điều hướng nhanh mà không cần chuột
-
-## Hiệu năng và độ ổn định
-
-- Bộ nhớ đệm biểu tượng thông minh cho trải nghiệm duyệt mượt hơn
-- Tải lười và quét nền cho thư viện lớn
-- Đồng bộ trạng thái tốt hơn giữa Cài đặt và điều hướng
-- Độ tin cậy tốt hơn cho cập nhật, xuất sao lưu và khôi phục cử chỉ
+- **Giao diện**: tỷ lệ biểu tượng, kích thước và khả năng hiển thị nhãn, khoảng cách lưới — với giá trị riêng cho nội dung thư mục — cùng một kiểu nền (làm mờ, Liquid Glass gốc, hoặc nền lấy từ hình nền động)
+- **Tìm kiếm**: bật/tắt khớp mờ và thời gian debounce tìm kiếm
+- **Ứng dụng ẩn**: giữ các ứng dụng cụ thể ngoài lưới mà không cần gỡ cài đặt
+- **Sao lưu**: chọn một thư mục, tạo bản sao lưu có dấu thời gian, khôi phục hoặc xóa các bản cũ từ danh sách
+- **Phím tắt & cử chỉ**: phím tắt toàn cục, góc nóng, và các liên kết cử chỉ trackpad (thử nghiệm)
+- **Cập nhật**: bật/tắt kiểm tra tự động và nút "Kiểm tra cập nhật" thủ công, cả hai đều dựa trên Sparkle
 
 ## Khắc phục sự cố
 
-### Vấn đề thường gặp
+**Ứng dụng không khởi động.** Xác nhận bạn đang dùng macOS 26.0 trở lên và cờ cách ly đã được gỡ bỏ (xem ở trên).
 
-**Q: Ứng dụng không khởi động?**  
-A: Hãy xác nhận bạn đang dùng macOS 26 trở lên, gỡ quarantine nếu cần, và đảm bảo bạn đang chạy một bản build đáng tin cậy.
+**"Kiểm tra cập nhật" báo lỗi.** LaunchNG dùng Sparkle với feed cập nhật đã ký; một lần kiểm tra thủ công luôn phải phản ánh bản phát hành mới nhất trong vòng vài phút.
 
-**Q: Tôi nên dùng engine nào?**  
-A: `Next Engine + Core Animation` được khuyến nghị cho trải nghiệm tốt nhất. Chỉ dùng `Legacy Engine` nếu bạn thực sự cần đường dẫn tương thích cũ.
-
-**Q: Tại sao lệnh CLI vẫn chưa có?**  
-A: Hãy bật giao diện dòng lệnh trong Cài đặt trước. LaunchNG có thể cài đặt và gỡ shim `launchng` được quản lý cho bạn.
+**Không thấy lệnh `launchng` trong terminal.** Đây là tính năng tùy chọn — hãy bật giao diện dòng lệnh trong Settings trước, LaunchNG sẽ tự cài đặt (và sau này có thể gỡ bỏ) shim được quản lý.
 
 ## Đóng góp
 
-Mọi đóng góp đều được chào đón.
+1. Fork repository
+2. Tạo nhánh tính năng (`git checkout -b feature/tinh-nang-cua-ban`)
+3. Commit các thay đổi với thông điệp rõ ràng
+4. Push nhánh và mở pull request
 
-1. Fork kho lưu trữ
-2. Tạo nhánh tính năng (`git checkout -b feature/amazing-feature`)
-3. Commit thay đổi (`git commit -m 'Add amazing feature'`)
-4. Push nhánh (`git push origin feature/amazing-feature`)
-5. Mở Pull Request
+Một vài điều giúp việc review diễn ra suôn sẻ:
+- Giữ các thay đổi dự án Xcode chỉ liên quan đến ký mã ra khỏi diff của bạn (xem phần ký mã cục bộ ở trên)
+- Nếu bạn động vào lưới Core Animation, hãy kiểm tra `GridReorderPlan.swift` trước — logic sắp xếp lại/phân trang nên nằm ở đó, không lặp lại theo từng view
+- Chạy bộ test suite trước khi mở PR:
+  ```bash
+  xcodebuild test -scheme LaunchNG -destination 'platform=macOS'
+  ```
 
-### Hướng dẫn phát triển
+Ảnh chụp màn hình mới, cập nhật (lưới chính, vài tab Settings) cũng là đóng góp thực sự hữu ích — xem phần giữ chỗ gần đầu file này.
 
-- Tuân theo quy ước style của Swift
-- Thêm comment có ý nghĩa cho logic phức tạp
-- Kiểm tra trên nhiều phiên bản macOS khi có thể
-- Tránh rải các tính năng thử nghiệm vào những file không liên quan
-- Giữ các tích hợp có thể tháo rời được tách biệt nếu có thể
+### Tài liệu thêm
 
-## Tương lai của quản lý ứng dụng
+- [Folder Liquid Glass](../Documentation/FolderLiquidGlass.md) — các ràng buộc thiết kế đằng sau biểu tượng thư mục kính, những gì đã được xác minh và những gì vẫn cần kiểm thử chấp nhận
+- [Grid diagnostics](../scripts/diagnostics/README.md) — các công cụ dò thủ công cho lưới và lớp phủ kính, cùng phạm vi và giới hạn chính xác của chúng
 
-Khi Apple ngày càng rời xa các launcher có thể tùy biến, LaunchNG cố gắng giữ lại khả năng tổ chức thủ công, quyền kiểm soát của người dùng và truy cập nhanh trên macOS hiện đại.
+## Giấy phép và ghi nhận
 
-**LaunchNG** không chỉ là bản thay thế Launchpad — nó là một phản hồi thực tế trước sự thụt lùi của workflow.
+LaunchNG là một fork của [LaunchNext](https://github.com/RoversX/LaunchNext) bởi RoversX, mà bản thân nó bắt nguồn từ nỗ lực cộng đồng rộng lớn hơn nhằm thay thế Launchpad. Cả hai dự án đều được cấp phép GPL-3.0, và LaunchNG tuân theo các điều khoản tương tự — xem [LICENSE](../LICENSE).
+
+Hỗ trợ cử chỉ trackpad thử nghiệm được xây dựng trên [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) và bản fork bởi [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport).
 
 ---
-
-**LaunchNG** - Giành lại quyền kiểm soát launcher ứng dụng của bạn 🚀
-
-*Dành cho người dùng macOS không muốn thỏa hiệp về khả năng tùy biến.*
-
-## Công cụ phát triển
-
-- Claude Code
-- Cursor
-- OpenAI Codex CLI
-- Perplexity
-- Google
-
-- Hỗ trợ cử chỉ thử nghiệm được xây dựng trên [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) và fork của [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport).❤️
 
 ![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNG/total)

@@ -2,63 +2,61 @@
 
 **言語**: [English](../README.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Русский](README.ru.md) | [हिन्दी](README.hi.md) | [Tiếng Việt](README.vi.md) | [Italiano](README.it.md) | [Čeština](README.cs.md)
 
-## 📥 ダウンロード
+macOS Tahoe（26）は Launchpad を完全に廃止しました。LaunchNG はそれをネイティブアプリとして復活させます。初回起動時に macOS 自身のデータベースから既存の Launchpad レイアウトをそのまま読み込み、Core Animation で描画するグリッドの上にページ送り・フォルダ・検索・ドラッグ＆ドロップによる並べ替えを独自に実装。Dock との連携、CLI/TUI の同梱、署名済みのアプリ内自動アップデートまで備えています。
 
-**[こちらからダウンロード](https://github.com/moonmig/LaunchNG/releases/latest)** - 最新版を入手
+## ダウンロード
 
-⭐ [LaunchNG](https://github.com/moonmig/LaunchNG) と元プロジェクト [LaunchNext](https://github.com/RoversX/LaunchNext) へのスターをお願いします！
+**[最新リリースを取得](https://github.com/moonmig/LaunchNG/releases/latest)**
 
-| | |
-|:---:|:---:|
-| ![](../public/banner.webp) | ![](../public/setting1.webp) |
-| ![](../public/setting2.webp) | ![](../public/setting3.webp) |
+便利だと感じたら、リポジトリへの star をいただけると励みになります。LaunchNG はもともと RoversX 氏の [LaunchNext](https://github.com/RoversX/LaunchNext) からフォークしたプロジェクトです——オリジナルへの star もぜひ。
 
-macOS Tahoe は Launchpad を削除しましたが、新しいインターフェースは使いにくく、Bio GPU を十分に活用できません。Apple よ、せめて元に戻すオプションを提供してください。それまでは、LaunchNG があります。
+<!-- スクリーンショットはここに入ります。最新のものを提供いただける場合は「貢献」セクションをご覧ください。 -->
 
-*[LaunchNext](https://github.com/RoversX/LaunchNext)（RoversX）をベースに開発しました。原プロジェクトに心から感謝します！❤️*
+### macOS がアプリの起動をブロックする場合
 
-*LaunchNext は GPL 3 ライセンスを選択しており、LaunchNG も同じライセンス条件に従います。*
+このフォークのリリースは未署名／ad-hoc ビルドです（有料の Apple Developer アカウントを使用していません）。そのため Gatekeeper は、一度検疫フラグを解除するまでアプリの起動を拒否します：
 
-⚠️ **macOS がアプリをブロックする場合、ターミナルで実行してください：**
 ```bash
 sudo xattr -r -d com.apple.quarantine /Applications/LaunchNG.app
 ```
-**理由**：私は Apple の開発者証明書（年間 $99）を購入する余裕がないため、macOS は未署名アプリをブロックします。このコマンドは隔離フラグを削除してアプリを実行可能にします。**信頼できるアプリにのみ使用してください。**
 
-## LaunchNG が提供するもの
+このコマンドは、信頼できるアプリに対してのみ実行してください。macOS のダウンロード検疫チェックをそのアプリに限って無効化します。
 
-- ✅ **旧システム Launchpad からのワンクリックインポート** - ネイティブ Launchpad SQLite データベースを直接読み取り、フォルダ、アプリ位置、レイアウトを復元
-- ✅ **手動でのアプリ整理** - アプリ移動、フォルダ作成、好みのレイアウト維持が可能
-- ✅ **2 つの描画パス** - 互換性重視の `Legacy Engine` と、最良の体験を提供する `Next Engine + Core Animation`
-- ✅ **コンパクト / フルスクリーン** - それぞれ別設定を保持可能
-- ✅ **キーボード中心の操作** - 高速検索、ナビゲーション、起動
-- ✅ **CLI / TUI 自動化サポート** - ターミナルからレイアウト確認と管理が可能
-- ✅ **Hot Corner とネイティブジェスチャー起動** - 複数のグローバル起動方法
-- ✅ **アプリを Dock に直接ドラッグ** - Core Animation エンジンで利用可能
-- ✅ **Markdown リリースノート対応の更新センター** - より充実したアプリ内更新体験
-- ✅ **バックアップ / 復元ツール** - より安全なエクスポートと復元フロー
-- ✅ **アクセシビリティとコントローラ対応** - 音声フィードバックとコントローラ操作を強化
-- ✅ **多言語対応** - 幅広いローカライズを提供
+ソースからビルドする場合は、このコマンドは不要です。下記の[ローカル署名の設定](#configure-local-code-signing)を参照してください。
 
-## macOS Tahoe が失わせたもの
+## LaunchNG でできること
 
-- ❌ カスタムアプリ整理なし
-- ❌ ユーザー作成フォルダなし
-- ❌ ドラッグ＆ドロップカスタマイズなし
-- ❌ 視覚的なアプリ管理なし
-- ❌ 強制的なカテゴリ分類
+- **既存の Launchpad データベースからワンクリックで移行** —— `/private$(getconf DARWIN_USER_DIR)com.apple.dock.launchpad/db/db` を直接読み込み、既存のフォルダ、位置、ページ構成を正確に復元
+- **クラシックなページ送りグリッド体験** —— 検索、キーボード操作、ドラッグ＆ドロップでの並べ替え、あるアイコンを別のアイコンにドラッグすることでフォルダを作成
+- **全面的に Core Animation で描画**、Dock への直接ドラッグ、macOS 26 のネイティブ Liquid Glass フォルダアイコンにも対応
+- **フォルダのレイアウト**：オリジナルと同じページ送り、または垂直スクロールから選択可能
+- **あいまい検索**、CJK（ピンインなど）の変換にも対応しており、入力が不完全・不正確でも目的のアプリを見つけられる
+- **ホットコーナーとトラックパッドジェスチャーによる起動**、実験的な 4本／5本指ピンチ・タップにも対応
+- **CLI と TUI** でターミナルからレイアウトを確認・操作可能
+- **[Sparkle](https://sparkle-project.org) による署名済み自動アップデート**、アプリ内の通常の「アップデートを確認」ボタンから利用可能
+- **選んだフォルダへのローカルバックアップ**、復元可能な履歴も管理
+- **アイコンラベルの非表示、アイコンサイズと間隔の調整** —— メイングリッドとフォルダ内でそれぞれ個別に設定可能
+- **13 言語**の完全な UI 翻訳（上記の言語一覧を参照）
+- **強化されたコンテキストメニュー** —— Finder で表示、アプリのパスをコピー、フォルダ名の変更、そして（オプションで）信頼できる他のアプリの Gatekeeper 検疫を解除するショートカット
+- **コントローラーと音声フィードバックのサポート**、アクセシビリティに配慮
 
-## データ保存
+## macOS Tahoe が奪ったもの
 
-アプリデータは以下に保存されます：
+- ユーザーによるフォルダ作成や自由な整理ができない
+- ドラッグ＆ドロップでの並べ替えができない
+- 視覚的なアプリ管理が一切ない——自動生成されアルファベット順に並んだ、触れないグリッドのみ
 
-```text
+LaunchNG が存在するのは、これが妥当なデフォルト仕様ではなく、明らかな機能低下だからです。
+
+## データの保存場所
+
+LaunchNG 自身のレイアウト、環境設定、キャッシュは以下に保存されます：
+
+```
 ~/Library/Application Support/LaunchNG/Data.store
 ```
 
-## ネイティブ Launchpad 統合
-
-LaunchNG はシステム Launchpad データベースを直接読み取れます：
+データはどこにも送信されません。唯一のネットワーク通信はアップデートフィードの確認と、あなたが実行を選んだ場合のみ発生する Apple 自身の Launchpad データベースの読み込みです：
 
 ```bash
 /private$(getconf DARWIN_USER_DIR)com.apple.dock.launchpad/db/db
@@ -66,154 +64,97 @@ LaunchNG はシステム Launchpad データベースを直接読み取れます
 
 ## インストール
 
-### 必要条件
+### 動作環境
 
 - macOS 26（Tahoe）以降
-- Apple Silicon または Intel プロセッサ
-- Xcode 26（ソースからビルドする場合）
+- Apple Silicon または Intel
+- ソースからビルドする場合は Xcode 26
 
 ### ソースからビルド
 
-1. **リポジトリをクローン**
-   ```bash
-   git clone https://github.com/moonmig/LaunchNG.git
-   cd LaunchNG
-   ```
-
-2. **Xcode で開く**
-   ```bash
-   open LaunchNG.xcodeproj
-   ```
-
-3. **ビルドして実行**
-   - 対象デバイスを選択
-   - `⌘+R` でビルドして実行
-   - `⌘+B` でビルドのみ
-
-### コマンドラインビルド
-
-**通常ビルド：**
 ```bash
-xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release
+git clone https://github.com/moonmig/LaunchNG.git
+cd LaunchNG
+open LaunchNG.xcodeproj
 ```
 
-**ユニバーサルバイナリ（Intel + Apple Silicon）：**
+<a name="configure-local-code-signing"></a>**ローカル署名の設定**（有料の Apple Developer アカウントは不要）：
+
+- **LaunchNG** ターゲットを選択 → **Signing & Capabilities** → **Team** を `None` に、証明書を `Sign to Run Locally` に設定。Hardened Runtime は有効のままにしてください。
+- この変更後、Xcode はプロジェクトファイルを変更済みとしてマークします——署名関連のみの変更は pull request に含めないでください。
+
+`⌘R` で実行するには、実行先を **My Mac** にする必要があります——ユニバーサル／「Any Mac」ではビルド・アーカイブはできてもデバッグ実行はできません。ビルドのみなら `⌘B`。
+
+### コマンドラインでのビルド
+
 ```bash
-xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO clean build
+xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release
+
+# ユニバーサルバイナリ（Apple Silicon + Intel）：
+xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release \
+  ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO clean build
 ```
 
 ## 使い方
 
-### はじめに
+1. **初回起動時**にインストール済みアプリを自動的にスキャンします。
+2. **設定 → General → Import System Launchpad** で、既存のレイアウト・フォルダ・配置をワンクリックで取り込みます。
+3. クリックで選択、ダブルクリック（または Return）で起動。どこでも入力すれば検索開始。
+4. あるアプリを別のアプリにドラッグしてフォルダを作成。アプリをドラッグして並べ替え。
+5. ターミナルからレイアウトを操作したい場合は、設定で CLI を有効にできます。
 
-1. LaunchNG は初回起動時にインストール済みアプリをスキャンします
-2. 旧 Launchpad レイアウトを取り込むか、新規レイアウトから開始します
-3. 検索、キーボード操作、マウスドラッグ、フォルダでアプリを整理します
-4. 設定でエンジン、レイアウトモード、起動方法、自動化を構成します
+### フルスクリーンとコンパクト
 
-### Launchpad をインポート
+- **フルスクリーン**は画面全体を覆い、オリジナルの Launchpad に最も近い見た目です。
+- **コンパクト**は角丸の浮動ウィンドウで、サイズ変更が可能です。
+- 外観設定（アイコンの拡大率、間隔、ページインジケーターの位置など）はモードごとに個別に保存されます。
+- フルスクリーンではメニューバーを非表示にでき、その場合 Dock も macOS が自動的に隠します。
 
-1. 設定を開く
-2. **Import Launchpad** をクリック
-3. 既存レイアウトとフォルダが自動で取り込まれます
+## 主な設定項目
 
-### エンジンと表示モード
-
-- **Legacy Engine** - 旧レンダリングパスを維持し、互換性を優先
-- **Next Engine + Core Animation** - 推奨。全体的な体験と新機能対応がより良い
-- **コンパクト / フルスクリーン** - 2 つのモードをサポートし、それぞれ別設定を保持可能
-
-## 主な機能
-
-### 起動と入力
-
-- **Hot Corner 対応** - 設定可能な画面コーナーから LaunchNG を起動
-- **実験的ネイティブジェスチャー対応** - 4 本指 pinch / tap アクション
-- **グローバルショートカット対応** - どこからでも LaunchNG を開ける
-- **Dock へのドラッグ** - Core Animation エンジンで macOS Dock に直接アプリを渡せる
-
-### 自動化とパワーユーザー向けワークフロー
-
-- **CLI / TUI 対応** - レイアウト確認、アプリ検索、フォルダ作成、アプリ移動、自動化が可能
-- **agent 向けワークフロー** - ターミナル型 AI agent や shell 自動化と相性が良い
-- **設定からコマンドラインを有効化** - 管理対象 `launchng` コマンドの追加 / 削除が可能
-
-### 更新体験
-
-- **アプリ内更新センター** - アプリを離れずに更新確認
-- **Markdown リリースノート** - 設定内でより豊かなリリースノート表示
-- **モダン通知 API** - 新しい macOS 通知方式に対応
-
-### バックアップと復元
-
-- 設定からバックアップ作成と復元が可能
-- より信頼性の高いバックアップ書き出し
-- 一時ファイルとクリーンアップ経路の安全性を改善
-
-### アクセシビリティとナビゲーション
-
-- **音声フィードバック対応** - ナビゲーション時にアプリやフォルダ名を読み上げ
-- **コントローラ対応** - ゲームコントローラで LaunchNG とフォルダを操作
-- **キーボード中心の操作** - マウスなしでも高速検索と移動が可能
-
-## パフォーマンスと安定性
-
-- アイコンキャッシュによる滑らかなブラウズ
-- 遅延読み込みとバックグラウンドスキャンで大規模ライブラリにも対応
-- 設定やナビゲーションの状態同期を改善
-- 更新処理、バックアップ書き出し、ジェスチャー復帰の信頼性向上
+- **外観**：アイコンの拡大率、ラベルのサイズと表示／非表示、グリッド間隔——フォルダ内容は個別の値を設定可能——および背景スタイル（ぼかし、ネイティブ Liquid Glass、またはライブ壁紙ベースの背景）
+- **検索**：あいまい検索の切り替えと検索のデバウンス時間
+- **非表示アプリ**：アンインストールせずに特定のアプリをグリッドから除外
+- **バックアップ**：フォルダを選択し、タイムスタンプ付きバックアップを作成、一覧から復元・削除
+- **ショートカットとジェスチャー**：グローバルホットキー、ホットコーナー、（実験的な）トラックパッドジェスチャーの割り当て
+- **アップデート**：自動確認の切り替えと手動の「アップデートを確認」ボタン、いずれも Sparkle 対応
 
 ## トラブルシューティング
 
-### よくある質問
+**アプリが起動しない。** macOS 26.0 以降であることと、検疫フラグが解除済みであることを確認してください（上記参照）。
 
-**Q: アプリが起動しない？**  
-A: macOS 26 以降であることを確認し、必要なら quarantine を外し、信頼できるビルドを使用してください。
+**「アップデートを確認」でエラーが出る。** LaunchNG は署名済みアップデートフィードを持つ Sparkle を使用しています。手動チェックは、数分以内に最新リリースを正しく反映するはずです。
 
-**Q: どのエンジンを使うべき？**  
-A: `Next Engine + Core Animation` を推奨します。旧互換パスが必要な場合のみ `Legacy Engine` を使ってください。
-
-**Q: CLI コマンドがまだ使えないのはなぜ？**  
-A: まず設定でコマンドラインインターフェースを有効にしてください。LaunchNG は管理対象の `launchng` shim を追加 / 削除できます。
+**ターミナルに `launchng` コマンドがない。** これはオプション機能です——まず設定でコマンドラインインターフェースを有効にしてください。LaunchNG が管理されたコマンドを自動的にインストール（後で削除も可能）します。
 
 ## コントリビューション
 
-コントリビューション歓迎です。
+1. リポジトリを fork
+2. 機能用のブランチを作成（`git checkout -b feature/your-feature`）
+3. わかりやすいメッセージでコミット
+4. ブランチを push して pull request を作成
 
-1. リポジトリを Fork
-2. 機能ブランチを作成（`git checkout -b feature/amazing-feature`）
-3. 変更をコミット（`git commit -m 'Add amazing feature'`）
-4. ブランチを Push（`git push origin feature/amazing-feature`）
-5. Pull Request を作成
+レビューがスムーズに進むためのポイント：
+- 署名関連のみの Xcode プロジェクト変更を diff に含めない（上記のローカル署名の設定を参照）
+- Core Animation グリッドを変更する場合は、まず `GridReorderPlan.swift` を確認してください——並べ替え／ページングのロジックはここに集約すべきで、各ビューに重複実装しないこと
+- PR を開く前にテストスイートを実行：
+  ```bash
+  xcodebuild test -scheme LaunchNG -destination 'platform=macOS'
+  ```
 
-### 開発ガイドライン
+最新の正確なスクリーンショット（メイングリッド、設定タブいくつか）の提供も、非常に価値のある貢献です——このファイル冒頭のプレースホルダーを参照してください。
 
-- Swift のスタイル規約に従う
-- 複雑なロジックには意味のあるコメントを追加する
-- 可能な限り複数の macOS バージョンでテストする
-- 実験的機能を無関係なファイルへ散らさない
-- 取り外し可能な統合はなるべく分離する
+### 関連ドキュメント
 
-## アプリ管理の未来
+- [Folder Liquid Glass](../Documentation/FolderLiquidGlass.md) —— フォルダのガラス風アイコンの設計上の制約、検証済みの内容、そして受け入れテストがまだ必要な部分
+- [Grid diagnostics](../scripts/diagnostics/README.md) —— グリッドとガラスオーバーレイの手動検証ツールと、その正確なカバレッジと制限
 
-Apple がカスタマイズ可能なランチャーから離れていく中で、LaunchNG は現代 macOS 上でも手動整理、ユーザー制御、高速なアプリアクセスを維持しようとしています。
+## ライセンスと謝辞
 
-**LaunchNG** は単なる Launchpad の代替ではなく、ワークフローの後退に対する現実的な回答です。
+LaunchNG は RoversX 氏の [LaunchNext](https://github.com/RoversX/LaunchNext) のフォークであり、それ自体もさらに広範な Launchpad 代替プロジェクトのコミュニティにルーツを持ちます。両プロジェクトとも GPL-3.0 でライセンスされており、LaunchNG も同じ条件に従います——詳細は [LICENSE](../LICENSE) を参照してください。
+
+実験的なトラックパッドジェスチャー機能は [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) および [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport) 氏によるフォークをベースにしています。
 
 ---
-
-**LaunchNG** - アプリランチャーの主導権を取り戻す 🚀
-
-*カスタマイズを妥協したくない macOS ユーザーのために。*
-
-## 開発ツール
-
-- Claude Code
-- Cursor
-- OpenAI Codex CLI
-- Perplexity
-- Google
-
-- 実験的ジェスチャー機能は [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) と [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport) の fork をベースにしています。❤️
 
 ![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNG/total)
