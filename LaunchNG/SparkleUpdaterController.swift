@@ -51,40 +51,60 @@ final class SparkleUpdaterController: NSObject, SPUStandardUserDriverDelegate, S
         set { controller.updater.automaticallyChecksForUpdates = newValue }
     }
 
-    // MARK: - SPUStandardUserDriverDelegate
+    // MARK: - Shared window-hiding
 
     /// LaunchNG's own window normally floats above everything (it can even
     /// sit above the menu bar) so it stays reachable as a launcher -- which
-    /// also means it renders in front of Sparkle's own alert/progress
-    /// windows, which use a standard window level. Sparkle calls this right
-    /// before showing any such window, specifically so the host app can get
-    /// its own UI out of the way first.
+    /// also means it renders in front of Sparkle's own windows, which use a
+    /// standard window level. Called synchronously, inline (never dispatched
+    /// async -- deferring this to a later main-queue turn was the original
+    /// bug: by the time that queued block ran, Sparkle had already shown and
+    /// finished presenting its window on the same turn).
+    @MainActor
+    private func getOutOfTheWay(reason: String) {
+        let windowVisible = AppDelegate.shared?.launchpadWindow?.isVisible ?? false
+        let windowLevel = AppDelegate.shared?.launchpadWindow?.level.rawValue ?? -1
+        let isSetting = AppDelegate.shared?.appStore.isSetting ?? false
+        sparkleDebugLog("getOutOfTheWay(\(reason)): windowVisible=\(windowVisible) windowLevel=\(windowLevel) isSetting=\(isSetting)")
+        // Settings is a SwiftUI sheet attached to the main window.
+        // hideWindow() only clears isSetting once its own fade-out animation
+        // finishes, which can leave the sheet's separate child window still
+        // on top of Sparkle's alert in the meantime. Close it immediately
+        // instead of waiting for that animation.
+        AppDelegate.shared?.appStore.isSetting = false
+        AppDelegate.shared?.hideWindow()
+    }
+
+    // MARK: - SPUStandardUserDriverDelegate
+
+    /// Only actually fires for the plain NSAlert-based "no update found" /
+    /// error alerts (SPUStandardUserDriver's -showAlert:secondaryAction:) --
+    /// NOT for the rich "update available" window, which is a separate
+    /// SUUpdateAlert window shown via showUpdateFoundWithAppcastItem: and
+    /// goes through standardUserDriverWillHandleShowingUpdate below instead.
+    /// Confirmed by reading Sparkle's own SPUStandardUserDriver.m after this
+    /// hook alone produced no diagnostic output across several real update
+    /// checks. Kept for the alert case it does cover.
     nonisolated func standardUserDriverWillShowModalAlert() {
         sparkleDebugLog("standardUserDriverWillShowModalAlert fired, isMainThread=\(Thread.isMainThread)")
-        // Dispatching async here (even to the main queue) was the bug: by
-        // the time that queued block actually ran, Sparkle had already
-        // presented its window on this same turn -- confirmed in the debug
-        // log, where our "before hideWindow()" line printed *after*
-        // standardUserDriverDidShowModalAlert had already fired. Sparkle
-        // calls this synchronously on the main thread specifically so the
-        // hide can happen before it proceeds, so do it inline, right here.
         MainActor.assumeIsolated {
-            let windowVisible = AppDelegate.shared?.launchpadWindow?.isVisible ?? false
-            let windowLevel = AppDelegate.shared?.launchpadWindow?.level.rawValue ?? -1
-            let isSetting = AppDelegate.shared?.appStore.isSetting ?? false
-            sparkleDebugLog("before hideWindow(): windowVisible=\(windowVisible) windowLevel=\(windowLevel) isSetting=\(isSetting)")
-            // Settings is a SwiftUI sheet attached to the main window.
-            // hideWindow() only clears isSetting once its own fade-out
-            // animation finishes, which left the sheet's separate child
-            // window still on top of Sparkle's alert in the meantime.
-            // Close it immediately instead of waiting for that animation.
-            AppDelegate.shared?.appStore.isSetting = false
-            AppDelegate.shared?.hideWindow()
+            getOutOfTheWay(reason: "willShowModalAlert")
         }
     }
 
     nonisolated func standardUserDriverDidShowModalAlert() {
         sparkleDebugLog("standardUserDriverDidShowModalAlert fired")
+    }
+
+    /// The actual hook for the "update available" window: called right
+    /// before SUUpdateAlert is shown for a user-initiated check (per
+    /// SPUStandardUserDriver.m's showUpdateFoundWithAppcastItem:). Not
+    /// called when bringing an already-shown alert back into focus.
+    nonisolated func standardUserDriverWillHandleShowingUpdate(_ handleShowingUpdate: Bool, forUpdate update: SUAppcastItem, state: SPUUserUpdateState) {
+        sparkleDebugLog("standardUserDriverWillHandleShowingUpdate fired, handleShowingUpdate=\(handleShowingUpdate) userInitiated=\(state.userInitiated)")
+        MainActor.assumeIsolated {
+            getOutOfTheWay(reason: "willHandleShowingUpdate")
+        }
     }
 
     // MARK: - SPUUpdaterDelegate

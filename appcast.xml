@@ -5,7 +5,25 @@
     <link>https://raw.githubusercontent.com/MoonMig/LaunchNG/main/appcast.xml</link>
     <description>LaunchNG update feed.</description>
     <language>en</language>
-                            <item>
+                                    <item>
+      <title>Version 2.4.15</title>
+      <pubDate>Wed, 30 Sep 2026 14:56:35 +0000</pubDate>
+      <sparkle:version>20260939</sparkle:version>
+      <sparkle:shortVersionString>2.4.15</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <sparkle:releaseNotesLink>https://github.com/MoonMig/LaunchNG/releases/tag/v2.4.15</sparkle:releaseNotesLink>
+      <enclosure url="https://github.com/MoonMig/LaunchNG/releases/download/v2.4.15/LaunchNG2.4.15.zip" sparkle:edSignature="kh16V3Vvk30GKbKY07VoNkLXZacllervMfHK5XKNjJfkGyeHxOEZcpCjnWY7wotIHMfd6QkJabG+EpPvD1M0Bw==" length="10207538" type="application/octet-stream" />
+    </item>
+<item>
+      <title>Version 2.4.14</title>
+      <pubDate>Wed, 30 Sep 2026 14:55:21 +0000</pubDate>
+      <sparkle:version>20260938</sparkle:version>
+      <sparkle:shortVersionString>2.4.14</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <sparkle:releaseNotesLink>https://github.com/MoonMig/LaunchNG/releases/tag/v2.4.14</sparkle:releaseNotesLink>
+      <enclosure url="https://github.com/MoonMig/LaunchNG/releases/download/v2.4.14/LaunchNG2.4.14.zip" sparkle:edSignature="ks67iANEdXCDGpND5afR7UqZdEd/sP9wJ3m9zK7naJ7dlcWMycC6KxmZNkpnj437vezrOU9xtkh5XI6S+zO4Dw==" length="10207533" type="application/octet-stream" />
+    </item>
+<item>
       <title>Version 2.4.14</title>
       <pubDate>Wed, 30 Sep 2026 14:47:02 +0000</pubDate>
       <sparkle:version>20260938</sparkle:version>
