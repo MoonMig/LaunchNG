@@ -674,7 +674,7 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                             // rather than clipping it at the card's side edges.
                             .padding(.horizontal, 24)
                     }
-                    .scrollDisabled(section == .about || section == .general)
+                    .scrollDisabled(section == .about)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .scrollBounceBehavior(.basedOnSize)
 
