@@ -2746,22 +2746,8 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
 
     private var dataManagementCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center) {
-                Text(appStore.localized(.dataManagementTitle))
-                    .font(.headline)
-                Spacer()
-                HStack(spacing: 10) {
-                    Button { exportDataFolder() } label: {
-                        Text(appStore.localized(.exportData))
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button { importDataFolder() } label: {
-                        Text(appStore.localized(.importData))
-                    }
-                    .buttonStyle(.bordered)
-                }
-            }
+            Text(appStore.localized(.dataManagementTitle))
+                .font(.headline)
 
             HStack(spacing: 10) {
                 Button { importFromLaunchpad() } label: {
@@ -5301,23 +5287,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
         return dir
     }
 
-    private func exportDataFolder() {
-        do {
-            let panel = NSOpenPanel()
-            panel.canChooseFiles = false
-            panel.canChooseDirectories = true
-            panel.canCreateDirectories = true
-            panel.allowsMultipleSelection = false
-            panel.prompt = appStore.localized(.chooseButton)
-            panel.message = appStore.localized(.exportPanelMessage)
-            if panel.runModal() == .OK, let destParent = panel.url {
-                try exportDataFolder(to: destParent)
-            }
-        } catch {
-            showBackupExportError(error)
-        }
-    }
-
     private func exportDataFolder(to destParent: URL) throws {
         let sourceDir = try supportDirectoryURL()
         let formatter = DateFormatter()
@@ -5352,19 +5321,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                 try? fm.removeItem(at: destDir)
                 throw error
             }
-        }
-    }
-
-    private func importDataFolder() {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.canCreateDirectories = false
-        panel.allowsMultipleSelection = false
-        panel.prompt = appStore.localized(.importPrompt)
-        panel.message = appStore.localized(.importPanelMessage)
-        if panel.runModal() == .OK, let srcDir = panel.url {
-            importDataFolder(from: srcDir)
         }
     }
 
