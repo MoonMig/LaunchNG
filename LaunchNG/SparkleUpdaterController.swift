@@ -60,8 +60,15 @@ final class SparkleUpdaterController: NSObject, SPUStandardUserDriverDelegate, S
     /// before showing any such window, specifically so the host app can get
     /// its own UI out of the way first.
     nonisolated func standardUserDriverWillShowModalAlert() {
-        sparkleDebugLog("standardUserDriverWillShowModalAlert fired")
-        DispatchQueue.main.async {
+        sparkleDebugLog("standardUserDriverWillShowModalAlert fired, isMainThread=\(Thread.isMainThread)")
+        // Dispatching async here (even to the main queue) was the bug: by
+        // the time that queued block actually ran, Sparkle had already
+        // presented its window on this same turn -- confirmed in the debug
+        // log, where our "before hideWindow()" line printed *after*
+        // standardUserDriverDidShowModalAlert had already fired. Sparkle
+        // calls this synchronously on the main thread specifically so the
+        // hide can happen before it proceeds, so do it inline, right here.
+        MainActor.assumeIsolated {
             let windowVisible = AppDelegate.shared?.launchpadWindow?.isVisible ?? false
             let windowLevel = AppDelegate.shared?.launchpadWindow?.level.rawValue ?? -1
             sparkleDebugLog("before hideWindow(): windowVisible=\(windowVisible) windowLevel=\(windowLevel)")
