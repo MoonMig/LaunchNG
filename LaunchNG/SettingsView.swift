@@ -66,7 +66,6 @@ struct SettingsView: View {
     @State private var backupRootPath: String = UserDefaults.standard.string(forKey: "backupRootDirectory") ?? ""
     @State private var backupRefreshToken = UUID()
     @State private var selectedBackupIDs: Set<String> = []
-    @State private var showPerformanceRestartPrompt = false
     @State private var capturingShortcutTarget: ShortcutTarget? = nil
     @State private var shortcutCaptureMonitor: Any?
     @State private var pendingShortcut: AppStore.HotKeyConfiguration?
@@ -1416,37 +1415,7 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
     // }
 
     private var performanceSection: some View {
-        let isLeanMode = appStore.performanceMode == .lean
-        return VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 20) {
-                Text(appStore.localized(.performanceModeTitle))
-                    .font(.headline)
-                performanceModePicker()
-
-                Divider()
-
-                Toggle(isOn: $appStore.useCAGridRenderer) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(appStore.localized(.performanceRendererTitle))
-                            .font(.body.weight(.medium))
-                        Text(appStore.localized(!isLeanMode ? .performanceRendererSubtitle :
-                            (appStore.useCAGridRenderer ? .performanceRendererWarning : .performanceRendererRecommendation)))
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .toggleStyle(.switch)
-                .tint(PerformanceEngineSelector.accent)
-                .disabled(!isLeanMode)
-                .help(appStore.localized(.performanceRendererBadge))
-            }
-            .padding(20)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(nsColor: .quaternarySystemFill),
-                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-
+        VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .firstTextBaseline, spacing: 16) {
                     Text(appStore.localized(.performanceCacheTitle))
@@ -1463,23 +1432,14 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
             .background(Color(nsColor: .quaternarySystemFill),
                         in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
-        .onChange(of: appStore.performanceMode) { _, _ in
-            showPerformanceRestartPrompt = true
-        }
-        .alert(appStore.localized(.performanceModeRestartTitle), isPresented: $showPerformanceRestartPrompt) {
-            Button(appStore.localized(.okButton), role: .cancel) {}
-        } message: {
-            Text(appStore.localized(.performanceModeRestartMessage))
-        }
     }
 
     private var performanceCacheDetails: some View {
         let stats = appStore.cacheStatistics
-        let isLeanMode = appStore.performanceMode == .lean
         return VStack(alignment: .leading, spacing: 0) {
             cacheDetailRow(title: appStore.localized(.performanceCacheIconLabel),
-                           valueText: isLeanMode ? appStore.localized(.performanceCacheIconsDisabled) : "\(stats.iconCacheSize)")
-                .help(appStore.localized(isLeanMode ? .performanceCacheLeanHint : .performanceCacheCountsHint))
+                           valueText: appStore.localized(.performanceCacheIconsDisabled))
+                .help(appStore.localized(.performanceCacheLeanHint))
             Divider()
             cacheDetailRow(title: appStore.localized(.performanceCacheAppInfoLabel),
                            valueText: "\(stats.appInfoCacheSize)")
@@ -2657,17 +2617,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
         formatter.dateStyle = .short
         formatter.timeStyle = .short
         return formatter.string(from: date)
-    }
-
-    private func performanceModePicker() -> some View {
-        PerformanceEngineSelector(
-            selection: $appStore.performanceMode,
-            nextTitle: appStore.localized(.performanceModeLean),
-            legacyTitle: appStore.localized(.performanceModeFull),
-            nextDescription: appStore.localized(.performanceModeDescriptionLean),
-            legacyDescription: appStore.localized(.performanceModeDescriptionFull),
-            restartHint: appStore.localized(.performanceModeRestartHint)
-        )
     }
 
     private func cacheStatusLabel(isValid: Bool) -> some View {
@@ -3941,8 +3890,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                         .labelsHidden()
                         .toggleStyle(.switch)
                 }
-                .disabled(!appStore.useCAGridRenderer)
-                .opacity(appStore.useCAGridRenderer ? 1 : 0.45)
 
                 VStack(alignment: .leading, spacing: 10) {
                     Label(appStore.localized(.trackpadVerticalDirectionTitle), systemImage: "arrow.left.arrow.right")
@@ -4660,32 +4607,12 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
             }
 
             HStack {
-                Text(appStore.localized(.predictDrop))
-                Spacer()
-                Toggle("", isOn: $appStore.enableDropPrediction)
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-            }
-            .disabled(appStore.useCAGridRenderer)
-            .opacity(appStore.useCAGridRenderer ? 0.5 : 1)
-
-            HStack {
                 Text(appStore.localized(.enableAnimations))
                 Spacer()
                 Toggle("", isOn: $appStore.enableAnimations)
                     .labelsHidden()
                     .toggleStyle(.switch)
             }
-
-            HStack {
-                Text(appStore.localized(.followScrollPagingTitle))
-                Spacer()
-                Toggle("", isOn: $appStore.followScrollPagingEnabled)
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-            }
-            .disabled(appStore.useCAGridRenderer)
-            .opacity(appStore.useCAGridRenderer ? 0.5 : 1)
 
             HStack {
                 Text(appStore.localized(.hideDockOption))
@@ -4767,8 +4694,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                     .toggleStyle(.switch)
             }
             .help(appStore.localized(.folderLiquidGlassHint))
-            .disabled(!appStore.useCAGridRenderer)
-            .opacity(appStore.useCAGridRenderer ? 1 : 0.5)
 
             Group {
                 HStack {
@@ -4797,8 +4722,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                 }
 
             }
-            .disabled(!appStore.useCAGridRenderer)
-            .opacity(appStore.useCAGridRenderer ? 1 : 0.5)
 
             HStack {
                 Text(appStore.localized(.backgroundImageTitle))
@@ -5111,25 +5034,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
 
     private var appearanceSecondarySection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 8) {
-                let durationEnabled = appStore.enableAnimations && !appStore.useCAGridRenderer
-                Text(appStore.localized(.animationDurationLabel))
-                    .font(.headline)
-                Slider(value: $appStore.animationDuration, in: 0.1...1.0, step: 0.05)
-                    .disabled(!durationEnabled)
-                    .opacity(durationEnabled ? 1 : 0.5)
-                HStack {
-                    Text("0.1s").font(.footnote)
-                    Spacer()
-                    Text(String(format: "%.2fs", appStore.animationDuration))
-                        .font(.footnote)
-                    Spacer()
-                    Text("1.0s").font(.footnote)
-                }
-                .foregroundStyle(durationEnabled ? .primary : .secondary)
-                .opacity(durationEnabled ? 1 : 0.6)
-            }
-
             VStack(alignment: .leading, spacing: 8) {
                 Text(appStore.localized(.iconLabelFontWeight))
                     .font(.headline)

@@ -11,9 +11,6 @@ final class IconStore {
     }
 
     func icon(for app: AppInfo) -> NSImage {
-        if PerformanceMode.current == .full {
-            return app.icon
-        }
         return icon(forPath: app.url.path)
     }
 

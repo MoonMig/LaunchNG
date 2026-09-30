@@ -122,11 +122,6 @@ private struct LaunchpadItemButtonContent: View {
                 let renderedIcon: NSImage = {
                     switch item {
                     case .app(let app):
-                        if let cachedIcon = AppCacheManager.shared.getCachedIcon(for: app.url.path),
-                           cachedIcon.size.width > 0,
-                           cachedIcon.size.height > 0 {
-                            return cachedIcon
-                        }
                         let base = IconStore.shared.icon(for: app)
                         if FileManager.default.fileExists(atPath: app.url.path),
                            base.size.width > 0 && base.size.height > 0 {

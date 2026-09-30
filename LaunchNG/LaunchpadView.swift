@@ -151,23 +151,7 @@ struct LaunchpadView: View {
     @State private var performanceMetrics: [String: TimeInterval] = [:]
     private let enablePerformanceMonitoring = false // Set to true to enable performance monitoring
     @State private var isHandoffDragging: Bool = false
-    private struct ScrollState {
-        var isUserSwiping: Bool = false
-        var accumulatedX: CGFloat = 0
-        var wheelAccumulated: CGFloat = 0
-        var wheelLastDirection: Int = 0
-        var wheelLastFlipAt: Date? = nil
-        var followOffset: CGFloat = 0
-        var followLastUpdateAt: TimeInterval = 0
-        var followLastOffset: CGFloat = 0
-    }
-
-    @State private var scrollState = ScrollState()
-    private let wheelFlipCooldown: TimeInterval = 0.15
     @State private var dragPointerOffset: CGPoint = .zero
-    @State private var blankDragStartPoint: CGPoint? = nil
-    @State private var blankDragShouldIgnore: Bool = false
-    @State private var blankDragConsumed: Bool = false
     @State private var fpsMonitor: FPSMonitor?
     @State private var fpsValue: Double = 0
     @State private var frameTimeMilliseconds: Double = 0
@@ -316,15 +300,6 @@ struct LaunchpadView: View {
         launchpadBaseView
         .sheet(isPresented: $appStore.isSetting) {
             SettingsView(appStore: appStore)
-        }
-        .onChange(of: appStore.followScrollPagingEnabled) { _, _ in
-            if scrollState.followOffset != 0 || scrollState.accumulatedX != 0 || scrollState.isUserSwiping {
-                scrollState.followOffset = 0
-                scrollState.accumulatedX = 0
-                scrollState.isUserSwiping = false
-                scrollState.followLastUpdateAt = 0
-                scrollState.followLastOffset = 0
-            }
         }
         .onChange(of: colorScheme) { _, _ in
             appStore.scheduleSystemAppearanceRefresh()
@@ -516,9 +491,6 @@ struct LaunchpadView: View {
             folderHoverBeganAt = nil
             pageFlipManager.isCooldown = false
             isHandoffDragging = false
-            blankDragStartPoint = nil
-            blankDragShouldIgnore = false
-            blankDragConsumed = false
             appStore.cleanupUnusedNewPage()
             appStore.removeEmptyPages()
             appStore.saveAllOrder()
@@ -763,22 +735,6 @@ struct LaunchpadView: View {
 
     private var launchpadInteractionOverlay: some View {
         ZStack {
-            // Full-window scroll catcher layer (doesn't intercept clicks, only observes scrolling)
-            if !appStore.useCAGridRenderer {
-                ScrollEventCatcher { deltaX, deltaY, phase, isMomentum, isPrecise in
-                    guard !appStore.isSetting else { return }
-                    let pageWidth = currentContainerSize.width + config.pageSpacing
-                    handleScroll(deltaX: deltaX,
-                                 deltaY: deltaY,
-                                 phase: phase,
-                                 isMomentum: isMomentum,
-                                 isPrecise: isPrecise,
-                                 pageWidth: pageWidth)
-                }
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
-            }
-
             // Semi-transparent background: only inserted while a folder is open, with a fade transition
             if isFolderOpen {
                 Color.black
@@ -786,7 +742,7 @@ struct LaunchpadView: View {
                     .ignoresSafeArea()
                     .transition(.opacity)
                     // Native folder presentation owns dismissal during CA transitions.
-                    .allowsHitTesting(!appStore.useCAGridRenderer)
+                    .allowsHitTesting(false)
                     .onTapGesture {
                         if !appStore.isFolderNameEditing {
                             let closingFolder = appStore.openFolder
@@ -803,87 +759,13 @@ struct LaunchpadView: View {
                     }
             }
 
-            if appStore.useCAGridRenderer {
-                CAFolderPresentation(appStore: appStore, controller: folderPresentation,
-                    iconSize: currentIconSize * CGFloat(min(max(appStore.iconScale, 0.6), 1.15)),
-                    onClose: { closePresentedFolder() }, onLaunchApp: { launchApp($0) },
-                    backgroundLabelSample: resolvedBackgroundLabelSample,
-                    backgroundLabelTints: backgroundLabelTints,
-                    initialRevealAppPath: folderAppToReveal)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if let openFolder = appStore.openFolder {
-                GeometryReader { proxy in
-                    let widthFactor: CGFloat = appStore.isFullscreenMode ? 0.7 : CGFloat(appStore.folderPopoverWidthFactor)
-                    let heightFactor: CGFloat = appStore.isFullscreenMode ? 0.7 : CGFloat(appStore.folderPopoverHeightFactor)
-                    let minWidth: CGFloat = appStore.isFullscreenMode ? 520 : 560
-                    let minHeight: CGFloat = 420
-                    let rawHorizontalMargin: CGFloat = appStore.isFullscreenMode ? max(proxy.size.width * 0.15, 120) : 32
-                    let rawVerticalMargin: CGFloat = appStore.isFullscreenMode ? max(proxy.size.height * 0.15, 120) : 32
-                    let horizontalMargin = min(rawHorizontalMargin, proxy.size.width / 2)
-                    let verticalMargin = min(rawVerticalMargin, proxy.size.height / 2)
-
-                    let proposedWidth = proxy.size.width * widthFactor
-                    let proposedHeight = proxy.size.height * heightFactor
-
-                    let maxAllowedWidth = max(proxy.size.width - horizontalMargin * 2, 0)
-                    let maxAllowedHeight = max(proxy.size.height - verticalMargin * 2, 0)
-
-                    let minAllowedWidth = min(minWidth, maxAllowedWidth)
-                    let minAllowedHeight = min(minHeight, maxAllowedHeight)
-
-                    let clampedWidth = max(min(proposedWidth, maxAllowedWidth), minAllowedWidth)
-                    let clampedHeight = max(min(proposedHeight, maxAllowedHeight), minAllowedHeight)
-                    let folderId = openFolder.id
-
-                    // Use a computed property so the binding correctly reacts to folderUpdateTrigger changes
-                    let folderBinding = Binding<FolderInfo>(
-                        get: {
-                            // Look the folder up again on every access, to make sure we get the latest state
-                            if let idx = appStore.folders.firstIndex(where: { $0.id == folderId }) {
-                                return appStore.folders[idx]
-                            }
-                            return openFolder
-                        },
-                        set: { newValue in
-                            if let idx = appStore.folders.firstIndex(where: { $0.id == folderId }) {
-                                appStore.folders[idx] = newValue
-                            }
-                        }
-                    )
-
-                    FolderView(
-                        appStore: appStore,
-                        folder: folderBinding,
-                        preferredIconSize: currentIconSize * CGFloat(min(max(appStore.iconScale, 0.6), 1.15)),
-                        initialRevealAppPath: folderAppToReveal,
-                        onClose: {
-                            let closingFolder = appStore.openFolder
-                            withAnimation(LNAnimations.springFast) {
-                                appStore.openFolder = nil
-                            }
-                            // After closing, move the keyboard-navigation selection to this folder
-                            if let folder = closingFolder,
-                               let idx = filteredItems.firstIndex(of: .folder(folder)) {
-                                isKeyboardNavigationActive = true
-                                selectedIndex = idx
-                                let targetPage = idx / config.itemsPerPage
-                                if targetPage != appStore.currentPage {
-                                    appStore.currentPage = targetPage
-                                }
-                            }
-                            // Restore focus to the search field after closing the folder
-                            isSearchFieldFocused = true
-                        },
-                        onLaunchApp: { app in
-                            launchApp(app)
-                        }
-                    )
-                    .frame(width: clampedWidth, height: clampedHeight)
-                    .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
-                    .id("folder_\(folderId)") // Use a stable ID, to avoid rebuilding the view on every update
-                    .transition(LNAnimations.folderOpenTransition)
-                }
-            }
+            CAFolderPresentation(appStore: appStore, controller: folderPresentation,
+                iconSize: currentIconSize * CGFloat(min(max(appStore.iconScale, 0.6), 1.15)),
+                onClose: { closePresentedFolder() }, onLaunchApp: { launchApp($0) },
+                backgroundLabelSample: resolvedBackgroundLabelSample,
+                backgroundLabelTints: backgroundLabelTints,
+                initialRevealAppPath: folderAppToReveal)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // The header passes events through; clicking the outer window margins dismisses LaunchNG.
             GeometryReader { proxy in
@@ -994,7 +876,6 @@ struct LaunchpadView: View {
         }()
 
         let iconSize: CGFloat = min(columnWidth, appHeight) * CGFloat(min(max(appStore.iconScale, 0.6), 1.15))
-        let effectivePageWidth = geo.size.width + config.pageSpacing
 
         if appStore.shouldShowOnboarding {
             let compactOnboardingLayout = geo.size.width < 960
@@ -1035,16 +916,15 @@ struct LaunchpadView: View {
             )
         }
 
-        if appStore.useCAGridRenderer {
-            let caInsets = NSEdgeInsets(top: actualTopPadding,
-                                        left: 0,
-                                        bottom: actualBottomPadding,
-                                        right: 0)
-            let caItems: [LaunchpadItem] = filteredItems
-            let externalDragSourceIndex: Int? = draggingItem.flatMap { filteredItems.firstIndex(of: $0) }
-            let externalDragHoverIndex: Int? = draggingItem != nil ? pendingDropIndex : nil
+        let caInsets = NSEdgeInsets(top: actualTopPadding,
+                                    left: 0,
+                                    bottom: actualBottomPadding,
+                                    right: 0)
+        let caItems: [LaunchpadItem] = filteredItems
+        let externalDragSourceIndex: Int? = draggingItem.flatMap { filteredItems.firstIndex(of: $0) }
+        let externalDragHoverIndex: Int? = draggingItem != nil ? pendingDropIndex : nil
 
-            return AnyView(
+        return AnyView(
                 ZStack(alignment: .topLeading) {
                     CAGridViewRepresentable(
                         appStore: appStore,
@@ -1106,121 +986,6 @@ struct LaunchpadView: View {
                     }
                 }
             )
-        }
-
-        let hStackOffset = -CGFloat(appStore.currentPage) * effectivePageWidth
-            + (appStore.followScrollPagingEnabled ? scrollState.followOffset : 0)
-
-        return AnyView(
-            ZStack(alignment: .topLeading) {
-                // Content
-                HStack(spacing: config.pageSpacing) {
-                    ForEach(pages.indices, id: \.self) { index in
-                        VStack(alignment: .leading, spacing: 0) {
-                            // Add dynamic padding above the grid
-                            if config.isFullscreen {
-                                Spacer()
-                                    .frame(height: actualTopPadding)
-                            }
-                            LazyVGrid(columns: config.gridItems, spacing: config.rowSpacing) {
-                                let pageItems = pages[index]
-                                ForEach(0..<pageItems.count, id: \.self) { localOffset in
-                                    let item = pageItems[localOffset]
-                                    let globalIndex = index * config.itemsPerPage + localOffset
-                                    itemDraggable(
-                                        item: item,
-                                        globalIndex: globalIndex,
-                                        pageIndex: index,
-                                        containerSize: geo.size,
-                                        columnWidth: columnWidth,
-                                        iconSize: iconSize,
-                                        appHeight: appHeight,
-                                        labelWidth: columnWidth * 0.9,
-                                        isSelected: (!isFolderOpen && isKeyboardNavigationActive && selectedIndex == globalIndex)
-                                    )
-                                }
-                            }
-                            .animation(LNAnimations.gridUpdate, value: pendingDropIndex)
-                            .id("grid_\(index)_\(appStore.gridRefreshTrigger.uuidString)")
-                            // Avoid unnecessary global refresh animations, to reduce drag repaints
-                            .frame(maxHeight: .infinity, alignment: .top)
-                        }
-                        .frame(width: geo.size.width, height: geo.size.height)
-                    }
-                }
-                .offset(x: hStackOffset)
-                .opacity(isFolderOpen ? 0.1 : 1)
-                .allowsHitTesting(!isFolderOpen)
-
-                // Lift the preview up into the outer coordinate space, so it isn't affected by the offset
-                if let draggingItem {
-                    DragPreviewItem(item: draggingItem,
-                                    iconSize: iconSize,
-                                    labelWidth: columnWidth * 0.9,
-                                    scale: dragPreviewScale)
-                        .position(x: dragPreviewPosition.x, y: dragPreviewPosition.y)
-                        .zIndex(100)
-                        .allowsHitTesting(false)
-                }
-            }
-            .coordinateSpace(name: "grid")
-            // Make the whole grid container hit-testable, to catch clicks on empty areas
-            .contentShape(Rectangle())
-            .simultaneousGesture(blankDragGesture(geoSize: geo.size,
-                                                  columnWidth: columnWidth,
-                                                  appHeight: appHeight,
-                                                  iconSize: iconSize),
-                                 including: draggingItem == nil ? .gesture : .subviews)
-            .onTapGesture {
-                // Resign input focus
-                NSApp.keyWindow?.makeFirstResponder(nil)
-                // Convert screen coordinates to grid coordinates, to allow closing via a click on empty space
-                let p = convertScreenToGrid(NSEvent.mouseLocation)
-                closeIfTappedOnEmptyOrGap(at: p,
-                                          geoSize: geo.size,
-                                          columnWidth: columnWidth,
-                                          appHeight: appHeight,
-                                          iconSize: iconSize)
-            }
-            .onAppear { }
-            .onChange(of: appStore.handoffDraggingApp) {
-                if appStore.openFolder == nil, appStore.handoffDraggingApp != nil {
-                    startHandoffDragIfNeeded(geo: geo, columnWidth: columnWidth, appHeight: appHeight, iconSize: iconSize)
-                }
-            }
-            .onChange(of: appStore.openFolder) {
-                if appStore.openFolder == nil, appStore.handoffDraggingApp != nil {
-                    startHandoffDragIfNeeded(geo: geo, columnWidth: columnWidth, appHeight: appHeight, iconSize: iconSize)
-                }
-            }
-            .onChange(of: appStore.currentPage) {
-                DispatchQueue.main.async {
-                    captureGridGeometry(geo, columnWidth: columnWidth, appHeight: appHeight, iconSize: iconSize)
-
-                    // Smart-preload icons for the current page and neighboring pages
-                    AppCacheManager.shared.smartPreloadIcons(
-                        for: appStore.items,
-                        currentPage: appStore.currentPage,
-                        itemsPerPage: config.itemsPerPage
-                    )
-                }
-            }
-            .onChange(of: appStore.gridRefreshTrigger) { _, _ in
-                DispatchQueue.main.async {
-                    captureGridGeometry(geo, columnWidth: columnWidth, appHeight: appHeight, iconSize: iconSize)
-                }
-            }
-            .onChange(of: geo.size) {
-                DispatchQueue.main.async {
-                    captureGridGeometry(geo, columnWidth: columnWidth, appHeight: appHeight, iconSize: iconSize)
-                }
-            }
-            .task {
-                await MainActor.run {
-                    captureGridGeometry(geo, columnWidth: columnWidth, appHeight: appHeight, iconSize: iconSize)
-                }
-            }
-        )
     }
 
     @MainActor
@@ -1260,7 +1025,7 @@ struct LaunchpadView: View {
 
         // Show the restored layout before moving. Waiting is bounded so a
         // missing icon cannot leave navigation pending forever.
-        if appStore.useCAGridRenderer {
+        do {
             let itemID = appStore.items[location.index].id
             var navigationGrid: CAGridView?
             _ = await waitForLayoutReveal(request, timeout: 1.5) {
@@ -1315,8 +1080,6 @@ struct LaunchpadView: View {
                 }
                 do { try await Task.sleep(for: .seconds(LayoutRevealFeedback.duration)) } catch { return }
             }
-        } else {
-            appStore.currentPage = destinationPage
         }
         guard let folder = location.folder else { return }
         guard !Task.isCancelled, appStore.layoutRevealRequest?.id == request.id,
@@ -2157,206 +1920,6 @@ extension LaunchpadView {
     }
 }
 
-// MARK: - Blank area drag to flip pages
-extension LaunchpadView {
-    private func blankDragGesture(geoSize: CGSize,
-                                  columnWidth: CGFloat,
-                                  appHeight: CGFloat,
-                                  iconSize: CGFloat) -> some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: .named("grid"))
-            .onChanged { value in
-                handleBlankAreaDragChange(value,
-                                          geoSize: geoSize,
-                                          columnWidth: columnWidth,
-                                          appHeight: appHeight,
-                                          iconSize: iconSize)
-            }
-            .onEnded { value in
-                handleBlankAreaDragEnd(value,
-                                       geoSize: geoSize,
-                                       columnWidth: columnWidth,
-                                       appHeight: appHeight,
-                                       iconSize: iconSize)
-            }
-    }
-
-    private func handleBlankAreaDragChange(_ value: DragGesture.Value,
-                                           geoSize: CGSize,
-                                           columnWidth: CGFloat,
-                                           appHeight: CGFloat,
-                                           iconSize: CGFloat) {
-        guard draggingItem == nil, !isFolderOpen else { return }
-        if blankDragConsumed { return }
-
-        if blankDragStartPoint == nil {
-            blankDragStartPoint = value.startLocation
-            blankDragShouldIgnore = isPointOnInteractiveItem(value.startLocation,
-                                                             geoSize: geoSize,
-                                                             columnWidth: columnWidth,
-                                                             appHeight: appHeight,
-                                                             iconSize: iconSize)
-            blankDragConsumed = false
-        // let ignoreReason = blankDragShouldIgnore ? "hit item" : "blank"
-        // print("[Launchpad] blank drag began at \(value.startLocation) -> \(ignoreReason)")
-        }
-
-        guard !blankDragShouldIgnore, let start = blankDragStartPoint else { return }
-
-        let translationX = value.location.x - start.x
-        let threshold = blankDragThreshold(for: geoSize.width)
-        // print("[Launchpad] blank drag change translation=\(translationX), threshold=\(threshold)")
-
-        if translationX <= -threshold {
-            navigateToNextPage()
-            blankDragStartPoint = value.location
-            blankDragConsumed = true
-            // print("[Launchpad] blank drag translation \(translationX) <= -\(threshold), flipped to next page")
-        } else if translationX >= threshold {
-            navigateToPreviousPage()
-            blankDragStartPoint = value.location
-            blankDragConsumed = true
-            // print("[Launchpad] blank drag translation \(translationX) >= \(threshold), flipped to previous page")
-        }
-    }
-
-    private func handleBlankAreaDragEnd(_ value: DragGesture.Value,
-                                         geoSize: CGSize,
-                                         columnWidth: CGFloat,
-                                         appHeight: CGFloat,
-                                         iconSize: CGFloat) {
-        defer { resetBlankDragState() }
-
-        guard draggingItem == nil, !isFolderOpen else { return }
-
-        if blankDragShouldIgnore { return }
-
-        guard blankDragStartPoint != nil else {
-            closeIfTappedOnEmptyOrGap(at: value.location,
-                                      geoSize: geoSize,
-                                      columnWidth: columnWidth,
-                                      appHeight: appHeight,
-                                      iconSize: iconSize)
-            return
-        }
-
-        if blankDragConsumed {
-            // print("[Launchpad] blank drag already consumed")
-            return
-        }
-
-        // Not enough drag distance is treated as a tap on empty space
-        let travel = hypot(value.translation.width, value.translation.height)
-        if travel <= 12 {
-            closeIfTappedOnEmptyOrGap(at: value.location,
-                                      geoSize: geoSize,
-                                      columnWidth: columnWidth,
-                                      appHeight: appHeight,
-                                      iconSize: iconSize)
-            // print("[Launchpad] blank drag travel \(travel) treated as tap")
-        } else {
-            // print("[Launchpad] blank drag end travel=\(travel) no action")
-        }
-    }
-
-    private func blankDragThreshold(for width: CGFloat) -> CGFloat {
-        max(width * 0.08, 60)
-    }
-
-    private func resetBlankDragState() {
-        blankDragStartPoint = nil
-        blankDragShouldIgnore = false
-        blankDragConsumed = false
-    }
-
-    private func isPointOnInteractiveItem(_ point: CGPoint,
-                                          geoSize: CGSize,
-                                          columnWidth: CGFloat,
-                                          appHeight: CGFloat,
-                                          iconSize: CGFloat) -> Bool {
-        guard let index = indexAt(point: point,
-                                  in: geoSize,
-                                  pageIndex: appStore.currentPage,
-                                  columnWidth: columnWidth,
-                                  appHeight: appHeight) else { return false }
-
-        guard currentItems.indices.contains(index) else { return false }
-        if case .empty = currentItems[index] { return false }
-
-        let rect = itemInteractiveRect(for: index,
-                                       geoSize: geoSize,
-                                       columnWidth: columnWidth,
-                                       appHeight: appHeight,
-                                       iconSize: iconSize)
-
-        let horizontalPadding: CGFloat = 8
-        let verticalPadding: CGFloat = 8
-        let hasLabel = appStore.showLabels
-        let iconLabelSpacing: CGFloat = hasLabel ? 6 : 0
-
-        let iconRect = CGRect(
-            x: rect.midX - iconSize / 2 + 16,
-            y: rect.minY + verticalPadding + 16,
-            width: iconSize - 32,
-            height: iconSize - 32
-        ).standardized
-
-        var labelRect = CGRect.null
-        if hasLabel {
-            let labelTop = iconRect.maxY + iconLabelSpacing
-            let labelBottom = rect.maxY - verticalPadding
-            let labelHeight = max(0, labelBottom - labelTop)
-            labelRect = CGRect(
-                x: rect.minX + horizontalPadding + 12,
-                y: labelTop,
-                width: rect.width - horizontalPadding * 2 - 24,
-                height: labelHeight
-            ).standardized
-        }
-
-        let isIconHit = iconRect.contains(point)
-        let isLabelHit = labelRect.contains(point)
-        // print("[Launchpad] hit-test at \(point) -> iconRect=\(iconRect), labelRect=\(labelRect), iconHit=\(isIconHit), labelHit=\(isLabelHit)")
-        return isIconHit || isLabelHit
-    }
-}
-
-// MARK: - Tap close helper
-extension LaunchpadView {
-    fileprivate func closeIfTappedOnEmptyOrGap(at point: CGPoint,
-                                               geoSize: CGSize,
-                                               columnWidth: CGFloat,
-                                               appHeight: CGFloat,
-                                               iconSize: CGFloat) {
-        guard appStore.openFolder == nil, draggingItem == nil else { return }
-        if let idx = indexAt(point: point,
-                             in: geoSize,
-                             pageIndex: appStore.currentPage,
-                             columnWidth: columnWidth,
-                             appHeight: appHeight) {
-            guard currentItems.indices.contains(idx) else {
-                AppDelegate.shared?.hideWindow()
-                return
-            }
-
-            if case .empty = currentItems[idx] {
-                AppDelegate.shared?.hideWindow()
-                return
-            }
-
-            let interactiveRect = itemInteractiveRect(for: idx,
-                                                      geoSize: geoSize,
-                                                      columnWidth: columnWidth,
-                                                      appHeight: appHeight,
-                                                      iconSize: iconSize)
-
-            if !interactiveRect.contains(point) {
-                AppDelegate.shared?.hideWindow()
-            }
-        } else {
-            AppDelegate.shared?.hideWindow()
-        }
-    }
-}
 
 // MARK: - Keyboard Navigation
 extension LaunchpadView {
@@ -2682,98 +2245,6 @@ extension LaunchpadView {
     }
 }
 
-// MARK: - View builders
-extension LaunchpadView {
-    @ViewBuilder
-    private func itemDraggable(item: LaunchpadItem,
-                               globalIndex: Int,
-                               pageIndex: Int,
-                               containerSize: CGSize,
-                               columnWidth: CGFloat,
-                               iconSize: CGFloat,
-                               appHeight: CGFloat,
-                               labelWidth: CGFloat,
-                               isSelected: Bool) -> some View {
-        if case .empty = item {
-            Rectangle().fill(Color.clear)
-                .frame(height: appHeight)
-        } else {
-            let shouldAllowHover = draggingItem == nil
-
-            let isCenterCreatingTarget: Bool = {
-                guard let draggingItem, let idx = currentItems.firstIndex(of: item) else { return false }
-                guard case .app = draggingItem else { return false }
-                guard appStore.isDragCreatingFolder else { return false }
-                switch item {
-                case .app(let targetApp):
-                    return appStore.folderCreationTarget?.id == targetApp.id
-                case .folder:
-                    return folderHoverCandidateIndex == idx
-                case .missingApp:
-                    return false
-                case .empty:
-                    return false
-                }
-            }()
-
-            let base = LaunchpadItemButton(
-                    item: item,
-                    iconSize: iconSize,
-                    labelWidth: labelWidth,
-                    isSelected: isSelected,
-                    showLabel: appStore.showLabels,
-                    labelFontSize: CGFloat(appStore.iconLabelFontSize),
-                    labelFontWeight: appStore.iconLabelFontWeightValue,
-                    shouldAllowHover: shouldAllowHover,
-                    externalScale: isCenterCreatingTarget ? 1.2 : nil,
-                    hoverMagnificationEnabled: appStore.enableHoverMagnification,
-                    hoverMagnificationScale: CGFloat(appStore.hoverMagnificationScale),
-                    activePressEffectEnabled: appStore.enableActivePressEffect,
-                    activePressScale: CGFloat(appStore.activePressScale),
-                    onTap: { if draggingItem == nil { handleItemTap(item) } }
-                )
-                .frame(height: appHeight)
-                // Keep a stable view identity, so a folder update doesn't interrupt a drag gesture
-                .id(item.id)
-            if appStore.searchText.isEmpty && !isFolderOpen && !appStore.isLayoutLocked {
-                let isDraggingThisTile = (draggingItem == item)
-
-                base
-                    .opacity(isDraggingThisTile ? 0 : 1)
-                    .allowsHitTesting(!isDraggingThisTile)
-                    .simultaneousGesture(
-                        DragGesture(minimumDistance: 2, coordinateSpace: .named("grid"))
-                            .onChanged { value in
-                                handleDragChange(value, item: item, in: containerSize, columnWidth: columnWidth, appHeight: appHeight, iconSize: iconSize)
-                            }
-                            .onEnded { _ in
-                                guard draggingItem != nil else { return }
-                                
-                                // Use the unified drag-end handling logic
-                                finalizeDragOperation(containerSize: containerSize, columnWidth: columnWidth, appHeight: appHeight, iconSize: iconSize)
-
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
-                                    draggingItem = nil
-                                    pendingDropIndex = nil
-                                    clampSelection()
-                                    appStore.cleanupUnusedNewPage()
-                                    appStore.removeEmptyPages()
-                                    
-                                    // Save immediately once the drag operation is complete
-                                    appStore.saveAllOrder()
-                                }
-                            }
-                    )
-                    .launchNGHideAppContextMenu(app: item.contextMenuApp, folder: item.contextMenuFolder, appStore: appStore)
-            } else {
-                base
-                    .launchNGHideAppContextMenu(app: item.contextMenuApp, folder: item.contextMenuFolder, appStore: appStore)
-            }
-        }
-    }
-
-}
-
 // MARK: - Drag math helpers
 extension LaunchpadView {
     private func pageOf(index: Int) -> Int { index / config.itemsPerPage }
@@ -2858,74 +2329,6 @@ extension LaunchpadView {
         return currentItems.indices.contains(globalIndex) ? globalIndex : nil
     }
 
-    private func itemInteractiveRect(for globalIndex: Int,
-                                      geoSize: CGSize,
-                                      columnWidth: CGFloat,
-                                      appHeight: CGFloat,
-                                      iconSize: CGFloat) -> CGRect {
-        let pageIndex = max(0, globalIndex / config.itemsPerPage)
-        let localIndex = globalIndex % config.itemsPerPage
-        let cellOrigin = GeometryUtils.cellOrigin(for: localIndex,
-                                                  containerSize: geoSize,
-                                                  pageIndex: pageIndex,
-                                                  columnWidth: columnWidth,
-                                                  appHeight: appHeight,
-                                                  columns: config.columns,
-                                                  columnSpacing: config.columnSpacing,
-                                                  rowSpacing: config.rowSpacing,
-                                                  pageSpacing: config.pageSpacing,
-                                                  currentPage: appStore.currentPage)
-        let cellRect = CGRect(x: cellOrigin.x,
-                              y: cellOrigin.y,
-                              width: columnWidth,
-                              height: appHeight)
-
-        // Matches the layout in LaunchpadItemButton: the button content has 8pt padding, 8pt vertical spacing between icon and label
-        let horizontalPadding: CGFloat = 8
-        let verticalPadding: CGFloat = 8
-        let labelWidth = columnWidth * 0.9
-        let hasLabel = appStore.showLabels
-        let iconLabelSpacing: CGFloat = hasLabel ? 6 : 0
-        let contentWidth = min(columnWidth, max(iconSize, labelWidth) + horizontalPadding * 2)
-        let rawLabelHeight = max(0, appHeight - iconSize - verticalPadding * 2 - iconLabelSpacing)
-        let labelHeight = hasLabel ? rawLabelHeight : 0
-        let contentHeight = min(appHeight, iconSize + iconLabelSpacing + labelHeight + verticalPadding * 2)
-
-        let insetX = max(0, (columnWidth - contentWidth) / 2)
-        let insetY = max(0, (appHeight - contentHeight) / 2)
-
-        return cellRect.insetBy(dx: insetX, dy: insetY)
-    }
-
-    private func iconCenter(for globalIndex: Int,
-                             geoSize: CGSize,
-                             columnWidth: CGFloat,
-                             appHeight: CGFloat,
-                             iconSize: CGFloat) -> CGPoint {
-        let pageIndex = max(0, globalIndex / config.itemsPerPage)
-        let localIndex = globalIndex % config.itemsPerPage
-        let cellOrigin = GeometryUtils.cellOrigin(for: localIndex,
-                                                  containerSize: geoSize,
-                                                  pageIndex: pageIndex,
-                                                  columnWidth: columnWidth,
-                                                  appHeight: appHeight,
-                                                  columns: config.columns,
-                                                  columnSpacing: config.columnSpacing,
-                                                  rowSpacing: config.rowSpacing,
-                                                  pageSpacing: config.pageSpacing,
-                                                  currentPage: appStore.currentPage)
-
-        let hasLabel = appStore.showLabels
-        let verticalPadding: CGFloat = 8
-        let iconLabelSpacing: CGFloat = hasLabel ? 6 : 0
-        let contentHeight = iconSize + iconLabelSpacing + (hasLabel ? max(0, appHeight - iconSize - verticalPadding * 2 - iconLabelSpacing) : 0) + verticalPadding * 2
-        let insetY = max(0, (appHeight - contentHeight) / 2)
-
-        let iconCenterX = cellOrigin.x + columnWidth / 2
-        let iconCenterY = cellOrigin.y + insetY + verticalPadding + iconSize / 2
-        return CGPoint(x: iconCenterX, y: iconCenterY)
-    }
-
     private func clampPointWithinBounds(_ point: CGPoint, containerSize: CGSize) -> CGPoint {
         let maxX = max(containerSize.width - 0.1, 0)
         let maxY = max(containerSize.height - 0.1, 0)
@@ -2995,216 +2398,6 @@ extension LaunchpadView {
         let maxSide = max(0, min(maxWidth, maxHeight) - insertMargin * 2)
         let scale = CGFloat(appStore.folderDropZoneScale)
         return min(iconSize * scale, maxSide)
-    }
-}
-
-// MARK: - Scroll handling (mouse wheel and trackpad)
-extension LaunchpadView {
-    private func rubberbandOffset(_ value: CGFloat, limit: CGFloat) -> CGFloat {
-        let factor: CGFloat = 0.5
-        let distance = abs(value)
-        let scaled = (factor * distance) / (distance + limit)
-        return scaled * (value >= 0 ? 1 : -1) * limit
-    }
-
-    private func handleWheelScroll(_ primaryDelta: CGFloat) {
-        if primaryDelta == 0 { return }
-        let direction = primaryDelta > 0 ? 1 : -1
-        let effectiveDirection = appStore.reverseWheelPagingDirection ? -direction : direction
-        if scrollState.wheelLastDirection != direction { scrollState.wheelAccumulated = 0 }
-        scrollState.wheelLastDirection = direction
-        scrollState.wheelAccumulated += abs(primaryDelta)
-        let baselineSensitivity = max(AppStore.defaultScrollSensitivity, 0.0001)
-        let relativeSensitivity = max(appStore.scrollSensitivity, 0.0001) / baselineSensitivity
-        // Scale wheel threshold by sensitivity.
-        let threshold: CGFloat = 2.0 / CGFloat(relativeSensitivity)
-        let now = Date()
-        if scrollState.wheelAccumulated >= threshold {
-            if let last = scrollState.wheelLastFlipAt, now.timeIntervalSince(last) < wheelFlipCooldown { return }
-            if effectiveDirection > 0 { navigateToNextPage() } else { navigateToPreviousPage() }
-            scrollState.wheelLastFlipAt = now
-            // Reset so one tick flips at most once.
-            scrollState.wheelAccumulated = 0
-        }
-    }
-
-    private func flipThreshold(_ pageWidth: CGFloat) -> CGFloat {
-        let baseline = max(AppStore.defaultScrollSensitivity, 0.001)
-        return pageWidth * ((baseline * baseline) / max(appStore.scrollSensitivity, 0.001))
-    }
-
-    private func resetFollowOffset(animated: Bool) {
-        guard scrollState.followOffset != 0 else { return }
-        if animated && appStore.enableAnimations {
-            withAnimation(LNAnimations.springFast) { scrollState.followOffset = 0 }
-        } else {
-            scrollState.followOffset = 0
-        }
-    }
-
-    private func handleScroll(deltaX: CGFloat,
-                              deltaY: CGFloat,
-                              phase: NSEvent.Phase,
-                              isMomentum: Bool,
-                              isPrecise: Bool,
-                              pageWidth: CGFloat) {
-        guard !isFolderOpen else { return }
-
-        let verticalDelta: CGFloat
-        if isPrecise {
-            verticalDelta = appStore.trackpadVerticalDirection == .natural ? deltaY : -deltaY
-        } else {
-            verticalDelta = -deltaY
-        }
-        let primaryDelta = abs(deltaX) >= abs(deltaY) ? deltaX : verticalDelta
-
-        // Non-precise wheel: accumulate deltas and apply a short cooldown.
-        if !isPrecise {
-            handleWheelScroll(primaryDelta)
-            return
-        }
-
-        // Precise scroll without follow: accumulate and flip once past the threshold.
-        if !appStore.followScrollPagingEnabled {
-            // Skip momentum to keep one flip per gesture.
-            if isMomentum { return }
-            // Treat vertical input as horizontal paging.
-            let delta = primaryDelta
-            switch phase {
-            case .began:
-                scrollState.isUserSwiping = true
-                scrollState.accumulatedX = 0
-            case .changed:
-                scrollState.isUserSwiping = true
-                scrollState.accumulatedX += delta
-            case .ended, .cancelled:
-                let threshold = flipThreshold(pageWidth)
-                if scrollState.accumulatedX <= -threshold {
-                    navigateToNextPage()
-                } else if scrollState.accumulatedX >= threshold {
-                    navigateToPreviousPage()
-                }
-                scrollState.accumulatedX = 0
-                scrollState.isUserSwiping = false
-            default:
-                break
-            }
-            return
-        }
-
-        // Follow-scroll mode: drag-like offset while scrolling, then settle.
-        if phase == [] {
-            handleWheelScroll(primaryDelta)
-            return
-        }
-        if isMomentum && phase != .ended && phase != .cancelled { return }
-        // Treat vertical input as horizontal paging.
-        let delta = primaryDelta
-        switch phase {
-        case .began:
-            scrollState.isUserSwiping = true
-            scrollState.accumulatedX = 0
-            scrollState.followOffset = 0
-            scrollState.followLastUpdateAt = 0
-            scrollState.followLastOffset = 0
-        case .changed:
-            scrollState.isUserSwiping = true
-            scrollState.accumulatedX += delta
-            var proposed = scrollState.accumulatedX
-            let atFirstPage = appStore.currentPage <= 0
-            let atLastPage = appStore.currentPage >= max(pages.count - 1, 0)
-            if atFirstPage && proposed > 0 {
-                proposed = rubberbandOffset(proposed, limit: pageWidth)
-            } else if atLastPage && proposed < 0 {
-                proposed = rubberbandOffset(proposed, limit: pageWidth)
-            } else {
-                let maxOffset = pageWidth * 0.95
-                proposed = max(-maxOffset, min(maxOffset, proposed))
-            }
-            let now = CFAbsoluteTimeGetCurrent()
-            let minInterval = 1.0 / 90.0
-            let minDelta: CGFloat = 0.6
-            if abs(proposed - scrollState.followLastOffset) >= minDelta || (now - scrollState.followLastUpdateAt) >= minInterval {
-                scrollState.followOffset = proposed
-                scrollState.followLastUpdateAt = now
-                scrollState.followLastOffset = proposed
-            }
-        case .ended, .cancelled:
-            let threshold = flipThreshold(pageWidth)
-            if scrollState.accumulatedX <= -threshold {
-                navigateToNextPage()
-            } else if scrollState.accumulatedX >= threshold {
-                navigateToPreviousPage()
-            }
-            resetFollowOffset(animated: true)
-            scrollState.accumulatedX = 0
-            scrollState.isUserSwiping = false
-            scrollState.followLastUpdateAt = 0
-            scrollState.followLastOffset = 0
-        default:
-            break
-        }
-    }
-}
-
-// MARK: - AppKit Scroll catcher
-struct ScrollEventCatcher: NSViewRepresentable {
-    typealias NSViewType = ScrollEventCatcherView
-    let onScroll: (CGFloat, CGFloat, NSEvent.Phase, Bool, Bool) -> Void
-
-    func makeNSView(context: Context) -> ScrollEventCatcherView {
-        let view = ScrollEventCatcherView()
-        view.onScroll = onScroll
-        return view
-    }
-
-    func updateNSView(_ nsView: ScrollEventCatcherView, context: Context) {
-        nsView.onScroll = onScroll
-    }
-
-    final class ScrollEventCatcherView: NSView {
-        var onScroll: ((CGFloat, CGFloat, NSEvent.Phase, Bool, Bool) -> Void)?
-        private var eventMonitor: Any?
-
-        override var acceptsFirstResponder: Bool { true }
-
-        override func scrollWheel(with event: NSEvent) {
-            // Prefer primary phase; fallback to momentum
-            let phase = event.phase != [] ? event.phase : event.momentumPhase
-            let isMomentum = event.momentumPhase != []
-            let isPreciseOrTrackpad = event.hasPreciseScrollingDeltas || event.phase != [] || event.momentumPhase != []
-            onScroll?(event.scrollingDeltaX,
-                      event.scrollingDeltaY,
-                      phase,
-                      isMomentum,
-                      isPreciseOrTrackpad)
-        }
-
-        override func viewDidMoveToWindow() {
-            super.viewDidMoveToWindow()
-            if let monitor = eventMonitor { NSEvent.removeMonitor(monitor); eventMonitor = nil }
-            // Globally observe scroll events on the current window, without consuming them
-            eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel]) { [weak self] event in
-                let phase = event.phase != [] ? event.phase : event.momentumPhase
-                let isMomentum = event.momentumPhase != []
-                let isPreciseOrTrackpad = event.hasPreciseScrollingDeltas || event.phase != [] || event.momentumPhase != []
-                self?.onScroll?(event.scrollingDeltaX,
-                                event.scrollingDeltaY,
-                                phase,
-                                isMomentum,
-                                isPreciseOrTrackpad)
-                return event
-            }
-        }
-
-        override func hitTest(_ point: NSPoint) -> NSView? {
-            // Don't intercept hit-testing, let the views below handle clicks/drags/etc.
-            return nil
-        }
-
-        deinit {
-            if let monitor = eventMonitor { NSEvent.removeMonitor(monitor) }
-        }
     }
 }
 
@@ -3388,10 +2581,8 @@ struct GridConfig {
         Array(repeating: GridItem(.flexible(), spacing: columnSpacing), count: columns)
     }
 }
- 
 
-//
-
+// MARK: - Drag preview view
 struct DragPreviewItem: View {
     let item: LaunchpadItem
     let iconSize: CGFloat
@@ -3563,38 +2754,6 @@ extension LaunchpadView {
         }
     }
     
-    // MARK: - Simplified drag handling function
-    private func handleDragChange(_ value: DragGesture.Value, item: LaunchpadItem, in containerSize: CGSize, columnWidth: CGFloat, appHeight: CGFloat, iconSize: CGFloat) {
-        guard !appStore.isLayoutLocked else { return }
-        // Initialize the drag
-        if draggingItem == nil {
-            var tx = Transaction(); tx.disablesAnimations = true
-            withTransaction(tx) { draggingItem = item }
-            isKeyboardNavigationActive = false
-            appStore.isDragCreatingFolder = false
-            appStore.folderCreationTarget = nil
-
-            if let idx = filteredItems.firstIndex(of: item) {
-                let center = iconCenter(for: idx,
-                                         geoSize: containerSize,
-                                         columnWidth: columnWidth,
-                                         appHeight: appHeight,
-                                         iconSize: iconSize)
-                dragPointerOffset = CGPoint(x: value.location.x - center.x,
-                                             y: value.location.y - center.y)
-                dragPreviewPosition = center
-            } else {
-                dragPointerOffset = .zero
-                dragPreviewPosition = value.location
-            }
-        }
-        applyDragUpdate(at: value.location,
-                        containerSize: containerSize,
-                        columnWidth: columnWidth,
-                        appHeight: appHeight,
-                        iconSize: iconSize)
-    }
-
     // Unified drag-end handling logic (shared by normal and handoff drags)
     private func finalizeDragOperation(containerSize: CGSize, columnWidth: CGFloat, appHeight: CGFloat, iconSize: CGFloat) {
         guard let dragging = draggingItem else { return }

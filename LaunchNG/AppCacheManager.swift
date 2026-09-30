@@ -26,9 +26,6 @@ final class AppCacheManager: ObservableObject {
 
     private init() {}
 
-    private var isLeanMode: Bool {
-        PerformanceMode.current == .lean
-    }
     // MARK: - Public interface
 
     /// Generate the app cache - called after app launch or a scan
@@ -67,11 +64,6 @@ final class AppCacheManager: ObservableObject {
             // Cache app info
             self.cacheAppInfos(uniqueApps)
 
-            // Cache app icons
-            if !self.isLeanMode {
-                self.cacheAppIcons(uniqueApps)
-            }
-
             // Cache grid layout data
             self.cacheGridLayout(items,
                                  itemsPerPage: itemsPerPage,
@@ -87,26 +79,6 @@ final class AppCacheManager: ObservableObject {
         }
     }
     
-    /// Get the cached app icon
-    func getCachedIcon(for appPath: String) -> NSImage? {
-        if isLeanMode {
-            return nil
-        }
-        let key = cacheKeyGenerator.generateIconKey(for: appPath)
-        
-        cacheLock.lock()
-        defer { cacheLock.unlock() }
-        if let icon = iconCache[key] {
-            if let index = iconCacheOrder.firstIndex(of: key) {
-                iconCacheOrder.remove(at: index)
-                iconCacheOrder.append(key)
-            }
-            return icon
-        } else {
-            return nil
-        }
-    }
-    
     /// Get the cached app info
     func getCachedAppInfo(for appPath: String) -> AppInfo? {
         let key = cacheKeyGenerator.generateAppInfoKey(for: appPath)
@@ -119,56 +91,6 @@ final class AppCacheManager: ObservableObject {
         return gridLayoutCache[key]
     }
 
-    /// Preload app icons into the cache
-    func preloadIcons(for appPaths: [String]) {
-        if isLeanMode {
-            return
-        }
-        DispatchQueue.global(qos: .utility).async { [weak self] in
-            guard let self = self else { return }
-            
-            for path in appPaths {
-                if self.getCachedIcon(for: path) == nil {
-                    let icon = NSWorkspace.shared.icon(forFile: path)
-                    let key = self.cacheKeyGenerator.generateIconKey(for: path)
-                    self.cacheLock.lock()
-                    self.iconCache[key] = icon
-                    self.iconCacheOrder.append(key)
-                    if self.iconCache.count > self.maxIconCacheSize {
-                        if let oldestKey = self.iconCacheOrder.first {
-                            self.iconCache.removeValue(forKey: oldestKey)
-                            self.iconCacheOrder.removeFirst()
-                        }
-                    }
-                    self.cacheLock.unlock()
-                }
-            }
-            
-            DispatchQueue.main.async {
-                self.calculateCacheSize()
-            }
-        }
-    }
-    
-    /// Smart preload: preload icons for the current page and neighboring pages
-    func smartPreloadIcons(for items: [LaunchpadItem], currentPage: Int, itemsPerPage: Int) {
-        if isLeanMode {
-            return
-        }
-        let startIndex = max(0, (currentPage - 1) * itemsPerPage)
-        let endIndex = min(items.count, (currentPage + 2) * itemsPerPage)
-        
-        let relevantItems = Array(items[startIndex..<endIndex])
-        let appPaths = relevantItems.compactMap { item -> String? in
-            if case let .app(app) = item {
-                return app.url.path
-            }
-            return nil
-        }
-        
-        preloadIcons(for: appPaths)
-    }
-    
     /// Clear all caches
     func clearAllCaches() {
         cacheLock.lock()
@@ -239,27 +161,6 @@ final class AppCacheManager: ObservableObject {
         cacheLock.unlock()
     }
     
-    private func cacheAppIcons(_ apps: [AppInfo]) {
-        if isLeanMode {
-            return
-        }
-        cacheLock.lock()
-        for app in apps {
-            let key = cacheKeyGenerator.generateIconKey(for: app.url.path)
-            if let existingIndex = iconCacheOrder.firstIndex(of: key) {
-                iconCacheOrder.remove(at: existingIndex)
-            }
-            iconCache[key] = app.icon
-            iconCacheOrder.append(key)
-            if iconCache.count > maxIconCacheSize {
-                if let oldestKey = iconCacheOrder.first {
-                    iconCache.removeValue(forKey: oldestKey)
-                    iconCacheOrder.removeFirst()
-                }
-            }
-        }
-        cacheLock.unlock()
-    }
     
     private func cacheGridLayout(_ items: [LaunchpadItem],
                                  itemsPerPage: Int,

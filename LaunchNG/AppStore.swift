@@ -389,12 +389,10 @@ final class AppStore: ObservableObject {
     static let hoverMagnificationScaleKey = "hoverMagnificationScale"
     static let activePressEffectKey = "enableActivePressEffect"
     static let activePressScaleKey = "activePressScale"
-    static let followScrollPagingKey = "followScrollPagingEnabled"
     static let reverseWheelPagingKey = "reverseWheelPagingDirection"
     static let reverseWheelVerticalKey = "reverseWheelVerticalDirection"
     static let trackpadVerticalDirectionKey = "trackpadVerticalDirection"
     static let hideMenuBarKey = "hideMenuBar"
-    static let useCAGridRendererKey = "useCAGridRenderer"
     static let folderLayoutModeKey = "folderLayoutMode"
     static let windowOpenAnimationKey = "windowOpenAnimationEnabled"
     static let windowShadowEnabledKey = "windowShadowEnabled"
@@ -522,7 +520,6 @@ final class AppStore: ObservableObject {
         }
         let existingInstall = isExistingInstall ?? (
             defaults.object(forKey: onboardingVersionKey) != nil ||
-            defaults.object(forKey: useCAGridRendererKey) != nil ||
             defaults.object(forKey: "isFullscreenMode") != nil ||
             defaults.object(forKey: gridColumnsKey) != nil
         )
@@ -900,7 +897,6 @@ final class AppStore: ObservableObject {
             Self.activePressScaleKey: activePressScale,
             "animationDuration": animationDuration,
             Self.globalHotKeyKey: globalHotKey?.dictionaryRepresentation ?? [:],
-            Self.useCAGridRendererKey: useCAGridRenderer,
             "showFPSOverlay": showFPSOverlay,
             Self.gameControllerEnabledKey: gameControllerEnabled,
             Self.gameControllerMenuToggleKey: gameControllerMenuTogglesLaunchpad
@@ -962,7 +958,6 @@ final class AppStore: ObservableObject {
         defaults.set(false, forKey: Self.hoverMagnificationKey)
         defaults.set(Self.defaultHoverMagnificationScale, forKey: Self.hoverMagnificationScaleKey)
         defaults.set(false, forKey: Self.activePressEffectKey)
-        defaults.set(false, forKey: Self.followScrollPagingKey)
         defaults.set(false, forKey: Self.reverseWheelPagingKey)
         defaults.set(false, forKey: Self.reverseWheelVerticalKey)
         defaults.set(TrackpadVerticalDirection.natural.rawValue, forKey: Self.trackpadVerticalDirectionKey)
@@ -1041,14 +1036,12 @@ final class AppStore: ObservableObject {
         enableHoverMagnification = defaults.object(forKey: Self.hoverMagnificationKey) as? Bool ?? false
         hoverMagnificationScale = defaults.object(forKey: Self.hoverMagnificationScaleKey) as? Double ?? Self.defaultHoverMagnificationScale
         enableActivePressEffect = defaults.object(forKey: Self.activePressEffectKey) as? Bool ?? false
-        followScrollPagingEnabled = defaults.object(forKey: Self.followScrollPagingKey) as? Bool ?? false
         reverseWheelPagingDirection = defaults.object(forKey: Self.reverseWheelPagingKey) as? Bool ?? false
         reverseWheelVerticalDirection = defaults.object(forKey: Self.reverseWheelVerticalKey) as? Bool ?? false
         trackpadVerticalDirection = defaults.string(forKey: Self.trackpadVerticalDirectionKey)
             .flatMap(TrackpadVerticalDirection.init(rawValue:)) ?? .natural
         activePressScale = defaults.object(forKey: Self.activePressScaleKey) as? Double ?? Self.defaultActivePressScale
         useLocalizedThirdPartyTitles = defaults.object(forKey: "useLocalizedThirdPartyTitles") as? Bool ?? true
-        useCAGridRenderer = defaults.object(forKey: Self.useCAGridRendererKey) as? Bool ?? true
         iconLabelFontWeight = defaults.string(forKey: Self.iconLabelFontWeightKey).flatMap(IconLabelFontWeightOption.init(rawValue:)) ?? .medium
         showFPSOverlay = defaults.object(forKey: "showFPSOverlay") as? Bool ?? false
         enableWindowOpenAnimation = defaults.object(forKey: Self.windowOpenAnimationKey) as? Bool ?? true
@@ -1774,13 +1767,6 @@ final class AppStore: ObservableObject {
         didSet { UserDefaults.standard.set(enableActivePressEffect, forKey: Self.activePressEffectKey) }
     }
 
-    @Published var followScrollPagingEnabled: Bool = {
-        if UserDefaults.standard.object(forKey: AppStore.followScrollPagingKey) == nil { return false }
-        return UserDefaults.standard.bool(forKey: AppStore.followScrollPagingKey)
-    }() {
-        didSet { UserDefaults.standard.set(followScrollPagingEnabled, forKey: Self.followScrollPagingKey) }
-    }
-
     @Published var reverseWheelPagingDirection: Bool = {
         if UserDefaults.standard.object(forKey: AppStore.reverseWheelPagingKey) == nil { return false }
         return UserDefaults.standard.bool(forKey: AppStore.reverseWheelPagingKey)
@@ -1800,20 +1786,6 @@ final class AppStore: ObservableObject {
         return raw.flatMap(TrackpadVerticalDirection.init(rawValue:)) ?? .natural
     }() {
         didSet { UserDefaults.standard.set(trackpadVerticalDirection.rawValue, forKey: Self.trackpadVerticalDirectionKey) }
-    }
-
-    @Published var useCAGridRenderer: Bool = {
-        if UserDefaults.standard.object(forKey: AppStore.useCAGridRendererKey) == nil { return true }
-        let enabled = UserDefaults.standard.bool(forKey: AppStore.useCAGridRendererKey)
-        if PerformanceMode.current == .full { return false }
-        return enabled
-    }() {
-        didSet {
-            if useCAGridRenderer, performanceMode == .full {
-                performanceMode = .lean
-            }
-            UserDefaults.standard.set(useCAGridRenderer, forKey: Self.useCAGridRendererKey)
-        }
     }
 
     @Published var activePressScale: Double = {
@@ -2002,16 +1974,6 @@ final class AppStore: ObservableObject {
         return UserDefaults.standard.bool(forKey: "showFPSOverlay")
     }() {
         didSet { UserDefaults.standard.set(showFPSOverlay, forKey: "showFPSOverlay") }
-    }
-
-    @Published var performanceMode: PerformanceMode = PerformanceMode.current {
-        didSet {
-            guard oldValue != performanceMode else { return }
-            PerformanceMode.persist(performanceMode)
-            if performanceMode == .full, useCAGridRenderer {
-                useCAGridRenderer = false
-            }
-        }
     }
 
     @Published var gameControllerEnabled: Bool = {
@@ -2914,7 +2876,6 @@ final class AppStore: ObservableObject {
         Self.migrateFolderLiquidGlassDefaultIfNeeded(from: defaults)
         folderLiquidGlassEnabled = Self.loadFolderLiquidGlassEnabled(from: defaults)
         let existingInstallBeforeDefaults = defaults.object(forKey: Self.onboardingVersionKey) != nil ||
-            defaults.object(forKey: Self.useCAGridRendererKey) != nil ||
             defaults.object(forKey: "isFullscreenMode") != nil ||
             defaults.object(forKey: Self.gridColumnsKey) != nil
 
@@ -2932,10 +2893,6 @@ final class AppStore: ObservableObject {
         } else {
             self.isFullscreenMode = UserDefaults.standard.bool(forKey: "isFullscreenMode")
         }
-        if UserDefaults.standard.object(forKey: PerformanceMode.userDefaultsKey) == nil {
-            PerformanceMode.persist(.lean)
-        }
-
         let shouldRememberPage = defaults.object(forKey: Self.rememberPageKey) == nil ? true : defaults.bool(forKey: Self.rememberPageKey)
         let savedPageIndex = defaults.object(forKey: Self.rememberedPageIndexKey) as? Int
 
@@ -3007,9 +2964,6 @@ final class AppStore: ObservableObject {
         if UserDefaults.standard.object(forKey: "enableAnimations") == nil {
             UserDefaults.standard.set(true, forKey: "enableAnimations")
         }
-        if UserDefaults.standard.object(forKey: AppStore.followScrollPagingKey) == nil {
-            UserDefaults.standard.set(false, forKey: AppStore.followScrollPagingKey)
-        }
         if UserDefaults.standard.object(forKey: AppStore.reverseWheelPagingKey) == nil {
             UserDefaults.standard.set(false, forKey: AppStore.reverseWheelPagingKey)
         }
@@ -3075,9 +3029,6 @@ final class AppStore: ObservableObject {
         }
         if defaults.object(forKey: Self.gameControllerMenuToggleKey) == nil {
             defaults.set(true, forKey: Self.gameControllerMenuToggleKey)
-        }
-        if defaults.object(forKey: Self.useCAGridRendererKey) == nil {
-            defaults.set(true, forKey: Self.useCAGridRendererKey)
         }
         if defaults.object(forKey: Self.developmentEnableCLICodeKey) == nil {
             defaults.set(false, forKey: Self.developmentEnableCLICodeKey)
@@ -4379,8 +4330,7 @@ final class AppStore: ObservableObject {
 
     @discardableResult
     func setFolderQuickLaunchAppPinned(_ pinned: Bool, app: AppInfo, inFolderID folderID: String) -> Bool {
-        guard useCAGridRenderer,
-              folderQuickLaunchEnabled,
+        guard folderQuickLaunchEnabled,
               let folderIndex = folders.firstIndex(where: { $0.id == folderID }) else { return false }
 
         var updatedFolder = folderWithValidQuickLaunchPins(folders[folderIndex])
@@ -4649,7 +4599,7 @@ final class AppStore: ObservableObject {
         AppInfo.from(url: url,
                      preferredName: preferredName,
                      customTitle: customTitles[url.path],
-                     loadIcon: PerformanceMode.current == .full)
+                     loadIcon: false)
     }
     
     // MARK: - Folder management
@@ -5158,7 +5108,6 @@ final class AppStore: ObservableObject {
             Self.hoverMagnificationKey,
             Self.hoverMagnificationScaleKey,
             Self.activePressEffectKey,
-            Self.followScrollPagingKey,
             Self.reverseWheelPagingKey,
             Self.reverseWheelVerticalKey,
             Self.trackpadVerticalDirectionKey,
@@ -6146,13 +6095,7 @@ final class AppStore: ObservableObject {
                                       itemsPerPage: itemsPerPage,
                                       columns: gridColumnsPerPage,
                                       rows: gridRowsPerPage)
-        } else {
-            // Cache is valid, but icons can still be preloaded
-            let appPaths = apps.map { $0.url.path }
-            cacheManager.preloadIcons(for: appPaths)
         }
-
-        cacheManager.smartPreloadIcons(for: items, currentPage: currentPage, itemsPerPage: itemsPerPage)
 
         if isInitialLoading {
             isInitialLoading = false
@@ -6199,10 +6142,6 @@ final class AppStore: ObservableObject {
                                       itemsPerPage: itemsPerPage,
                                       columns: gridColumnsPerPage,
                                       rows: gridRowsPerPage)
-        } else {
-            // Cache is valid, only update what changed
-            let changedAppPaths = apps.map { $0.url.path }
-            cacheManager.preloadIcons(for: changedAppPaths)
         }
     }
 
@@ -6459,17 +6398,11 @@ final class AppStore: ObservableObject {
         if FileManager.default.fileExists(atPath: url.path) {
             return AppInfo.from(url: url,
                                 customTitle: customTitles[path],
-                                loadIcon: PerformanceMode.current == .full)
+                                loadIcon: false)
         }
 
         let fallbackName = customTitles[path] ?? url.deletingPathExtension().lastPathComponent
-        let icon: NSImage
-        if PerformanceMode.current == .full {
-            icon = NSWorkspace.shared.icon(forFile: url.path)
-        } else {
-            icon = AppInfo.transparentPlaceholderIcon
-        }
-        return AppInfo(name: fallbackName, icon: icon, url: url)
+        return AppInfo(name: fallbackName, icon: AppInfo.transparentPlaceholderIcon, url: url)
     }
 
     func defaultDisplayName(for path: String) -> String {
@@ -6477,7 +6410,7 @@ final class AppStore: ObservableObject {
         guard FileManager.default.fileExists(atPath: url.path) else {
             return url.deletingPathExtension().lastPathComponent
         }
-        return AppInfo.from(url: url, customTitle: nil, loadIcon: PerformanceMode.current == .full).name
+        return AppInfo.from(url: url, customTitle: nil, loadIcon: false).name
     }
 
     var uninstallToolAppURL: URL? {
@@ -6585,7 +6518,7 @@ final class AppStore: ObservableObject {
     }
 
     private func applyCustomTitleOverride(for url: URL, title: String?) {
-        let info = AppInfo.from(url: url, customTitle: title, loadIcon: PerformanceMode.current == .full)
+        let info = AppInfo.from(url: url, customTitle: title, loadIcon: false)
         var changed = false
 
         if let index = apps.firstIndex(where: { $0.url == url }) {

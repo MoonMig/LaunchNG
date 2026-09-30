@@ -506,7 +506,7 @@ class NativeLaunchpadImporter {
         if let appPath = NSWorkspace.shared.absolutePathForApplication(withBundleIdentifier: bundleId) {
             return AppInfo.from(url: URL(fileURLWithPath: appPath),
                                 preferredName: title,
-                                loadIcon: PerformanceMode.current == .full)
+                                loadIcon: false)
         }
 
         // Fallback: search common paths
@@ -541,14 +541,14 @@ class NativeLaunchpadImporter {
                     if bundle.bundleIdentifier == bundleId {
                         return AppInfo.from(url: url,
                                             preferredName: title,
-                                            loadIcon: PerformanceMode.current == .full)
+                                            loadIcon: false)
                     }
                     // Fallback: name match
                     if let appName = bundle.infoDictionary?["CFBundleName"] as? String,
                        appName == title {
                         return AppInfo.from(url: url,
                                             preferredName: title,
-                                            loadIcon: PerformanceMode.current == .full)
+                                            loadIcon: false)
                     }
                 }
             }

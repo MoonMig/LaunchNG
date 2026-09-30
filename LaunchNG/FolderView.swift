@@ -238,11 +238,11 @@ struct FolderView: View {
     }
 
     private var shouldShowFolderPageIndicator: Bool {
-        appStore.useCAGridRenderer && appStore.folderLayoutMode == .paged && folderPageCount > 1
+        appStore.folderLayoutMode == .paged && folderPageCount > 1
     }
 
     private var shouldScrollFolderTitleWithContent: Bool {
-        appStore.useCAGridRenderer && appStore.folderLayoutMode == .vertical
+        appStore.folderLayoutMode == .vertical
     }
 
     private var folderTitleOpacity: Double {
@@ -297,73 +297,23 @@ struct FolderView: View {
         let appHeight = max(recomputedAppHeight, iconSize + 32)
         let labelWidth: CGFloat = columnWidth * 0.9
 
-        if appStore.useCAGridRenderer {
-            CAFolderGridViewRepresentable(
-                appStore: appStore,
-                folder: $folder,
-                currentPage: $folderCurrentPage,
-                pageCount: $folderPageCount,
-                verticalScrollOffset: $folderVerticalScrollOffset,
-                iconSize: iconSize,
-                verticalHeaderHeight: shouldScrollFolderTitleWithContent ? folderTitleHeight : 0,
-                onClose: onClose,
-                onLaunchApp: onLaunchApp,
-                presentationState: presentationState,
-                labelColorOverride: labelColorOverride,
-                labelShadow: labelShadow,
-                initialRevealAppPath: initialRevealAppPath
-            )
-            .id("ca_folder_grid_\(folder.id)_\(appStore.folderLayoutMode.rawValue)")
-            .onAppear { columnsCount = desiredColumns }
-        } else {
-            ZStack(alignment: .topLeading) {
-            ScrollViewReader { reader in
-            ScrollView {
-                ScrollOffsetReader { offsetY in
-                    scrollOffsetY = offsetY
-                }
-                .frame(height: 0)
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: spacing), count: desiredColumns), spacing: spacing) {
-                    ForEach(Array(visualApps.enumerated()), id: \.element.id) { (idx, app) in
-                        appDraggable(
-                            app: app,
-                            appIndex: idx,
-                            containerSize: geo.size,
-                            columnWidth: columnWidth,
-                            appHeight: appHeight,
-                            iconSize: iconSize,
-                            labelWidth: labelWidth,
-                            isSelected: isKeyboardNavigationActive && selectedIndex == idx
-                        )
-                        .id(app.url.standardizedFileURL.path)
-                    }
-                }
-                .animation(LNAnimations.gridUpdate, value: pendingDropIndex)
-                .id(forceRefreshTrigger) // Force the app grid to refresh via forceRefreshTrigger
-                .padding(EdgeInsets(top: gridPadding, leading: gridPadding, bottom: gridPadding, trailing: gridPadding))
-            }
-            .scrollIndicators(.hidden)
-            .disabled(isEditingName) // Disable scrolling while editing
-            .onAppear { columnsCount = desiredColumns }
-            .onChange(of: geo.size) { _, _ in columnsCount = desiredColumns }
-            .onAppear {
-                if let path = initialRevealAppPath { reader.scrollTo(path, anchor: .center) }
-            }
-            }
-
-            // Drag preview layer
-            if let draggingApp {
-                DragPreviewItem(item: .app(draggingApp),
-                                iconSize: iconSize,
-                                labelWidth: labelWidth,
-                                scale: dragPreviewScale)
-                    .position(x: dragPreviewPosition.x, y: dragPreviewPosition.y)
-                    .zIndex(100)
-                    .allowsHitTesting(false)
-            }
-        }
-            .coordinateSpace(name: "folderGrid")
-        }
+        CAFolderGridViewRepresentable(
+            appStore: appStore,
+            folder: $folder,
+            currentPage: $folderCurrentPage,
+            pageCount: $folderPageCount,
+            verticalScrollOffset: $folderVerticalScrollOffset,
+            iconSize: iconSize,
+            verticalHeaderHeight: shouldScrollFolderTitleWithContent ? folderTitleHeight : 0,
+            onClose: onClose,
+            onLaunchApp: onLaunchApp,
+            presentationState: presentationState,
+            labelColorOverride: labelColorOverride,
+            labelShadow: labelShadow,
+            initialRevealAppPath: initialRevealAppPath
+        )
+        .id("ca_folder_grid_\(folder.id)_\(appStore.folderLayoutMode.rawValue)")
+        .onAppear { columnsCount = desiredColumns }
     }
     
     // Visual drag reordering
@@ -709,64 +659,9 @@ extension FolderView {
     }
 
     private func handleKeyEvent(_ event: NSEvent) -> NSEvent? {
-        // Let input through while editing the folder name
-        if isTextFieldFocused { return event }
-        if appStore.useCAGridRenderer { return event }
-
-        // Esc closes the folder
-        if event.keyCode == 53 {
-            onClose()
-            return nil
-        }
-
-        // Return: activate or trigger the selection
-        if event.keyCode == 36 {
-            if !isKeyboardNavigationActive {
-                isKeyboardNavigationActive = true
-                setSelectionToStart()
-                clampSelection()
-                announceSelectedAppIfNeeded()
-                return nil
-            }
-            if let idx = selectedIndex, folder.apps.indices.contains(idx) {
-                let targetApp = folder.apps[idx]
-                if canLaunch(targetApp) {
-                    onLaunchApp(targetApp)
-                } else {
-                    NSSound.beep()
-                }
-                return nil
-            }
-            return event
-        }
-
-        // Tab: same as Return, activates keyboard navigation first
-        if event.keyCode == 48 {
-            if !isKeyboardNavigationActive {
-                isKeyboardNavigationActive = true
-                setSelectionToStart()
-                clampSelection()
-                announceSelectedAppIfNeeded()
-                return nil
-            }
-            return event
-        }
-
-        // Any arrow key: activate navigation first, same as Return/Tab above,
-        // instead of only Down doing so and Up/Left/Right silently no-oping
-        // on a first press before navigation is active.
-        if let (dx, dy) = arrowDelta(for: event.keyCode) {
-            if !isKeyboardNavigationActive {
-                isKeyboardNavigationActive = true
-                setSelectionToStart()
-                clampSelection()
-                announceSelectedAppIfNeeded()
-                return nil
-            }
-            moveSelection(dx: dx, dy: dy)
-            return nil
-        }
-
+        // The Next Engine's own CAFolderGridView/CAFolderPresentation handles
+        // keyboard navigation for an open folder; this SwiftUI-level monitor
+        // is a no-op passthrough now that folders are always CA-hosted.
         return event
     }
 

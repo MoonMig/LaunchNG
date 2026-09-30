@@ -75,7 +75,7 @@ struct CAFolderGridViewRepresentable: NSViewRepresentable {
             localize: { [weak store] key in store?.localized(key.localizationKey) ?? key.localizationKey.rawValue },
             showQuarantineRemovalAction: appStore.showQuarantineRemovalAction,
             canUseConfiguredUninstallTool: appStore.uninstallToolAppURL != nil,
-            folderQuickLaunchPinningEnabled: appStore.useCAGridRenderer && appStore.folderQuickLaunchEnabled,
+            folderQuickLaunchPinningEnabled: appStore.folderQuickLaunchEnabled,
             isOpenFolderAppPinned: { [weak store] app in
                 store?.isFolderQuickLaunchAppPinned(app, inFolderID: folderID) ?? false
             }
