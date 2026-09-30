@@ -2432,47 +2432,7 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .padding(.top, -15)
-
-            quarantineRemovalCard
         }
-    }
-
-    private var quarantineRemovalCard: some View {
-        HStack(spacing: 8) {
-            Text(appStore.localized(.developmentQuarantineRemovalTitle))
-                .font(.subheadline.weight(.semibold))
-            Button {
-                showQuarantineRemovalInfoPopover.toggle()
-            } label: {
-                Image(systemName: "info.circle")
-                    .font(.subheadline.weight(.regular))
-                    .foregroundStyle(.secondary)
-            }
-            .buttonStyle(.plain)
-            .popover(isPresented: $showQuarantineRemovalInfoPopover, arrowEdge: .top) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(appStore.localized(.developmentQuarantineRemovalInfoTitle))
-                        .font(.headline)
-                    Text(appStore.localized(.developmentQuarantineRemovalInfoBody))
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .textSelection(.enabled)
-                }
-                .padding(12)
-                .frame(width: 390, alignment: .leading)
-            }
-            Spacer()
-            Toggle("", isOn: $appStore.showQuarantineRemovalAction)
-                .labelsHidden()
-                .toggleStyle(.switch)
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(nsColor: .windowBackgroundColor))
-        )
     }
 
     private var generalActions: some View {
@@ -2655,6 +2615,38 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
+            Divider()
+
+            HStack {
+                Text(appStore.localized(.developmentQuarantineRemovalTitle))
+                    .font(.subheadline.weight(.semibold))
+                Button {
+                    showQuarantineRemovalInfoPopover.toggle()
+                } label: {
+                    Image(systemName: "info.circle")
+                        .font(.subheadline.weight(.regular))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .popover(isPresented: $showQuarantineRemovalInfoPopover, arrowEdge: .top) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(appStore.localized(.developmentQuarantineRemovalInfoTitle))
+                            .font(.headline)
+                        Text(appStore.localized(.developmentQuarantineRemovalInfoBody))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .textSelection(.enabled)
+                    }
+                    .padding(12)
+                    .frame(width: 390, alignment: .leading)
+                }
+                Spacer()
+                Toggle("", isOn: $appStore.showQuarantineRemovalAction)
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
