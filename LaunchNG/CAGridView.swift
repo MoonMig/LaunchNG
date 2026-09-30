@@ -93,11 +93,7 @@ final class CAGridView: NSView, CALayerDelegate, NSDraggingSource {
             let start = (count - 1) * itemsPerPage
             let end = min(count * itemsPerPage, items.count)
             guard start < end else { break }
-            let pageIsEmpty = items[start..<end].allSatisfy {
-                if case .empty = $0 { return true }
-                return false
-            }
-            guard pageIsEmpty else { break }
+            guard items[start..<end].isEntirelyEmptyPlaceholders else { break }
             count -= 1
         }
         return count

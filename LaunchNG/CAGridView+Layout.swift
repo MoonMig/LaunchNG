@@ -322,20 +322,7 @@ extension CAGridView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
 
-        let pageWidth = bounds.width
-        let pageHeight = bounds.height
-        let pageStride = pageWidth + pageSpacing
-
-        let availableWidth = max(0, pageWidth - contentInsets.left - contentInsets.right)
-        let availableHeight = max(0, pageHeight - contentInsets.top - contentInsets.bottom)
-
-        let totalColumnSpacing = columnSpacing * CGFloat(max(columns - 1, 0))
-        let totalRowSpacing = rowSpacing * CGFloat(max(rows - 1, 0))
-        let usableWidth = max(0, availableWidth - totalColumnSpacing)
-        let usableHeight = max(0, availableHeight - totalRowSpacing)
-        let cellWidth = usableWidth / CGFloat(max(columns, 1))
-        let cellHeight = usableHeight / CGFloat(max(rows, 1))
-        let strideX = cellWidth + columnSpacing
+        let pageStride = bounds.width + pageSpacing
 
         let actualIconSize = iconSize
         let labelHeight: CGFloat = showLabels ? (labelFontSize + 8) : 0
@@ -343,15 +330,13 @@ extension CAGridView {
 
         for (pageIndex, pageLayers) in iconLayers.enumerated() {
             for (localIndex, containerLayer) in pageLayers.enumerated() {
-                let col = localIndex % columns
-                let row = localIndex / columns
-
-                let cellOriginX = contentInsets.left + CGFloat(col) * strideX
-                let cellOriginY = pageHeight - contentInsets.top - CGFloat(row + 1) * cellHeight - CGFloat(row) * rowSpacing
+                let geo = cellGeometry(forLocalIndex: localIndex)
+                let cellWidth = geo.cellWidth
+                let cellHeight = geo.cellHeight
 
                 let totalHeight = actualIconSize + labelTopSpacing + labelHeight
-                let containerX = CGFloat(pageIndex) * pageStride + cellOriginX
-                let containerY = cellOriginY + (cellHeight - totalHeight) / 2
+                let containerX = CGFloat(pageIndex) * pageStride + geo.cellOriginX
+                let containerY = geo.cellOriginY + (cellHeight - totalHeight) / 2
 
                 containerLayer.frame = CGRect(x: containerX, y: containerY, width: cellWidth, height: totalHeight)
 
@@ -393,7 +378,7 @@ extension CAGridView {
             }
         }
 
-        let totalWidth = pageWidth * CGFloat(max(1, pageCount)) + pageSpacing * CGFloat(max(pageCount - 1, 0))
+        let totalWidth = bounds.width * CGFloat(max(1, pageCount)) + pageSpacing * CGFloat(max(pageCount - 1, 0))
         // Avoid setting frame on a transformed layer; reset to identity, update frame, then re-apply translation.
         // This prevents visual/data misalignment caused by frame updates under non-identity transforms.
         pageContainerLayer.transform = CATransform3DIdentity

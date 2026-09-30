@@ -897,15 +897,24 @@ extension CAGridView {
         CATransaction.commit()
     }
 
-    func gridCenterForGlobalIndex(_ globalIndex: Int) -> CGPoint {
-        guard bounds.width > 0, bounds.height > 0 else { return .zero }
+    /// Per-cell geometry (size + page-relative origin) for a local index
+    /// within one page. Shared by every function that needs to know where a
+    /// grid cell sits -- content insets, spacing, stride, and the col/row
+    /// split have independently been the site of real hit-testing bugs
+    /// before (see gridPositionAt's own comment on the slab-boundary fix);
+    /// three copies of this formula meant a fix like that one only landing
+    /// in one of them, silently leaving the other two to disagree with it.
+    struct CellGeometry {
+        let cellWidth: CGFloat
+        let cellHeight: CGFloat
+        /// Page-relative; does not include the page index's own offset.
+        let cellOriginX: CGFloat
+        let cellOriginY: CGFloat
+    }
 
+    func cellGeometry(forLocalIndex localIndex: Int) -> CellGeometry {
         let pageWidth = bounds.width
         let pageHeight = bounds.height
-        let pageStride = pageWidth + pageSpacing
-        let pageIndex = max(0, globalIndex / itemsPerPage)
-        let localIndex = max(0, globalIndex % itemsPerPage)
-
         let availableWidth = max(0, pageWidth - contentInsets.left - contentInsets.right)
         let availableHeight = max(0, pageHeight - contentInsets.top - contentInsets.bottom)
         let totalColumnSpacing = columnSpacing * CGFloat(max(columns - 1, 0))
@@ -921,15 +930,25 @@ extension CAGridView {
 
         let cellOriginX = contentInsets.left + CGFloat(col) * strideX
         let cellOriginY = pageHeight - contentInsets.top - CGFloat(row + 1) * cellHeight - CGFloat(row) * rowSpacing
+        return CellGeometry(cellWidth: cellWidth, cellHeight: cellHeight, cellOriginX: cellOriginX, cellOriginY: cellOriginY)
+    }
+
+    func gridCenterForGlobalIndex(_ globalIndex: Int) -> CGPoint {
+        guard bounds.width > 0, bounds.height > 0 else { return .zero }
+
+        let pageStride = bounds.width + pageSpacing
+        let pageIndex = max(0, globalIndex / itemsPerPage)
+        let localIndex = max(0, globalIndex % itemsPerPage)
+        let geo = cellGeometry(forLocalIndex: localIndex)
 
         let actualIconSize = iconSize
         let labelHeight: CGFloat = showLabels ? labelFontSize + 8 : 0
         let labelTopSpacing: CGFloat = showLabels ? 4 : 0
         let totalHeight = actualIconSize + labelTopSpacing + labelHeight
 
-        let containerX = CGFloat(pageIndex) * pageStride + cellOriginX
-        let containerY = cellOriginY + (cellHeight - totalHeight) / 2
-        return CGPoint(x: containerX + cellWidth / 2, y: containerY + totalHeight / 2)
+        let containerX = CGFloat(pageIndex) * pageStride + geo.cellOriginX
+        let containerY = geo.cellOriginY + (geo.cellHeight - totalHeight) / 2
+        return CGPoint(x: containerX + geo.cellWidth / 2, y: containerY + totalHeight / 2)
     }
     
     func resetIconPositions() {
@@ -1112,34 +1131,17 @@ extension CAGridView {
         let localIndex = index % itemsPerPage
         guard pageIndex >= 0 && pageIndex < pageCount else { return nil }
 
-        let pageWidth = bounds.width
-        let pageHeight = bounds.height
-        let pageStride = pageWidth + pageSpacing
-
-        let availableWidth = max(0, pageWidth - contentInsets.left - contentInsets.right)
-        let availableHeight = max(0, pageHeight - contentInsets.top - contentInsets.bottom)
-        let totalColumnSpacing = columnSpacing * CGFloat(max(columns - 1, 0))
-        let totalRowSpacing = rowSpacing * CGFloat(max(rows - 1, 0))
-        let usableWidth = max(0, availableWidth - totalColumnSpacing)
-        let usableHeight = max(0, availableHeight - totalRowSpacing)
-        let cellWidth = usableWidth / CGFloat(max(columns, 1))
-        let cellHeight = usableHeight / CGFloat(max(rows, 1))
-        let strideX = cellWidth + columnSpacing
-
-        let col = localIndex % columns
-        let row = localIndex / columns
-
-        let cellOriginX = contentInsets.left + CGFloat(col) * strideX
-        let cellOriginY = pageHeight - contentInsets.top - CGFloat(row + 1) * cellHeight - CGFloat(row) * rowSpacing
+        let pageStride = bounds.width + pageSpacing
+        let geo = cellGeometry(forLocalIndex: localIndex)
 
         let labelHeight: CGFloat = showLabels ? (labelFontSize + 8) : 0
         let labelTopSpacing: CGFloat = showLabels ? 4 : 0
         let totalHeight = iconSize + labelTopSpacing + labelHeight
 
-        let containerX = CGFloat(pageIndex) * pageStride + cellOriginX
-        let containerY = cellOriginY + (cellHeight - totalHeight) / 2
+        let containerX = CGFloat(pageIndex) * pageStride + geo.cellOriginX
+        let containerY = geo.cellOriginY + (geo.cellHeight - totalHeight) / 2
 
-        let iconX = containerX + (cellWidth - iconSize) / 2
+        let iconX = containerX + (geo.cellWidth - iconSize) / 2
         let iconY = containerY + labelHeight + labelTopSpacing
 
         let centerX = iconX + iconSize / 2 + scrollOffset

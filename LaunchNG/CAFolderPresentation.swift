@@ -641,7 +641,6 @@ final class CAFolderPresentationHost: NSView {
         state?.allowsInteraction = false
         completion?.cancel()
         preparationTimeout?.cancel(); preparationTimeout = nil
-        source = destination
         beginTransitionCompletion { $0.dismissImmediately() }
         controller?.backdrop?.setFolderDepth(false, duration: duration, motion: nextMotion)
         grid.animateFolderPresentation(from: destination, opening: false, duration: duration,

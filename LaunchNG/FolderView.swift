@@ -752,8 +752,10 @@ extension FolderView {
             return event
         }
 
-        // Down arrow: activate navigation first
-        if event.keyCode == 125 {
+        // Any arrow key: activate navigation first, same as Return/Tab above,
+        // instead of only Down doing so and Up/Left/Right silently no-oping
+        // on a first press before navigation is active.
+        if let (dx, dy) = arrowDelta(for: event.keyCode) {
             if !isKeyboardNavigationActive {
                 isKeyboardNavigationActive = true
                 setSelectionToStart()
@@ -761,13 +763,6 @@ extension FolderView {
                 announceSelectedAppIfNeeded()
                 return nil
             }
-            moveSelection(dx: 0, dy: 1)
-            return nil
-        }
-
-        // Left/right or other arrow keys
-        if let (dx, dy) = arrowDelta(for: event.keyCode) {
-            guard isKeyboardNavigationActive else { return event }
             moveSelection(dx: dx, dy: dy)
             return nil
         }

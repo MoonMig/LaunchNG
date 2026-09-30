@@ -170,6 +170,24 @@ enum LaunchpadItem: Identifiable, Equatable {
     static func == (lhs: LaunchpadItem, rhs: LaunchpadItem) -> Bool {
         lhs.id == rhs.id
     }
+
+    /// True for the `.empty` placeholder case specifically -- distinct from
+    /// `.missingApp`, which still occupies a real (if broken) slot.
+    var isEmptyPlaceholder: Bool {
+        if case .empty = self { return true }
+        return false
+    }
+}
+
+extension Sequence where Element == LaunchpadItem {
+    /// True when every item in this slice is an `.empty` placeholder -- the
+    /// "is this whole page blank" test shared by CAGridView.visiblePageCount
+    /// and CAGridViewRepresentable's onRequestNewPage, kept in one place so
+    /// the two don't independently redefine what counts as an empty
+    /// trailing page and risk disagreeing about it.
+    var isEntirelyEmptyPlaceholders: Bool {
+        allSatisfy(\.isEmptyPlaceholder)
+    }
 }
 
 // MARK: - Unified persistence model (top-level item: app or folder)

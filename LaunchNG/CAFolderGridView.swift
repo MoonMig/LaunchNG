@@ -232,7 +232,18 @@ final class CAFolderGridView: NSView {
             horizontalOffset = pageOffset(for: currentPage, metrics: metrics)
             targetHorizontalOffset = horizontalOffset
         }
-        updateLayout(animated: false)
+        // Skip while a drag is live: updateLayout() unconditionally resets
+        // every non-dragged icon's layer.frame to its plain, un-shifted
+        // position, which would fight updatePagedReorderPreview/
+        // updateVerticalReorderPreview's own frame assignments and snap the
+        // reorder "make space" preview back to normal mid-gesture if AppKit
+        // happens to call layout() again for any incidental reason (a
+        // resize, some other needsLayout trigger) while dragging. Those two
+        // functions already keep itemFrames in sync themselves, so nothing
+        // here depends on this call running during a drag.
+        if !isDraggingItem {
+            updateLayout(animated: false)
+        }
         if window != nil, bounds.width > 0, bounds.height > 0, isPresentationLayoutReady,
            let path = pendingRevealAppPath,
            let index = apps.firstIndex(where: { $0.url.standardizedFileURL.path == path }),

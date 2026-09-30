@@ -229,7 +229,7 @@ struct LaunchpadView: View {
     /// even if the rest of it is empty.
     private var visiblePageCount: Int {
         var count = pages.count
-        while count > 1, pages[count - 1].allSatisfy({ if case .empty = $0 { return true }; return false }) {
+        while count > 1, pages[count - 1].isEntirelyEmptyPlaceholders {
             count -= 1
         }
         return count

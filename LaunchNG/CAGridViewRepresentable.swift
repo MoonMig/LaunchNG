@@ -179,11 +179,7 @@ struct CAGridViewRepresentable: NSViewRepresentable {
                 // leaving dangling empty pages (with their own indicator dot)
                 // behind once the drag ended without ever using them.
                 let lastPageStart = ((appStore.items.count - 1) / itemsPerPage) * itemsPerPage
-                let lastPageIsEmpty = appStore.items[lastPageStart...].allSatisfy {
-                    if case .empty = $0 { return true }
-                    return false
-                }
-                guard !lastPageIsEmpty else { return }
+                guard !appStore.items[lastPageStart...].isEntirelyEmptyPlaceholders else { return }
                 let currentPageCount = (appStore.items.count + itemsPerPage - 1) / itemsPerPage
                 let neededItems = (currentPageCount + 1) * itemsPerPage - appStore.items.count
                 for _ in 0..<neededItems {
