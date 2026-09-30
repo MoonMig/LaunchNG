@@ -7,9 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 LaunchNG is a native macOS (Tahoe/26+) SwiftUI + AppKit app that replaces the
 Launchpad that Apple removed. It imports the user's existing Launchpad layout
 straight from the system SQLite database, then re-implements paging, folders,
-search, drag-and-drop reordering, and Dock integration on top of two
-interchangeable rendering engines. It also ships a CLI/TUI and a bundled
-GUI-less auto-updater.
+search, drag-and-drop reordering, and Dock integration on a Core
+Animation-rendered grid. It also ships a CLI/TUI and a Sparkle-based signed
+in-app auto-updater.
 
 ## Build, run, test
 
@@ -180,13 +180,6 @@ factored out into the `LaunchNGWallpaperCore` static library and covered by
 `ko`, `fr`, `es`, `de`, `ru`, `hi`, `vi`, `it`, `cs`) drive in-app strings.
 README translations live separately under `i18n/README.<lang>.md` and must be
 updated alongside `README.md` — they are not auto-generated.
-
-### Markdown rendering
-
-`Markdown/` is a minimal, dependency-free Markdown renderer
-(`SimpleMarkdownParser.swift` → `MarkdownRenderModel.swift`) used only to
-render GitHub release notes in the in-app Update tab
-(`ReleaseNotesMarkdownView.swift`).
 
 ## Conventions worth knowing
 
