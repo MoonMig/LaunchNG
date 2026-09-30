@@ -2,67 +2,62 @@
 
 **Languages**: [English](README.md) | [简体中文](i18n/README.zh.md) | [繁體中文](i18n/README.zh-TW.md) | [日本語](i18n/README.ja.md) | [한국어](i18n/README.ko.md) | [Français](i18n/README.fr.md) | [Español](i18n/README.es.md) | [Deutsch](i18n/README.de.md) | [Русский](i18n/README.ru.md) | [हिन्दी](i18n/README.hi.md) | [Tiếng Việt](i18n/README.vi.md) | [Italiano](i18n/README.it.md) | [Čeština](i18n/README.cs.md)
 
-## 📥 Download
+macOS Tahoe (26) removed Launchpad outright. LaunchNG brings it back as a native app: it reads your existing Launchpad layout straight out of macOS's own database on first run, then reimplements paging, folders, search, and drag-and-drop reordering on top of a Core Animation-rendered grid, with Dock integration, a bundled CLI/TUI, and a signed, in-app auto-updater.
 
-**[Download here](https://github.com/moonmig/LaunchNG/releases/latest)** - Get the latest release
+## Download
 
-⭐ Consider starring [LaunchNG](https://github.com/moonmig/LaunchNG) and especially [LaunchNext](https://github.com/RoversX/LaunchNext)!
+**[Get the latest release](https://github.com/moonmig/LaunchNG/releases/latest)**
 
-| | |
-|:---:|:---:|
-| ![](./public/banner.webp) | ![](./public/setting1.webp) |
-| ![](./public/setting2.webp) | ![](./public/setting3.webp) |
+If you find this useful, a star on the repo is appreciated. LaunchNG began as a fork of [LaunchNext](https://github.com/RoversX/LaunchNext) by RoversX — the original project is worth a star too.
 
-MacOS Tahoe removed launchpad,and it's so hard to use, it's doesn't use your Bio GPU, please apple, at least give people an option to switch back. Before that, here is LaunchNG
+<!-- Screenshots go here — see Contributing if you'd like to submit current ones. -->
 
-*Built upon [LaunchNext](https://github.com/RoversX/LaunchNext) by RoversX - huge thanks to the original project!❤️*
+### If macOS blocks the app on first launch
 
-*LaunchNext has chosen the GPL 3 license. LaunchNG follows the same licensing terms.*
+Releases are unsigned/ad-hoc builds (no paid Apple Developer account is used for this fork), so Gatekeeper will refuse to open the app until you clear the quarantine flag once:
 
-⚠️ **If macOS blocks the app, run this in Terminal:**
 ```bash
 sudo xattr -r -d com.apple.quarantine /Applications/LaunchNG.app
 ```
-**Why**: ~~I can't afford Apple's developer certificate ($99/year), so macOS blocks unsigned apps.~~ This command removes the quarantine flag to let it run. **Only use this command on apps you trust.**
 
-### Code Signing Status
+Only run this against apps you actually trust — it disables macOS's download-quarantine check for that app.
 
-Releases from this fork are currently unsigned/ad-hoc builds, hence the quarantine command above.
+Building from source instead? See [Configure local code signing](#configure-local-code-signing) below; you won't need this command.
 
-Building from source? See [Configure local code signing](#configure-local-code-signing).
+## What it does
 
-### What LaunchNG Delivers
-- ✅ **One-click import from old system Launchpad** - directly reads your native Launchpad SQLite database (`/private$(getconf DARWIN_USER_DIR)com.apple.dock.launchpad/db/db`) to perfectly recreate your existing folders, app positions, and layout
-- ✅ **Classic Launchpad experience** - works exactly like the beloved original interface
-- ✅ **Multi-language support** - full internationalization with English, Simplified Chinese, Traditional Chinese, Japanese, French, Spanish, German, Russian, and more
-- ✅ **Hide icon labels** - clean, minimalist view when you don't need app names
-- ✅ **Custom icon sizes** - adjust icon dimensions to fit your preferences
-- ✅ **Smart folder management** - create and organize folders just like before
-- ✅ **Fuzzy search and keyboard navigation** - find apps quickly, even with partial or imperfect input
-- ✅ **CLI / TUI support** - inspect and operate your layout from the terminal
-- ✅ **Hot Corner and native gesture support** - open LaunchNG with corners, trackpad gestures, and 4 / 5 finger options
-- ✅ **Drag apps directly to the Dock** - available in Next Engine + Core Animation
-- ✅ **Core Animation folders** - folder content supports paged and vertical scroll layouts
-- ✅ **Better context menus** - Show in Finder, Copy App Path, Rename Folder, and configured uninstall actions
-- ✅ **Update tab with Markdown release notes** - richer in-app update experience
-- ✅ **Backup, controller, and voice support improvements** - better reliability and accessibility
+- **One-click import from the real Launchpad database** — reads `/private$(getconf DARWIN_USER_DIR)com.apple.dock.launchpad/db/db` directly and reconstructs your existing folders, positions, and pages exactly as they were
+- **The classic paged-grid experience** — search, keyboard navigation, drag-and-drop reordering, folder creation by dragging one icon onto another
+- **Core Animation rendering throughout**, including drag-and-drop straight into the Dock and native Liquid Glass folder icons on macOS 26
+- **Folder layouts**: paged (like the original) or vertical scrolling, per your preference
+- **Fuzzy search** with CJK (pinyin/romanization) matching, so partial or imperfect input still finds the right app
+- **Hot corner and trackpad gesture activation**, including experimental 4/5-finger pinch and tap support
+- **A CLI and TUI** for inspecting or scripting your layout from the terminal
+- **Signed automatic updates** via [Sparkle](https://sparkle-project.org), with a normal in-app "Check for Updates"
+- **Local backups** to a folder of your choice, with a managed history you can restore from
+- **Hide app icon labels, resize icons, adjust spacing** — independently for the main grid and for folder contents
+- **13 languages** with full UI translation (see the language list above)
+- **Context menu actions** — show in Finder, copy app path, rename folders, and (opt-in) a Gatekeeper-unblock shortcut for other apps you trust
+- **Controller and voice-feedback support** for accessibility-minded setups
 
-### What We Lost in macOS Tahoe
-- ❌ No custom app organization
-- ❌ No user-created folders
-- ❌ No drag-and-drop customization
-- ❌ No visual app management
-- ❌ Forced categorical grouping
+## What macOS Tahoe took away
 
+- No user-created folders or custom organization
+- No drag-and-drop rearranging
+- No visual app management at all — just an automatically generated, alphabetized grid you can't touch
 
-### Data Storage
-Application data is safely stored in:
+LaunchNG exists because that's a real downgrade, not a reasonable default.
+
+## Where your data lives
+
+LaunchNG's own layout, preferences, and cache live in:
+
 ```
 ~/Library/Application Support/LaunchNG/Data.store
 ```
 
-### Native Launchpad Integration
-Reads directly from the system Launchpad database:
+Nothing is sent anywhere. The only network activity is checking the update feed and, when you choose to import it, reading Apple's own Launchpad database at:
+
 ```bash
 /private$(getconf DARWIN_USER_DIR)com.apple.dock.launchpad/db/db
 ```
@@ -70,176 +65,96 @@ Reads directly from the system Launchpad database:
 ## Installation
 
 ### Requirements
+
 - macOS 26 (Tahoe) or later
-- Apple Silicon or Intel processor
-- Xcode 26 (for building from source)
+- Apple Silicon or Intel
+- Xcode 26, if building from source
 
-### Build from Source
+### Build from source
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/moonmig/LaunchNG.git
-   cd LaunchNG
-   ```
+```bash
+git clone https://github.com/moonmig/LaunchNG.git
+cd LaunchNG
+open LaunchNG.xcodeproj
+```
 
-2. **Open in Xcode**
-   ```bash
-   open LaunchNG.xcodeproj
-   ```
+<a name="configure-local-code-signing"></a>**Configure local code signing** (no paid Apple Developer account needed):
 
-3. <a name="configure-local-code-signing"></a>**Configure local code signing**
-   - A paid Apple Developer membership is not required to build or contribute to LaunchNG.
-   - Select the **LaunchNG target**, open **Signing & Capabilities**, set **Team** to `None`, and select `Sign to Run Locally` as the signing certificate.
-   - Keep Hardened Runtime enabled.
-   - Xcode may mark the project file as modified after changing these local settings. Do not include signing-only changes in a pull request.
+- Select the **LaunchNG** target → **Signing & Capabilities** → set **Team** to `None`, certificate to `Sign to Run Locally`. Leave Hardened Runtime on.
+- Xcode will mark the project file as modified after this — don't include signing-only changes in a pull request.
 
-   | **Xcode local signing settings for LaunchNG** | **Signed and notarized LaunchNG release** |
-   | :---: | :---: |
-   | <img src="./public/local-code-signing.png" alt="Xcode local signing settings for LaunchNG" width="620"> | <img src="./public/notarized-release-status.png" alt="Signed and notarized LaunchNG release status" width="300"> |
+To run with `⌘R`, the destination must be **My Mac** — a universal/"Any Mac" destination can build and archive but can't launch for debugging. `⌘B` to just build.
 
-4. **Build and run**
-   - To launch the app with `⌘+R`, select `My Mac` as the run destination—not `Any Mac`.
-   - `Any Mac (arm64, x86_64)` is intended for generic builds and archives; it cannot launch the app for debugging.
-   - Press `⌘+B` if you only want to build.
+### Command-line build
 
-### Command Line Build
-
-**Regular Build:**
 ```bash
 xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release
+
+# Universal binary (Apple Silicon + Intel):
+xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release \
+  ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO clean build
 ```
 
-**Universal Binary Build (Intel + Apple Silicon):**
-```bash
-xcodebuild -project LaunchNG.xcodeproj -scheme LaunchNG -configuration Release ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO clean build
-```
+## Using it
 
-## Usage
+1. **First launch** scans your installed applications automatically.
+2. **Settings → General → Import System Launchpad** pulls in your existing layout, folders, and positions in one click.
+3. Click to select, double-click (or Return) to launch; type anywhere to search.
+4. Drag one app onto another to create a folder; drag apps around to reorder.
+5. Optionally enable the CLI in Settings if you want to script your layout from the terminal.
 
-### Getting Started
-1. **First Launch**: LaunchNG automatically scans all installed applications
-2. **Select**: Click to select apps, double-click to launch
-3. **Search**: Type to instantly filter applications
-4. **Organize**: Drag apps to create folders and custom layouts
-5. **Automate**: Enable CLI in Settings if you want terminal workflows
+### Fullscreen vs. compact
 
-### Import Your Launchpad
-1. Open Settings (gear icon)
-2. Click **"Import Launchpad"**
-3. Your existing layout and folders are automatically imported
+- **Fullscreen** covers the whole screen, closest to the original Launchpad.
+- **Compact** is a floating, rounded window you can resize.
+- Appearance settings (icon scale, spacing, page-indicator position, and more) are tracked separately for each mode.
+- Fullscreen can optionally hide the menu bar; macOS hides the Dock automatically when that's on.
 
+## Notable settings
 
-### Display Modes
-- **Compact**: Floating window with rounded corners
-- **Fullscreen**: Full-screen mode for maximum visibility
-- **Legacy Engine** and **Next Engine + Core Animation** are available in Settings
-- LaunchNG can keep separate settings for fullscreen and compact
-- Optional fullscreen menu bar hiding is available; macOS also hides the Dock when this is enabled
-
-## Advanced Features
-
-### Search and Folder Experience
-- **Fuzzy Search**: Match apps with partial names, abbreviations, and imperfect input
-- **Configurable Search Delay**: Tune search debounce timing in Settings
-- **Folder Layout Modes**: Choose between Launchpad-like paged folders and vertical scrolling folders
-- **Core Animation Folder Rendering**: Smoother folder interaction for larger folders
-
-### Smart Background Interaction
-- Intelligent click detection prevents accidental dismissal
-- Context-aware gesture handling
-- Search field protection
-
-### Performance Optimization
-- **Icon Caching**: Intelligent image caching for smooth scrolling
-- **Lazy Loading**: Efficient memory usage
-- **Background Scanning**: Non-blocking app discovery
-
-### Automation and Activation
-- **CLI / TUI**: Manage LaunchNG from the terminal
-- **Hot Corner**: Open LaunchNG from a configurable screen corner
-- **Experimental native gestures**: 4 / 5 finger pinch and tap actions, including external trackpad device selection
-- **Dock drag**: Drag apps directly into the macOS Dock in Next Engine + Core Animation
-
-### App Management
-- **Context menu actions**: Show apps in Finder, copy app paths, rename folders, and use a configured uninstall tool
-
-### Update and Backup Tools
-- **Update tab**: Check for updates and read Markdown release notes inside Settings
-- **Backup tools**: Create and restore backups more safely
-- **Notification update**: Modern notification API support
-
-### Multi-Display Support
-- Automatic screen detection
-- Per-display positioning
-- Seamless multi-monitor workflows
+- **Appearance**: icon scale, label size and visibility, grid spacing — with separate values for folder contents — plus a background style (blur, native Liquid Glass, or a live wallpaper-derived backdrop)
+- **Search**: fuzzy matching toggle and search debounce timing
+- **Hidden apps**: keep specific apps out of the grid without uninstalling them
+- **Backup**: pick a folder, create timestamped backups, restore or delete old ones from a list
+- **Shortcut & gesture**: the global hotkey, hot corner, and (experimental) trackpad gesture bindings
+- **Updates**: automatic-check toggle and a manual "Check for Updates" button, both backed by Sparkle
 
 ## Troubleshooting
 
-### Common Issues
+**The app won't start.** Confirm you're on macOS 26.0 or later and that the quarantine flag has been cleared (see above).
 
-**Q: App won't start?**
-A: Ensure macOS 26.0+ and check system permissions.
+**"Check for Updates" says something's wrong.** LaunchNG uses Sparkle with a signed update feed; a manual check should always reflect the latest published release within a few minutes.
 
-**Q: Which engine should I use?**
-A: `Next Engine + Core Animation` is recommended for the best experience. `Legacy Engine` is still available if you need the older compatibility path.
-
-**Q: Why doesn't the CLI command exist yet?**
-A: Enable the command line interface in Settings first. LaunchNG can install and remove the managed `launchng` command for you.
+**The `launchng` terminal command isn't there.** It's opt-in — enable the command line interface in Settings first, and LaunchNG will install (and can later remove) the managed shim itself.
 
 ## Contributing
 
-We welcome contributions! Please:
-
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes with a clear message
+4. Push the branch and open a pull request
 
-### Development Guidelines
-- Follow Swift style conventions
-- Add meaningful comments for complex logic
-- Test on multiple macOS versions
-- Maintain backward compatibility
+A few things that help review go smoothly:
+- Keep signing-only Xcode project changes out of your diff (see local code signing above)
+- If you're touching the Core Animation grid, check `GridReorderPlan.swift` first — reorder/paging logic belongs there, not duplicated per view
+- Run the test suite before opening a PR:
+  ```bash
+  xcodebuild test -scheme LaunchNG -destination 'platform=macOS'
+  ```
 
-### Documentation
+Fresh, current screenshots (main grid, a couple of Settings tabs) are also genuinely useful contributions — see the placeholder near the top of this file.
 
-- [Folder Liquid Glass](Documentation/FolderLiquidGlass.md) — design constraints
-  behind the Core Animation grid's glass folder icons, what is verified, and what
-  still needs main-app acceptance.
-- [Grid diagnostics](scripts/diagnostics/README.md) — manual probes for the grid
-  and glass overlay, with their commands and coverage limits.
+### Further documentation
 
-Unit tests live in `LaunchNGTests` and run with:
+- [Folder Liquid Glass](Documentation/FolderLiquidGlass.md) — design constraints behind the folder glass icons, what's verified, and what still needs acceptance testing
+- [Grid diagnostics](scripts/diagnostics/README.md) — manual probes for the grid and glass overlay, with their exact coverage and limits
 
-```sh
-xcodebuild test -scheme LaunchNG -destination 'platform=macOS'
-```
+## License and attribution
 
-## The Future of App Management
+LaunchNG is a fork of [LaunchNext](https://github.com/RoversX/LaunchNext) by RoversX, which in turn traces back to the broader Launchpad-replacement community effort. Both projects are licensed GPL-3.0, and LaunchNG follows the same terms — see [LICENSE](LICENSE).
 
-As Apple moves away from customizable interfaces, LaunchNG represents a push toward user control and personalization. I still hope Apple brings Launchpad back.
-
-**LaunchNG** isn't just a Launchpad replacement—it's a statement that user choice matters.
-
+Experimental trackpad gesture support is built on [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) and the fork by [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport).
 
 ---
-
-**LaunchNG** - Reclaim Your App Launcher 🚀
-
-*Built for macOS users who refuse to compromise on customization.*
-
-## Development Tools
-
-- Claude Code 
-- Cursor 
-- OpenAI Codex CLI
-- Perplexity
-- Google
-
-
-
-- Experimental gesture support is built on [OpenMultitouchSupport](https://github.com/Kyome22/OpenMultitouchSupport) and the fork by [KrishKrosh](https://github.com/KrishKrosh/OpenMultitouchSupport).❤️
-
 
 ![GitHub downloads](https://img.shields.io/github/downloads/moonmig/LaunchNG/total)
