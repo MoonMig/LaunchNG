@@ -71,7 +71,14 @@ final class SparkleUpdaterController: NSObject, SPUStandardUserDriverDelegate, S
         MainActor.assumeIsolated {
             let windowVisible = AppDelegate.shared?.launchpadWindow?.isVisible ?? false
             let windowLevel = AppDelegate.shared?.launchpadWindow?.level.rawValue ?? -1
-            sparkleDebugLog("before hideWindow(): windowVisible=\(windowVisible) windowLevel=\(windowLevel)")
+            let isSetting = AppDelegate.shared?.appStore.isSetting ?? false
+            sparkleDebugLog("before hideWindow(): windowVisible=\(windowVisible) windowLevel=\(windowLevel) isSetting=\(isSetting)")
+            // Settings is a SwiftUI sheet attached to the main window.
+            // hideWindow() only clears isSetting once its own fade-out
+            // animation finishes, which left the sheet's separate child
+            // window still on top of Sparkle's alert in the meantime.
+            // Close it immediately instead of waiting for that animation.
+            AppDelegate.shared?.appStore.isSetting = false
             AppDelegate.shared?.hideWindow()
         }
     }
