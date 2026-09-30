@@ -56,6 +56,12 @@ if [[ -z "${VERSION}" ]]; then
   exit 1
 fi
 
+BUILD_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "${APP_PATH}/Contents/Info.plist")"
+if [[ -z "${BUILD_VERSION}" ]]; then
+  echo "error: Could not read CFBundleVersion from ${APP_PATH}" >&2
+  exit 1
+fi
+
 ZIP_NAME="LaunchNG${VERSION}.zip"
 ZIP_PATH="${RELEASE_DIR}/${ZIP_NAME}"
 DMG_NAME="LaunchNG${VERSION}.dmg"
@@ -94,7 +100,7 @@ DMG_SHA256="$(awk -v f="${DMG_NAME}" '$2 == f { print $1 }' "${CHECKSUMS_PATH}")
 # material is ever passed on the command line or written to disk here.
 SPARKLE_SIGN_OUTPUT="$("${ROOT_DIR}/scripts/sparkle-tools/bin/sign_update" "${ZIP_PATH}")"
 python3 "${ROOT_DIR}/scripts/sparkle-tools/update_appcast.py" \
-  "${ROOT_DIR}" "${VERSION}" "${ZIP_NAME}" "${SPARKLE_SIGN_OUTPUT}"
+  "${ROOT_DIR}" "${BUILD_VERSION}" "${VERSION}" "${ZIP_NAME}" "${SPARKLE_SIGN_OUTPUT}"
 
 echo "Release artifacts:"
 echo "  App: ${APP_PATH}"

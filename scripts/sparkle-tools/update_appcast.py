@@ -5,7 +5,14 @@ scripts/release-notarized.sh after signing the release zip with
 scripts/sparkle-tools/bin/sign_update.
 
 Usage:
-    update_appcast.py <repo-root> <version> <zip-name> <sign_update-output>
+    update_appcast.py <repo-root> <build-version> <marketing-version> <zip-name> <sign_update-output>
+
+<build-version> must be the app's CFBundleVersion -- Sparkle's updater
+compares this against the *installed* CFBundleVersion (SUHost.version),
+never CFBundleShortVersionString, so this field drives whether an update
+is offered at all. <marketing-version> (CFBundleShortVersionString) is
+carried only as sparkle:shortVersionString, for display, and to build the
+GitHub release URL/tag, which use the marketing version.
 
 <sign_update-output> is the raw stdout of `sign_update <zip>`, e.g.:
     sparkle:edSignature="BASE64..." length="12345"
@@ -13,29 +20,32 @@ Usage:
 import datetime
 import pathlib
 import sys
+from xml.sax.saxutils import escape, quoteattr
 
 def main() -> None:
-    if len(sys.argv) != 5:
+    if len(sys.argv) != 6:
         print(__doc__, file=sys.stderr)
         raise SystemExit(2)
 
     root_dir = pathlib.Path(sys.argv[1])
-    version = sys.argv[2]
-    zip_name = sys.argv[3]
-    sig_attrs = sys.argv[4].strip()
+    build_version = sys.argv[2]
+    marketing_version = sys.argv[3]
+    zip_name = sys.argv[4]
+    sig_attrs = sys.argv[5].strip()
     appcast_path = root_dir / "appcast.xml"
 
     pub_date = datetime.datetime.now(datetime.timezone.utc).strftime("%a, %d %b %Y %H:%M:%S +0000")
-    download_url = f"https://github.com/MoonMig/LaunchNG/releases/download/v{version}/{zip_name}"
-    notes_url = f"https://github.com/MoonMig/LaunchNG/releases/tag/v{version}"
+    download_url = f"https://github.com/MoonMig/LaunchNG/releases/download/v{marketing_version}/{zip_name}"
+    notes_url = f"https://github.com/MoonMig/LaunchNG/releases/tag/v{marketing_version}"
 
     item = f"""    <item>
-      <title>Version {version}</title>
+      <title>{escape(f"Version {marketing_version}")}</title>
       <pubDate>{pub_date}</pubDate>
-      <sparkle:version>{version}</sparkle:version>
+      <sparkle:version>{escape(build_version)}</sparkle:version>
+      <sparkle:shortVersionString>{escape(marketing_version)}</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <sparkle:releaseNotesLink>{notes_url}</sparkle:releaseNotesLink>
-      <enclosure url="{download_url}" {sig_attrs} type="application/octet-stream" />
+      <sparkle:releaseNotesLink>{escape(notes_url)}</sparkle:releaseNotesLink>
+      <enclosure url={quoteattr(download_url)} {sig_attrs} type="application/octet-stream" />
     </item>
 """
 
@@ -56,7 +66,7 @@ def main() -> None:
 """
 
     appcast_path.write_text(text, encoding="utf-8")
-    print(f"Updated {appcast_path} with version {version}")
+    print(f"Updated {appcast_path} with build {build_version} (marketing version {marketing_version})")
 
 
 if __name__ == "__main__":

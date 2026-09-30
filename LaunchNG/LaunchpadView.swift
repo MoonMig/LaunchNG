@@ -2282,9 +2282,9 @@ extension LaunchpadView {
     /// sitting outside this cell's own zone. That makes an .insert landing
     /// between two occupied cells (e.g. two folders) unreachable. This is the
     /// same fix as CAGridView+Input.swift's isPointInFolderDropZone, applied
-    /// to the Legacy engine's own drag math — including the handoff drag used
-    /// to pull an item out of an open folder, which reuses this code even
-    /// when the Next (Core Animation) engine renders the grid.
+    /// to the handoff drag used to pull an item out of an open folder, which
+    /// still runs through this SwiftUI-side drag math regardless of which
+    /// grid is rendering.
     private func clampedFolderDropZoneSize(iconSize: CGFloat, columnWidth: CGFloat, appHeight: CGFloat) -> CGFloat {
         let insertMargin: CGFloat = 16
         let maxWidth = columnWidth + config.columnSpacing

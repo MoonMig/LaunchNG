@@ -8,7 +8,8 @@
     <item>
       <title>Version 2.4.6</title>
       <pubDate>Wed, 30 Sep 2026 09:21:57 +0000</pubDate>
-      <sparkle:version>2.4.6</sparkle:version>
+      <sparkle:version>20260930</sparkle:version>
+      <sparkle:shortVersionString>2.4.6</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
       <sparkle:releaseNotesLink>https://github.com/MoonMig/LaunchNG/releases/tag/v2.4.6</sparkle:releaseNotesLink>
       <enclosure url="https://github.com/MoonMig/LaunchNG/releases/download/v2.4.6/LaunchNG2.4.6.zip" sparkle:edSignature="Pr0xDtf0TfhXk8acr4SxwBO0jm26Wu31F7CfNFTd0xteIXTbuSJJ9zS7y6ZLEx0Fadk32UoQo1JjvJamvkGjDg==" length="10404311" type="application/octet-stream" />

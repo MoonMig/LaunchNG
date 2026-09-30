@@ -102,28 +102,29 @@ other files are views or engines that read/mutate `AppStore` — when tracing
 "where does X live," start there. It's huge; grep for the relevant
 `@Published` property or method name rather than reading top to bottom.
 
-### Two rendering engines
+### Rendering engine
 
-Settings expose **Legacy Engine** (pure SwiftUI grid, `LaunchpadView.swift`,
-`LaunchpadItemButton.swift`) and **Next Engine + Core Animation**
-(`CAGridView.swift` + its `CAGridView+*.swift` extensions: `Input`, `Layout`,
-`DragLanding`, `DropPreview`, `FolderCreation`, `FolderDissolve`,
-`FolderGlass`, `FolderMerge`) wrapped for SwiftUI via
-`CAGridViewRepresentable.swift`. The CA engine is the recommended/default
-path and is where drag-and-drop-to-Dock and Liquid Glass folder icons live.
-Folder-open/close presentation for the CA engine is driven by
-`CAFolderPresentation.swift` + `CAFolderGridView.swift`
-(`CAFolderGridViewRepresentable.swift`), with `FolderGlassOverlay.swift`
-rendering the native glass backplate and `FolderIconBitmapCache.swift`
-caching rendered folder-icon bitmaps (byte-budgeted LRU). `PerformanceEngineSelector.swift`
-/ `PerformanceMode.swift` pick between them. The legacy SwiftUI `FolderView.swift`
-is the non-CA folder UI.
+The grid renders on Core Animation via `CAGridView.swift` + its
+`CAGridView+*.swift` extensions (`Input`, `Layout`, `DragLanding`,
+`DropPreview`, `FolderCreation`, `FolderDissolve`, `FolderGlass`,
+`FolderMerge`), wrapped for SwiftUI via `CAGridViewRepresentable.swift`. This
+is where drag-and-drop-to-Dock and Liquid Glass folder icons live.
+Folder-open/close presentation is driven by `CAFolderPresentation.swift` +
+`CAFolderGridView.swift` (`CAFolderGridViewRepresentable.swift`), with
+`FolderGlassOverlay.swift` rendering the native glass backplate and
+`FolderIconBitmapCache.swift` caching rendered folder-icon bitmaps
+(byte-budgeted LRU). The folder's native glass panel hosts SwiftUI's
+`FolderView.swift` internally (via `NSHostingView`) for its content/layout —
+`FolderView.swift` is not a separate legacy engine, just the CA engine's
+folder content view. An older, pure-SwiftUI top-level grid ("Legacy Engine",
+toggled via `PerformanceEngineSelector.swift`/`PerformanceMode.swift`) has
+been removed entirely; Core Animation is now the only top-level grid
+renderer.
 
 Grid reordering math is isolated in `GridReorderPlan.swift` — a pure,
-side-effect-free algorithm (page compaction, cascade, new/emptied pages) that
-both engines share and that has its own exhaustive unit test
-(`GridReorderPlanTests`). Prefer changing behavior there over duplicating
-reorder logic per-engine.
+side-effect-free algorithm (page compaction, cascade, new/emptied pages)
+with its own exhaustive unit test (`GridReorderPlanTests`). Prefer changing
+behavior there over duplicating reorder logic elsewhere.
 
 ### Native Launchpad import
 

@@ -327,6 +327,7 @@ fi
 
 BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "${APP_PATH}/Contents/Info.plist")"
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${APP_PATH}/Contents/Info.plist")"
+BUILD_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "${APP_PATH}/Contents/Info.plist")"
 APP_EXECUTABLE_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "${APP_PATH}/Contents/Info.plist")"
 
 if [[ "${BUNDLE_ID}" != "com.moonmig.launchng" ]]; then
@@ -336,6 +337,11 @@ fi
 
 if [[ -z "${VERSION}" ]]; then
   echo "error: could not read CFBundleShortVersionString" >&2
+  exit 1
+fi
+
+if [[ -z "${BUILD_VERSION}" ]]; then
+  echo "error: could not read CFBundleVersion" >&2
   exit 1
 fi
 
@@ -526,7 +532,7 @@ SHA256="$(awk '{print $1}' "${CHECKSUMS_PATH}")"
 # material is ever passed on the command line or written to disk here.
 SPARKLE_SIGN_OUTPUT="$("${ROOT_DIR}/scripts/sparkle-tools/bin/sign_update" "${ZIP_PATH}")"
 python3 "${ROOT_DIR}/scripts/sparkle-tools/update_appcast.py" \
-  "${ROOT_DIR}" "${VERSION}" "${ZIP_NAME}" "${SPARKLE_SIGN_OUTPUT}"
+  "${ROOT_DIR}" "${BUILD_VERSION}" "${VERSION}" "${ZIP_NAME}" "${SPARKLE_SIGN_OUTPUT}"
 
 touch "${RELEASE_ROOT}/.release-success"
 rm -rf -- "${DERIVED_DATA_PATH}" "${LOCAL_EXTRACT_PATH}"
