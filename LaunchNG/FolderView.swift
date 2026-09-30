@@ -18,21 +18,11 @@ struct FolderView: View {
     @State private var folderPageCount: Int = 1
     @State private var folderVerticalScrollOffset: CGFloat = 0
     @FocusState private var isTextFieldFocused: Bool
-    @Namespace private var reorderNamespaceFolder
     // Keyboard navigation
     @State private var selectedIndex: Int? = nil
     @State private var isKeyboardNavigationActive: Bool = false
     @State private var keyMonitor: Any?
-    // Drag-related state
-    @State private var draggingApp: AppInfo? = nil
-    @State private var dragPreviewPosition: CGPoint = .zero
-    @State private var dragPreviewScale: CGFloat = 1.2
-    @State private var pendingDropIndex: Int? = nil
-    @State private var scrollOffsetY: CGFloat = 0
-    @State private var outOfBoundsBeganAt: Date? = nil
-    @State private var hasHandedOffDrag: Bool = false
-    private let outOfBoundsDwell: TimeInterval = 0.0
-    
+
     let onClose: () -> Void
     let onLaunchApp: (AppInfo) -> Void
 
@@ -41,12 +31,11 @@ struct FolderView: View {
     }
     
     // Tuned spacing and layout parameters.
-    // This engine uses one symmetric spacing value throughout (the grid, the
-    // hit-testing math in GeometryUtils.cellOrigin, everything) rather than
-    // separate horizontal/vertical figures like the Next Engine's folder
-    // grid, so a single blended value is what's achievable here without a
-    // larger geometry rewrite -- averaging keeps it responsive to both
-    // sliders instead of ignoring one of them.
+    // This view uses one symmetric spacing value throughout rather than
+    // separate horizontal/vertical figures like the main folder grid
+    // (CAFolderGridView), so a single blended value is what's achievable
+    // here without a larger geometry rewrite -- averaging keeps it
+    // responsive to both sliders instead of ignoring one of them.
     private var spacing: CGFloat {
         CGFloat((appStore.folderIconColumnSpacing + appStore.folderIconRowSpacing) / 2)
     }
@@ -56,18 +45,6 @@ struct FolderView: View {
     private let titlePadding: CGFloat = 16
     private let folderTitleHeight: CGFloat = 72
 
-    private var visualApps: [AppInfo] {
-        guard let dragging = draggingApp, let pending = pendingDropIndex else { return folder.apps }
-        var apps = folder.apps
-        if let from = apps.firstIndex(of: dragging) {
-            apps.remove(at: from)
-            let insertIndex = pending
-            let clamped = min(max(0, insertIndex), apps.count)
-            apps.insert(dragging, at: clamped)
-        }
-        return apps
-    }
-    
     var body: some View {
         folderContent
         .padding()
@@ -365,226 +342,8 @@ extension FolderView {
         let width = (containerWidth - totalColumnSpacing) / CGFloat(cols)
         return max(50, width) // Clamp to a reasonable minimum width
     }
-
-    // Drag hit-testing and cell geometry (implemented in the extension below)
-
-    @ViewBuilder
-    private func appDraggable(app: AppInfo,
-                              appIndex: Int,
-                              containerSize: CGSize,
-                              columnWidth: CGFloat,
-                              appHeight: CGFloat,
-                              iconSize: CGFloat,
-                              labelWidth: CGFloat,
-                              isSelected: Bool) -> some View {
-        let base = LaunchpadItemButton(
-            item: .app(app),
-            iconSize: iconSize,
-            labelWidth: labelWidth,
-            isSelected: isSelected,
-            showLabel: appStore.showLabels,
-            labelFontSize: CGFloat(appStore.iconLabelFontSize),
-            labelFontWeight: appStore.iconLabelFontWeightValue,
-            shouldAllowHover: draggingApp == nil,
-            hoverMagnificationEnabled: appStore.enableHoverMagnification,
-            hoverMagnificationScale: CGFloat(appStore.hoverMagnificationScale),
-            activePressEffectEnabled: appStore.enableActivePressEffect,
-            activePressScale: CGFloat(appStore.activePressScale),
-            onTap: {
-                // Don't launch the app while editing
-                if draggingApp == nil && !isEditingName {
-                    if canLaunch(app) {
-                        onLaunchApp(app)
-                    } else {
-                        NSSound.beep()
-                    }
-                }
-            }
-        )
-        .frame(height: appHeight)
-        // matchedGeometryEffect removed to reduce scrolling overhead
-
-        let isDraggingThisTile = (draggingApp == app)
-
-        if appStore.isLayoutLocked {
-            base
-                .launchNGHideAppContextMenu(app: app, appStore: appStore)
-        } else {
-            base
-                .opacity(isDraggingThisTile ? 0 : 1)
-                .allowsHitTesting(!isDraggingThisTile)
-                .animation(LNAnimations.springFast, value: isSelected)
-                .simultaneousGesture(
-                    DragGesture(minimumDistance: 2, coordinateSpace: .named("folderGrid"))
-                        .onChanged { value in
-                            guard !appStore.isLayoutLocked else { return }
-                            // Disable dragging while editing
-                            if isEditingName { return }
-
-                        if draggingApp == nil {
-                            var tx = Transaction(); tx.disablesAnimations = true
-                            withTransaction(tx) { draggingApp = app }
-                            isKeyboardNavigationActive = false // Disable keyboard navigation
-
-                            // Keep the drag preview's center matching the pointer position, avoiding any offset
-                            dragPreviewPosition = value.location
-                        }
-
-                        // The preview follows the pointer position (no starting offset), keeping the cursor aligned with the icon's center
-                        dragPreviewPosition = value.location
-
-                        // Detect whether the drag has left the folder's bounds and is dwelling there
-                        let isOutside: Bool = (value.location.x < 0 || value.location.y < 0 ||
-                                               value.location.x > containerSize.width ||
-                                               value.location.y > containerSize.height)
-                        let now = Date()
-                        if isOutside {
-                            if outOfBoundsBeganAt == nil { outOfBoundsBeganAt = now }
-                            if !hasHandedOffDrag, let start = outOfBoundsBeganAt, now.timeIntervalSince(start) >= outOfBoundsDwell, let dragging = draggingApp {
-                                // Hand off to the outer grid: move the app out of the folder and close the folder
-                                hasHandedOffDrag = true
-                                pendingDropIndex = nil
-                                appStore.handoffDraggingApp = dragging
-                                appStore.handoffDragScreenLocation = NSEvent.mouseLocation
-                                appStore.removeAppFromFolder(dragging, folder: folder)
-                                // Clean up the internal drag state and close the folder
-                                draggingApp = nil
-                                outOfBoundsBeganAt = nil
-                                withAnimation(LNAnimations.springFast) {
-                                    onClose()
-                                }
-                                return
-                            }
-                        } else {
-                            outOfBoundsBeganAt = nil
-                        }
-
-                        if let hoveringIndex = indexAt(point: dragPreviewPosition,
-                                                       containerSize: containerSize,
-                                                       columnWidth: columnWidth,
-                                                       appHeight: appHeight) {
-                            // Treat "hovering over the last cell" as inserting at the end, pushing the last item forward to make room
-                            let count = visualApps.count
-                            if count > 0,
-                               hoveringIndex == count - 1,
-                               let dragging = draggingApp,
-                               dragging != visualApps[hoveringIndex] {
-                                pendingDropIndex = count // Trailing slot
-                            } else {
-                                // If the hit is the "trailing slot" (== count), keep it as count; otherwise it's a cell index
-                                pendingDropIndex = hoveringIndex
-                            }
-                        } else {
-                            pendingDropIndex = nil
-                        }
-                    }
-                    .onEnded { _ in
-                        if appStore.isLayoutLocked { return }
-                        // Don't process the end of a drag while editing
-                        if isEditingName { return }
-                        
-                        guard let dragging = draggingApp else { return }
-                        defer {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
-                                draggingApp = nil
-                                pendingDropIndex = nil
-                                // Don't automatically restore keyboard navigation after a drag ends, to keep the experience consistent
-                            }
-                        }
-
-                        // If the drag was already handed off to the outer grid, don't process the drop here
-                        if hasHandedOffDrag {
-                            hasHandedOffDrag = false
-                            outOfBoundsBeganAt = nil
-                            return
-                        }
-
-                        if let finalIndex = pendingDropIndex {
-                            // Visual snap position: use finalIndex directly, to snap accurately to the target position
-                            let dropDisplayIndex = finalIndex
-                            let targetCenter = cellCenter(for: dropDisplayIndex,
-                                                          containerSize: containerSize,
-                                                          columnWidth: columnWidth,
-                                                          appHeight: appHeight)
-                            withAnimation(LNAnimations.dragPreview) {
-                                dragPreviewPosition = targetCenter
-                                dragPreviewScale = 1.0
-                            }
-                            if let from = folder.apps.firstIndex(of: dragging) {
-                                var apps = folder.apps
-                                apps.remove(at: from)
-                                // Exactly matches the visual preview: use the hover index directly
-                                let insertIndex = finalIndex
-                                let clamped = min(max(0, insertIndex), apps.count)
-                                apps.insert(dragging, at: clamped)
-                                folder.apps = apps
-                                appStore.notifyFolderContentChanged(folder)
-
-                                // Also trigger compaction after a drag inside the folder ends, so empty items on the main screen move to the end of the page
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    appStore.compactItemsWithinPages()
-                                }
-                            }
-                        }
-                    }
-                )
-                .launchNGHideAppContextMenu(app: app, appStore: appStore)
-        }
-    }
 }
 
-// MARK: - Drag geometry & hit-testing (folder internal)
-extension FolderView {
-    private func cellOrigin(for index: Int,
-                            containerSize: CGSize,
-                            columnWidth: CGFloat,
-                            appHeight: CGFloat) -> CGPoint {
-        return GeometryUtils.cellOrigin(for: index,
-                                      containerSize: containerSize,
-                                      pageIndex: 0,
-                                      columnWidth: columnWidth,
-                                      appHeight: appHeight,
-                                      columns: max(columnsCount, 1),
-                                      columnSpacing: spacing,
-                                      rowSpacing: spacing,
-                                      pageSpacing: 0,
-                                      currentPage: 0,
-                                      gridPadding: gridPadding,
-                                      scrollOffsetY: scrollOffsetY)
-    }
-
-    private func cellCenter(for index: Int,
-                            containerSize: CGSize,
-                            columnWidth: CGFloat,
-                            appHeight: CGFloat) -> CGPoint {
-        let origin = cellOrigin(for: index, containerSize: containerSize, columnWidth: columnWidth, appHeight: appHeight)
-        return CGPoint(x: origin.x + columnWidth / 2, y: origin.y + appHeight / 2)
-    }
-
-    private func indexAt(point: CGPoint,
-                         containerSize: CGSize,
-                         columnWidth: CGFloat,
-                         appHeight: CGFloat) -> Int? {
-        guard let offsetInPage = GeometryUtils.indexAt(point: point,
-                                                      containerSize: containerSize,
-                                                      pageIndex: 0,
-                                                      columnWidth: columnWidth,
-                                                      appHeight: appHeight,
-                                                      columns: max(columnsCount, 1),
-                                                      columnSpacing: spacing,
-                                                      rowSpacing: spacing,
-                                                      pageSpacing: 0,
-                                                      currentPage: 0,
-                                                      itemsPerPage: visualApps.count,
-                                                      gridPadding: gridPadding,
-                                                      scrollOffsetY: scrollOffsetY) else { return nil }
-        
-        let count = visualApps.count
-        // Allow returning count as the "trailing slot", so dragging past the last item makes room
-        if count == 0 { return 0 }
-        return min(max(offsetInPage, 0), count)
-    }
-}
 
 // MARK: - Scroll offset reader for NSScrollView
 private struct ScrollOffsetReader: NSViewRepresentable {
