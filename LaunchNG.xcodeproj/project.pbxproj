@@ -17,6 +17,7 @@
 		C200000E2F70000100ABCDEF /* libLaunchNGContextMenuCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C20000012F70000100ABCDEF /* libLaunchNGContextMenuCore.a */; };
 		D300000D2F70000100ABCDEF /* libLaunchNGWallpaperCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D30000012F70000100ABCDEF /* libLaunchNGWallpaperCore.a */; };
 		D300000E2F70000100ABCDEF /* libLaunchNGWallpaperCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D30000012F70000100ABCDEF /* libLaunchNGWallpaperCore.a */; };
+		F3E2D3A42F56B78900ABCDEF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = F2E2D3A42F56B78900ABCDEF /* Sparkle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,6 +81,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0D1B0B422E4CDE460083EEF9 /* LaunchNG */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F4E2D3A42F56B78900ABCDEF /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+			);
 			path = LaunchNG;
 			sourceTree = "<group>";
 		};
@@ -100,6 +104,16 @@
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F4E2D3A42F56B78900ABCDEF /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 0D1B0B3F2E4CDE460083EEF9 /* LaunchNG */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		0D1B0B3D2E4CDE460083EEF9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -107,6 +121,7 @@
 			files = (
 				C200000D2F70000100ABCDEF /* libLaunchNGContextMenuCore.a in Frameworks */,
 				D300000D2F70000100ABCDEF /* libLaunchNGWallpaperCore.a in Frameworks */,
+				F3E2D3A42F56B78900ABCDEF /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -191,7 +206,6 @@
 				0D1B0B3C2E4CDE460083EEF9 /* Sources */,
 				0D1B0B3D2E4CDE460083EEF9 /* Frameworks */,
 				0D1B0B3E2E4CDE460083EEF9 /* Resources */,
-				E1C2D3A42F56B78900ABCDEF /* Run Script (Updater) */,
 			);
 			buildRules = (
 			);
@@ -204,6 +218,7 @@
 			);
 			name = LaunchNG;
 			packageProductDependencies = (
+				F2E2D3A42F56B78900ABCDEF /* Sparkle */,
 			);
 			productName = LaunchNG;
 			productReference = 0D1B0B402E4CDE460083EEF9 /* LaunchNG.app */;
@@ -322,6 +337,9 @@
 			);
 			mainGroup = 0D1B0B372E4CDE460083EEF9;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F1E2D3A42F56B78900ABCDEF /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0D1B0B412E4CDE460083EEF9 /* Products */;
 			projectDirPath = "";
@@ -352,38 +370,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		E1C2D3A42F56B78900ABCDEF /* Run Script (Updater) */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/UpdaterScripts/SwiftUpdater/Package.swift",
-				"$(SRCROOT)/UpdaterScripts/SwiftUpdater/Sources/SwiftUpdater/Arguments.swift",
-				"$(SRCROOT)/UpdaterScripts/SwiftUpdater/Sources/SwiftUpdater/Config.swift",
-				"$(SRCROOT)/UpdaterScripts/SwiftUpdater/Sources/SwiftUpdater/Downloader.swift",
-				"$(SRCROOT)/UpdaterScripts/SwiftUpdater/Sources/SwiftUpdater/Errors.swift",
-				"$(SRCROOT)/UpdaterScripts/SwiftUpdater/Sources/SwiftUpdater/GitHubAPI.swift",
-				"$(SRCROOT)/UpdaterScripts/SwiftUpdater/Sources/SwiftUpdater/Installer.swift",
-				"$(SRCROOT)/UpdaterScripts/SwiftUpdater/Sources/SwiftUpdater/Localization.swift",
-				"$(SRCROOT)/UpdaterScripts/SwiftUpdater/Sources/SwiftUpdater/NCursesUI.swift",
-				"$(SRCROOT)/UpdaterScripts/SwiftUpdater/Sources/SwiftUpdater/SwiftUpdater.swift",
-			);
-			name = "Run Script (Updater)";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Updater/SwiftUpdater",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/bash;
-			shellScript = "set -euo pipefail\n\nif [[ \"${ENABLE_PREVIEWS:-NO}\" == \"YES\" ]]; then\n  echo 'SwiftUI Preview: skip updater build'\n  exit 0\nfi\n\nUPDATER_DIR=\"${SRCROOT}/UpdaterScripts/SwiftUpdater\"\nDEST_DIR=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Updater\"\nSOURCE_BIN=\"${UPDATER_DIR}/.build/apple/Products/Release/SwiftUpdater\"\nLEGACY_BIN=\"${UPDATER_DIR}/.build/release/SwiftUpdater\"\n\nmkdir -p \"${DEST_DIR}\"\n\nfunction sign_binary {\n  local identity=\"${EXPANDED_CODE_SIGN_IDENTITY:-}\"\n  local signing_allowed=\"${CODE_SIGNING_ALLOWED:-YES}\"\n\n  if [[ \"${signing_allowed}\" == \"YES\" && -n \"${identity}\" ]]; then\n    /usr/bin/codesign --force --sign \"${identity}\" --options runtime --preserve-metadata=entitlements,requirements \"$1\"\n  else\n    /usr/bin/codesign --force --sign - --options runtime --preserve-metadata=entitlements,requirements \"$1\"\n  fi\n}\n\nif [[ -f \"${SOURCE_BIN}\" ]]; then\n  echo \"Using SwiftUpdater at ${SOURCE_BIN}\"\n  cp \"${SOURCE_BIN}\" \"${DEST_DIR}/SwiftUpdater\"\n  chmod +x \"${DEST_DIR}/SwiftUpdater\"\n  sign_binary \"${DEST_DIR}/SwiftUpdater\"\n  exit 0\nfi\n\nif [[ -f \"${LEGACY_BIN}\" ]]; then\n  echo \"Using SwiftUpdater at ${LEGACY_BIN}\"\n  cp \"${LEGACY_BIN}\" \"${DEST_DIR}/SwiftUpdater\"\n  chmod +x \"${DEST_DIR}/SwiftUpdater\"\n  sign_binary \"${DEST_DIR}/SwiftUpdater\"\n  exit 0\nfi\n\n>&2 echo \"error: SwiftUpdater binary not found. Run 'swift build --configuration release --arch arm64 --arch x86_64 --product SwiftUpdater' in UpdaterScripts/SwiftUpdater\"\nexit 1\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0D1B0B3C2E4CDE460083EEF9 /* Sources */ = {
@@ -612,12 +598,7 @@
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleAllowMixedLocalizations = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = LaunchNG;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 RoversX / CloseX. Licensed under GPL-3.0";
+				INFOPLIST_FILE = LaunchNG/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -654,12 +635,7 @@
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleAllowMixedLocalizations = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = LaunchNG;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 RoversX / CloseX. Licensed under GPL-3.0";
+				INFOPLIST_FILE = LaunchNG/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -828,6 +804,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F1E2D3A42F56B78900ABCDEF /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F2E2D3A42F56B78900ABCDEF /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F1E2D3A42F56B78900ABCDEF /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0D1B0B382E4CDE460083EEF9 /* Project object */;
 }

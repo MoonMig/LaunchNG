@@ -89,6 +89,13 @@ rm -rf "${DMG_STAGING}"
 ZIP_SHA256="$(awk -v f="${ZIP_NAME}" '$2 == f { print $1 }' "${CHECKSUMS_PATH}")"
 DMG_SHA256="$(awk -v f="${DMG_NAME}" '$2 == f { print $1 }' "${CHECKSUMS_PATH}")"
 
+# Sign the zip for Sparkle and append its appcast.xml entry. sign_update
+# reads the EdDSA private key from this machine's Keychain -- no key
+# material is ever passed on the command line or written to disk here.
+SPARKLE_SIGN_OUTPUT="$("${ROOT_DIR}/scripts/sparkle-tools/bin/sign_update" "${ZIP_PATH}")"
+python3 "${ROOT_DIR}/scripts/sparkle-tools/update_appcast.py" \
+  "${ROOT_DIR}" "${VERSION}" "${ZIP_NAME}" "${SPARKLE_SIGN_OUTPUT}"
+
 echo "Release artifacts:"
 echo "  App: ${APP_PATH}"
 echo "  ${ZIP_PATH}"
@@ -99,7 +106,12 @@ echo "Version: ${VERSION}"
 echo "ZIP SHA256: ${ZIP_SHA256}"
 echo "DMG SHA256: ${DMG_SHA256}"
 echo ""
+echo "Sparkle signature: ${SPARKLE_SIGN_OUTPUT}"
+echo ""
 echo "Upload these assets to the GitHub release tagged ${VERSION}:"
 echo "  ${ZIP_NAME}"
 echo "  ${DMG_NAME}"
 echo "  checksums.txt"
+echo ""
+echo "appcast.xml at the repo root was updated with this release --"
+echo "commit and push it to main so the Sparkle feed picks it up."

@@ -77,6 +77,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSGestureR
         // let copilotProvider = CopilotProvider(authStore: authStore)
         // LLMProviderRegistry.shared.register(provider: copilotProvider)
 
+        _ = SparkleUpdaterController.shared
+
         appStore.syncGlobalHotKeyRegistration()
         // appStore.syncAIOverlayHotKeyRegistration()
 

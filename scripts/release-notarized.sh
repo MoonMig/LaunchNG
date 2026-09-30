@@ -255,14 +255,6 @@ printf '%s\n' "$$" > "${RELEASE_ROOT}/.release-active"
 trap 'rm -f "${RELEASE_ROOT}/.release-active"' EXIT
 
 if [[ "${MODE}" == "notarize" ]]; then
-  echo "Building the universal SwiftUpdater..."
-  swift build \
-    --package-path "${ROOT_DIR}/UpdaterScripts/SwiftUpdater" \
-    --configuration release \
-    --arch arm64 \
-    --arch x86_64 \
-    --product SwiftUpdater
-
   echo "Creating the Xcode archive..."
   xcodebuild \
     -project "${PROJECT_PATH}" \
@@ -292,7 +284,6 @@ if [[ "${MODE}" == "notarize" ]]; then
 fi
 
 APP_PATH="${EXPORT_PATH}/LaunchNG.app"
-UPDATER_PATH="${APP_PATH}/Contents/Resources/Updater/SwiftUpdater"
 
 if [[ "${MODE}" == "local" ]]; then
   while [[ "${LOCAL_INPUT_PATH}" == [[:space:]]* ]]; do
@@ -331,11 +322,6 @@ fi
 
 if [[ ! -d "${APP_PATH}" ]]; then
   echo "error: exported app not found at ${APP_PATH}" >&2
-  exit 1
-fi
-
-if [[ ! -x "${UPDATER_PATH}" ]]; then
-  echo "error: bundled SwiftUpdater not found at ${UPDATER_PATH}" >&2
   exit 1
 fi
 
@@ -387,19 +373,16 @@ require_release_architectures() {
 
 echo "Verifying universal binary architectures..."
 require_release_architectures "${APP_EXECUTABLE_PATH}" "LaunchNG"
-require_release_architectures "${UPDATER_PATH}" "SwiftUpdater"
 
 echo "Verifying Developer ID signatures..."
 codesign --verify --deep --strict --verbose=2 "${APP_PATH}"
 
 APP_SIGNATURE="$(codesign -d --verbose=4 "${APP_PATH}" 2>&1)"
-UPDATER_SIGNATURE="$(codesign -d --verbose=4 "${UPDATER_PATH}" 2>&1)"
 
 APP_TEAM_ID="$(printf '%s\n' "${APP_SIGNATURE}" | awk -F= '$1 == "TeamIdentifier" { print $2; exit }')"
-UPDATER_TEAM_ID="$(printf '%s\n' "${UPDATER_SIGNATURE}" | awk -F= '$1 == "TeamIdentifier" { print $2; exit }')"
 
-if [[ -z "${APP_TEAM_ID}" || -z "${UPDATER_TEAM_ID}" ]]; then
-  echo "error: LaunchNG and SwiftUpdater must both contain a Developer ID team identifier" >&2
+if [[ -z "${APP_TEAM_ID}" ]]; then
+  echo "error: LaunchNG must contain a Developer ID team identifier" >&2
   exit 1
 fi
 
@@ -413,13 +396,8 @@ if [[ "${APP_TEAM_ID}" != "${TEAM_ID}" ]]; then
   exit 1
 fi
 
-if [[ "${UPDATER_TEAM_ID}" != "${TEAM_ID}" ]]; then
-  echo "error: SwiftUpdater is not signed by expected team ${TEAM_ID}" >&2
-  exit 1
-fi
-
-if [[ "${APP_SIGNATURE}" != *"runtime"* || "${UPDATER_SIGNATURE}" != *"runtime"* ]]; then
-  echo "error: LaunchNG and SwiftUpdater must both use Hardened Runtime" >&2
+if [[ "${APP_SIGNATURE}" != *"runtime"* ]]; then
+  echo "error: LaunchNG must use Hardened Runtime" >&2
   exit 1
 fi
 
@@ -543,6 +521,13 @@ fi
 
 SHA256="$(awk '{print $1}' "${CHECKSUMS_PATH}")"
 
+# Sign the zip for Sparkle and append its appcast.xml entry. sign_update
+# reads the EdDSA private key from this machine's Keychain -- no key
+# material is ever passed on the command line or written to disk here.
+SPARKLE_SIGN_OUTPUT="$("${ROOT_DIR}/scripts/sparkle-tools/bin/sign_update" "${ZIP_PATH}")"
+python3 "${ROOT_DIR}/scripts/sparkle-tools/update_appcast.py" \
+  "${ROOT_DIR}" "${VERSION}" "${ZIP_NAME}" "${SPARKLE_SIGN_OUTPUT}"
+
 touch "${RELEASE_ROOT}/.release-success"
 rm -rf -- "${DERIVED_DATA_PATH}" "${LOCAL_EXTRACT_PATH}"
 rm -f -- "${NOTARY_SUBMISSION_PATH}"
@@ -585,6 +570,7 @@ echo "  ${CHECKSUMS_PATH}"
 echo
 echo "Version: ${VERSION}"
 echo "SHA256: ${SHA256}"
+echo "Sparkle signature: ${SPARKLE_SIGN_OUTPUT}"
 if [[ -n "${SUBMISSION_ID}" ]]; then
   echo "Notary submission: ${SUBMISSION_ID}"
 fi
@@ -592,3 +578,6 @@ echo
 echo "Upload these assets to the GitHub release:"
 echo "  ${ZIP_NAME}"
 echo "  checksums.txt"
+echo
+echo "appcast.xml at the repo root was updated with this release --"
+echo "commit and push it to main so the Sparkle feed picks it up."

@@ -537,24 +537,7 @@ enum LocalizationKey: String {
     // 更新检查相关
     case checkForUpdates
     case checkForUpdatesButton
-    case checkingForUpdates
-    case upToDate
-    case updateAvailable
-    case newVersion
-    case downloadUpdate
-    case updateCheckFailed
-    case tryAgain
     case autoCheckForUpdates
-    case versionParseError
-    case updatesRefreshButton
-    case openUpdaterConfig
-    case updaterConfirmTitle
-    case updaterConfirmMessage
-    case updaterTerminalHint
-    case updaterLaunchFailed
-    case updaterMissingBinary
-    case updaterNotExecutable
-    case updaterHoldPrompt
 }
 
 final class LocalizationManager {
@@ -849,24 +832,7 @@ final class LocalizationManager {
                 // 更新检查相关
                 .checkForUpdates: "Check for Updates",
                 .checkForUpdatesButton: "Check for Updates",
-                .checkingForUpdates: "Checking for updates...",
-                .upToDate: "You're up to date",
-                .updateAvailable: "Update Available",
-                .newVersion: "New version:",
-                .downloadUpdate: "Download Update",
-                .updateCheckFailed: "Update check failed",
-                .tryAgain: "Try Again",
                 .autoCheckForUpdates: "Check for updates automatically",
-                .versionParseError: "Version parsing error",
-                .updatesRefreshButton: "Check again",
-                .openUpdaterConfig: "Open updater config",
-                .updaterConfirmTitle: "Install update via Terminal?",
-                .updaterConfirmMessage: "LaunchNG will quit and open the Terminal-based updater. The app will relaunch automatically after installation completes.\n\nIf the Download Update button on the right looks transparent, click it anyway.\nThis is a macOS bug.⬇️",
-                .updaterTerminalHint: "The update runs in Terminal. LaunchNG will quit and relaunch automatically.",
-                .updaterLaunchFailed: "Failed to start updater (%@).",
-                .updaterMissingBinary: "Updater binary not found in the app bundle.",
-                .updaterNotExecutable: "Updater binary is not executable.",
-            .updaterHoldPrompt: "Press Enter to close this window. LaunchNG will reopen automatically."
         ],
         .portugueseBrazil: [
             .reverseWheelPagingTitle: "Inverter a direção de paginação da roda",
@@ -1124,24 +1090,7 @@ final class LocalizationManager {
             // Atualizações
             .checkForUpdates: "Verificar atualizações",
             .checkForUpdatesButton: "Verificar atualizações",
-            .checkingForUpdates: "Verificando atualizações...",
-            .upToDate: "Você está na versão mais recente",
-            .updateAvailable: "Atualização disponível",
-            .newVersion: "Nova versão:",
-            .downloadUpdate: "Baixar atualização",
-            .updateCheckFailed: "Falha ao verificar atualização",
-            .tryAgain: "Tentar novamente",
             .autoCheckForUpdates: "Verificar atualizações automaticamente",
-            .versionParseError: "Erro ao analisar versão",
-            .updatesRefreshButton: "Verificar novamente",
-            .openUpdaterConfig: "Abrir configuração de atualização",
-            .updaterConfirmTitle: "Instalar atualização via Terminal?",
-            .updaterConfirmMessage: "O LaunchNG será encerrado e abrirá o atualizador no Terminal. Quando terminar, o app abrirá novamente sozinho.\n\nSe o botão Baixar atualização à direita estiver transparente, clique mesmo assim.\nIsso é um bug do macOS.⬇️",
-            .updaterTerminalHint: "A atualização ocorre no Terminal. LaunchNG será encerrado e relançado automaticamente.",
-            .updaterLaunchFailed: "Falha ao iniciar o atualizador (%@).",
-            .updaterMissingBinary: "Binário do atualizador não encontrado no bundle.",
-            .updaterNotExecutable: "O atualizador não é executável.",
-            .updaterHoldPrompt: "Pressione Enter para fechar esta janela. LaunchNG será aberto novamente automaticamente.",
 
             .settingsSectionGeneral: "Geral",
             .settingsSectionAppSources: "Fontes e busca",
@@ -1449,17 +1398,7 @@ final class LocalizationManager {
                 // Cập nhật
                 .checkForUpdates: "Kiểm tra cập nhật",
                 .checkForUpdatesButton: "Kiểm tra cập nhật",
-                .checkingForUpdates: "Đang kiểm tra cập nhật...",
-                .upToDate: "Bạn đang dùng phiên bản mới nhất",
-                .updateAvailable: "Có bản cập nhật mới",
-                .newVersion: "Phiên bản mới:",
-                .downloadUpdate: "Tải bản cập nhật",
-                .updateCheckFailed: "Kiểm tra cập nhật thất bại",
-                .tryAgain: "Thử lại",
                 .autoCheckForUpdates: "Tự động kiểm tra cập nhật",
-                .versionParseError: "Lỗi phân tích phiên bản",
-                .updatesRefreshButton: "Kiểm tra lại",
-                .openUpdaterConfig: "Mở tệp cấu hình cập nhật"
             ],
             .simplifiedChinese: [
                 .noAppsFound: "未找到任何应用",
@@ -1738,24 +1677,7 @@ final class LocalizationManager {
                 // 更新检查相关
                 .checkForUpdates: "检查更新",
                 .checkForUpdatesButton: "检查更新",
-                .checkingForUpdates: "正在检查更新...",
-                .upToDate: "已是最新版本",
-                .updateAvailable: "发现新版本",
-                .newVersion: "新版本：",
-                .downloadUpdate: "下载更新",
-                .updateCheckFailed: "更新检查失败",
-                .tryAgain: "重试",
             .autoCheckForUpdates: "自动检查更新",
-            .versionParseError: "版本解析错误",
-            .updatesRefreshButton: "重新检查",
-            .openUpdaterConfig: "打开更新配置文件",
-            .updaterConfirmTitle: "使用终端安装更新？",
-                .updaterConfirmMessage: "LaunchNG 将会退出并在终端中运行更新器。安装完成后会自动重新启动。\n\n如果右侧的“下载更新”按钮是透明的，请直接点击。\n这是 macOS 的 bug。⬇️",
-                .updaterTerminalHint: "更新会在终端中执行，LaunchNG 将退出并自动重新启动。",
-                .updaterLaunchFailed: "无法启动更新器（%@）。",
-                .updaterMissingBinary: "应用包内未找到更新器。",
-                .updaterNotExecutable: "更新器文件不可执行。",
-                .updaterHoldPrompt: "更新完成后，按回车键关闭窗口，LaunchNG 会自动重新打开。"
             ],
             .japanese: [
                 .reverseWheelPagingTitle: "ホイールのページ送り方向を反転",
@@ -1998,24 +1920,7 @@ final class LocalizationManager {
                 // 更新検査関連
                 .checkForUpdates: "アップデートを確認",
                 .checkForUpdatesButton: "アップデートを確認",
-                .checkingForUpdates: "アップデートを確認中...",
-                .upToDate: "最新版です",
-                .updateAvailable: "アップデートが利用可能",
-                .newVersion: "新しいバージョン：",
-                .downloadUpdate: "アップデートをダウンロード",
-                .updateCheckFailed: "アップデート確認に失敗",
-                .tryAgain: "再試行",
             .autoCheckForUpdates: "自動でアップデートを確認",
-            .versionParseError: "バージョン解析エラー",
-            .updatesRefreshButton: "再チェック",
-            .openUpdaterConfig: "アップデート設定ファイルを開く",
-            .updaterConfirmTitle: "ターミナルでアップデートをインストールしますか？",
-                .updaterConfirmMessage: "LaunchNG は終了し、ターミナル上のアップデーターが起動します。インストール完了後は自動的に再起動します。\n\n右側の「アップデートをダウンロード」ボタンが透明に見えても、そのままクリックしてください。\nこれは macOS の不具合です。⬇️",
-                .updaterTerminalHint: "アップデートはターミナルで実行されます。LaunchNG は終了し、自動で再起動します。",
-                .updaterLaunchFailed: "アップデーターの起動に失敗しました（%@）。",
-                .updaterMissingBinary: "アプリ内にアップデーターが見つかりません。",
-                .updaterNotExecutable: "アップデーターが実行可能ではありません。",
-                .updaterHoldPrompt: "アップデート後は Enter キーを押してこのウィンドウを閉じてください。LaunchNG は自動的に再起動します。"
             ],
             .korean: [
                 .reverseWheelPagingTitle: "휠 페이지 전환 방향 반전",
@@ -2258,24 +2163,7 @@ final class LocalizationManager {
                 // 업데이트 관련
                 .checkForUpdates: "업데이트 확인",
                 .checkForUpdatesButton: "업데이트 확인",
-                .checkingForUpdates: "업데이트를 확인하고 있어요",
-                .upToDate: "최신 버전이에요",
-                .updateAvailable: "업데이트가 있어요",
-                .newVersion: "새 버전:",
-                .downloadUpdate: "업데이트 다운로드",
-                .updateCheckFailed: "업데이트 확인에 실패했어요",
-                .tryAgain: "다시 시도하기",
                 .autoCheckForUpdates: "업데이트 자동 확인",
-                .versionParseError: "버전 분석 오류",
-                .updatesRefreshButton: "다시 확인하기",
-                .openUpdaterConfig: "업데이트 구성 파일 열기",
-                .updaterConfirmTitle: "터미널에서 업데이트를 설치할까요?",
-                .updaterConfirmMessage: "LaunchNG가 종료되고 터미널 기반 업데이터가 실행될거에요. 설치가 끝나면 앱이 자동으로 다시 열려요.\n\n오른쪽의 '업데이트 다운로드' 버튼이 투명해 보여도 그냥 눌러 주세요.\nmacOS 버그예요.⬇️",
-                .updaterTerminalHint: "업데이트는 터미널에서 진행돼요. LaunchNG는 종료 후 자동으로 다시 실행돼요.",
-                .updaterLaunchFailed: "업데이터를 시작하지 못했어요(%@).",
-                .updaterMissingBinary: "앱 번들에서 업데이터를 찾을 수 없어요",
-                .updaterNotExecutable: "업데이터 파일을 실행할 수 없어요",
-                .updaterHoldPrompt: "업데이트가 끝나면 Enter 키를 눌러 창을 닫으세요. LaunchNG가 자동으로 다시 열려요."
             ],
             .french: [
                 .reverseWheelPagingTitle: "Inverser le sens de pagination de la molette",
@@ -2514,24 +2402,7 @@ final class LocalizationManager {
                 // Vérification des mises à jour
                 .checkForUpdates: "Vérification des mises à jour",
                 .checkForUpdatesButton: "Vérifier les mises à jour",
-                .checkingForUpdates: "Vérification en cours...",
-                .upToDate: "LaunchNG est à jour",
-                .updateAvailable: "Mise à jour disponible",
-                .newVersion: "Nouvelle version :",
-                .downloadUpdate: "Télécharger la mise à jour",
-                .updateCheckFailed: "Échec de la vérification de mise à jour",
-                .tryAgain: "Réessayer",
                 .autoCheckForUpdates: "Vérification automatique",
-                .versionParseError: "Erreur d'analyse de version",
-                .updatesRefreshButton: "Vérifier à nouveau",
-                .openUpdaterConfig: "Ouvrir le fichier de configuration des mises à jour",
-                .updaterConfirmTitle: "Installer la mise à jour via le Terminal ?",
-                .updaterConfirmMessage: "LaunchNG va se fermer et lancer le programme de mise à jour en mode Terminal. L’application se relancera automatiquement une fois l’installation terminée.\n\nSi le bouton Télécharger la mise à jour à droite paraît transparent, cliquez dessus malgré tout.\nIl s’agit d’un bug de macOS.⬇️",
-                .updaterTerminalHint: "La mise à jour s’exécute dans le Terminal. LaunchNG va se fermer puis se relancer automatiquement.",
-                .updaterLaunchFailed: "Échec du lancement du programme de mise à jour (%@).",
-                .updaterMissingBinary: "Programme de mise à jour introuvable dans le paquet de l’application.",
-                .updaterNotExecutable: "Le programme de mise à jour n’est pas exécutable.",
-                .updaterHoldPrompt: "Appuyez sur Entrée pour fermer cette fenêtre. LaunchNG va se relancer automatiquement."
             ],
             .spanish: [
                 .reverseWheelPagingTitle: "Invertir la dirección de paginación de la rueda",
@@ -2770,24 +2641,7 @@ final class LocalizationManager {
                 // Verificación de actualizaciones
                 .checkForUpdates: "Buscar actualizaciones",
                 .checkForUpdatesButton: "Buscar actualizaciones",
-                .checkingForUpdates: "Buscando actualizaciones...",
-                .upToDate: "Estás actualizado",
-                .updateAvailable: "Actualización disponible",
-                .newVersion: "Nueva versión:",
-                .downloadUpdate: "Descargar actualización",
-                .updateCheckFailed: "Error al buscar actualizaciones",
-                .tryAgain: "Intentar de nuevo",
                 .autoCheckForUpdates: "Buscar actualizaciones automáticamente",
-                .versionParseError: "Error de análisis de versión",
-                .updatesRefreshButton: "Comprobar de nuevo",
-                .openUpdaterConfig: "Abrir archivo de configuración de actualización",
-                .updaterConfirmTitle: "¿Instalar la actualización en Terminal?",
-                .updaterConfirmMessage: "LaunchNG se cerrará y abrirá el actualizador en Terminal. La aplicación se volverá a abrir automáticamente cuando termine la instalación.\n\nSi el botón Descargar actualización de la derecha se ve transparente, haz clic igualmente.\nEs un error de macOS.⬇️",
-                .updaterTerminalHint: "La actualización se ejecuta en Terminal. LaunchNG se cerrará y se abrirá de nuevo automáticamente.",
-                .updaterLaunchFailed: "No se pudo iniciar el actualizador (%@).",
-                .updaterMissingBinary: "No se encontró el actualizador dentro del paquete de la app.",
-                .updaterNotExecutable: "El actualizador no es ejecutable.",
-                .updaterHoldPrompt: "Cuando termine la actualización, pulse Intro para cerrar esta ventana. LaunchNG se abrirá automáticamente."
             ],
             .italian: [
                 .noAppsFound: "Nessuna app trovata",
@@ -3071,24 +2925,7 @@ final class LocalizationManager {
                 // Controllo aggiornamenti
                 .checkForUpdates: "Controlla aggiornamenti",
                 .checkForUpdatesButton: "Controlla aggiornamenti",
-                .checkingForUpdates: "Controllo aggiornamenti...",
-                .upToDate: "Il software è aggiornato",
-                .updateAvailable: "Aggiornamento disponibile",
-                .newVersion: "Nuova versione:",
-                .downloadUpdate: "Scarica aggiornamento",
-                .updateCheckFailed: "Controllo aggiornamenti fallito",
-                .tryAgain: "Riprova",
                 .autoCheckForUpdates: "Controlla aggiornamenti automaticamente",
-                .versionParseError: "Errore nell’analisi della versione",
-                .updatesRefreshButton: "Controlla di nuovo",
-                .openUpdaterConfig: "Apri file di configurazione dell’updater",
-                .updaterConfirmTitle: "Installare l’aggiornamento tramite Terminale?",
-                .updaterConfirmMessage: "LaunchNG verrà chiuso e si aprirà l’updater nel Terminale. L’app si riaprirà automaticamente al termine dell’installazione.\n\nSe il pulsante Scarica aggiornamento a destra sembra trasparente, cliccaci comunque.\nÈ un bug di macOS.⬇️",
-                .updaterTerminalHint: "L’aggiornamento viene eseguito nel Terminale. LaunchNG verrà chiuso e si riaprirà automaticamente.",
-                .updaterLaunchFailed: "Impossibile avviare l’updater (%@).",
-                .updaterMissingBinary: "Binario dell’updater non trovato nel bundle dell’app.",
-                .updaterNotExecutable: "Il binario dell’updater non è eseguibile.",
-                .updaterHoldPrompt: "Premi Invio per chiudere questa finestra. LaunchNG si riaprirà automaticamente."
             ],
             .czech: [
                 .reverseWheelPagingTitle: "Obrátit směr listování kolečkem",
@@ -3328,24 +3165,7 @@ final class LocalizationManager {
                 // Update
                 .checkForUpdates: "Kontrola aktualizací",
                 .checkForUpdatesButton: "Zkontrolovat aktualizace",
-                .checkingForUpdates: "Kontrola aktualizací…",
-                .upToDate: "Používáte nejnovější verzi",
-                .updateAvailable: "Je k dispozici aktualizace",
-                .newVersion: "Nová verze:",
-                .downloadUpdate: "Stáhnout aktualizaci",
-                .updateCheckFailed: "Kontrola aktualizací se nezdařila",
-                .tryAgain: "Zkusit znovu",
                 .autoCheckForUpdates: "Automaticky kontrolovat aktualizace",
-                .versionParseError: "Chyba při zpracování verze",
-                .updatesRefreshButton: "Zkontrolovat znovu",
-                .openUpdaterConfig: "Otevřít konfiguraci aktualizátoru",
-                .updaterConfirmTitle: "Nainstalovat aktualizaci přes Terminál?",
-                .updaterConfirmMessage: "LaunchNG se ukončí a otevře aktualizátor v Terminálu. Aplikace se po dokončení instalace automaticky znovu spustí.\n\nPokud tlačítko Stáhnout aktualizaci vpravo vypadá průhledně, stejně na něj klikněte.\nJde o chybu macOS.⬇️",
-                .updaterTerminalHint: "Aktualizace probíhá v Terminálu. LaunchNG se ukončí a automaticky znovu spustí.",
-                .updaterLaunchFailed: "Nepodařilo se spustit aktualizátor (%@).",
-                .updaterMissingBinary: "Binární soubor aktualizátoru nebyl nalezen v balíčku aplikace.",
-                .updaterNotExecutable: "Binární soubor aktualizátoru není spustitelný.",
-                .updaterHoldPrompt: "Stiskněte Enter pro zavření tohoto okna. LaunchNG se automaticky znovu otevře."
             ],
             .german: [
                 .reverseWheelPagingTitle: "Seitenrichtung des Mausrads umkehren",
@@ -3585,24 +3405,7 @@ final class LocalizationManager {
                 // Update-Überprüfung
                 .checkForUpdates: "Nach Updates suchen",
                 .checkForUpdatesButton: "Nach Updates suchen",
-                .checkingForUpdates: "Suche nach Updates...",
-                .upToDate: "Sie sind auf dem neuesten Stand",
-                .updateAvailable: "Update verfügbar",
-                .newVersion: "Neue Version:",
-                .downloadUpdate: "Update herunterladen",
-                .updateCheckFailed: "Update-Prüfung fehlgeschlagen",
-                .tryAgain: "Erneut versuchen",
                 .autoCheckForUpdates: "Automatisch nach Updates suchen",
-                .versionParseError: "Versions-Parsing-Fehler",
-                .updatesRefreshButton: "Erneut prüfen",
-                .openUpdaterConfig: "Updater-Konfigurationsdatei öffnen",
-                .updaterConfirmTitle: "Update über das Terminal installieren?",
-                .updaterConfirmMessage: "LaunchNG wird beendet und startet den Terminal-Updater. Nach Abschluss der Installation öffnet sich die App automatisch erneut.\n\nWenn die Schaltfläche Update laden rechts transparent wirkt, klicke sie trotzdem.\nDas ist ein macOS-Fehler.⬇️",
-                .updaterTerminalHint: "Das Update läuft im Terminal. LaunchNG beendet sich und startet danach automatisch erneut.",
-                .updaterLaunchFailed: "Updater konnte nicht gestartet werden (%@).",
-                .updaterMissingBinary: "Updater wurde im App-Paket nicht gefunden.",
-                .updaterNotExecutable: "Updater-Datei ist nicht ausführbar.",
-                .updaterHoldPrompt: "Nach dem Update Enter drücken, um dieses Fenster zu schließen. LaunchNG wird automatisch wieder geöffnet."
             ],
             .russian: [
                 .reverseWheelPagingTitle: "Обратить направление листания колёсиком",
@@ -3845,17 +3648,7 @@ final class LocalizationManager {
                 // Проверка обновлений
                 .checkForUpdates: "Проверить обновления",
                 .checkForUpdatesButton: "Проверить обновления",
-                .checkingForUpdates: "Проверка обновлений...",
-                .upToDate: "У вас последняя версия",
-                .updateAvailable: "Доступно обновление",
-                .newVersion: "Новая версия:",
-                .downloadUpdate: "Скачать обновление",
-                .updateCheckFailed: "Ошибка проверки обновлений",
-                .tryAgain: "Попробовать снова",
                 .autoCheckForUpdates: "Автоматически проверять обновления",
-                .versionParseError: "Ошибка разбора версии",
-                .updatesRefreshButton: "Проверить снова",
-                .openUpdaterConfig: "Открыть файл конфигурации обновлений"
             ]
         ]
 
@@ -4704,24 +4497,7 @@ final class LocalizationManager {
             .okButton: "確定",
             .checkForUpdates: "檢查更新",
             .checkForUpdatesButton: "檢查更新",
-            .checkingForUpdates: "正在檢查更新...",
-            .upToDate: "已是最新版本",
-            .updateAvailable: "發現新版本",
-            .newVersion: "新版本：",
-            .downloadUpdate: "下載更新",
-            .updateCheckFailed: "更新檢查失敗",
-            .tryAgain: "重試",
             .autoCheckForUpdates: "自動檢查更新",
-            .versionParseError: "版本解析錯誤",
-            .updatesRefreshButton: "重新檢查",
-            .openUpdaterConfig: "開啟更新設定檔案",
-            .updaterConfirmTitle: "使用終端機安裝更新？",
-            .updaterConfirmMessage: "LaunchNG 將會退出並在終端機中執行更新器。安裝完成後會自動重新啟動。\n\n如果右側的“下載更新”按鈕是透明的，請直接點選。\n這是 macOS 的 bug。⬇️",
-            .updaterTerminalHint: "更新會在終端機中執行，LaunchNG 將退出並自動重新啟動。",
-            .updaterLaunchFailed: "無法啟動更新器（%@）。",
-            .updaterMissingBinary: "App 套件內找不到更新器。",
-            .updaterNotExecutable: "更新器檔案不可執行。",
-            .updaterHoldPrompt: "更新完成後，按 Enter 鍵關閉視窗，LaunchNG 會自動重新開啟。",
         ]
 
         builder[.japanese]?.merge([
@@ -7113,17 +6889,7 @@ final class LocalizationManager {
             .okButton: "ठीक",
             .checkForUpdates: "अपडेट जाँचें",
             .checkForUpdatesButton: "अपडेट जाँचें",
-            .checkingForUpdates: "अपडेट की जाँच हो रही है…",
-            .upToDate: "आप नवीनतम संस्करण पर हैं",
-            .updateAvailable: "नया अपडेट उपलब्ध",
-            .newVersion: "नया संस्करण:",
-            .downloadUpdate: "अपडेट डाउनलोड करें",
-            .updateCheckFailed: "अपडेट जाँच विफल",
-            .tryAgain: "पुनः प्रयास",
             .autoCheckForUpdates: "स्वचालित रूप से अपडेट जाँचें",
-            .versionParseError: "संस्करण पार्स त्रुटि",
-            .updatesRefreshButton: "फिर से जाँचें",
-            .openUpdaterConfig: "अपडेट कॉन्फ़िग फ़ाइल खोलें",
             .settingsSectionGeneral: "सामान्य",
             .settingsSectionAppSources: "स्रोत और खोज",
             .scanSourcesFuzzySearchTitle: "फज़ी खोज",

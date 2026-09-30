@@ -73,10 +73,15 @@ folder glass feature live in `Documentation/FolderLiquidGlass.md`.
   caching logic used by the fullscreen background, also independently
   testable.
 
-`UpdaterScripts/` is a **separate Swift package** (`SwiftUpdater`, its own
-`Package.swift`), a standalone ncurses TUI updater binary bundled with
-releases — not part of the Xcode project graph. `UpdaterScripts/launchng_updater.py`
-is the Python counterpart/legacy updater script.
+Self-updates go through **Sparkle** (SPM dependency on the `LaunchNG` target
+only, `SparkleUpdaterController.swift` wraps `SPUStandardUpdaterController`).
+`appcast.xml` at the repo root (served to the app via
+`raw.githubusercontent.com` — see `SUFeedURL` in the target's build
+settings) is the feed; `scripts/sparkle-tools/bin/` holds vendored Sparkle
+CLI binaries (`sign_update`, `generate_appcast`, `BinaryDelta`) that the
+release scripts use to sign each release asset and append its appcast
+entry. The EdDSA private key used to sign releases lives only in the
+release-builder's macOS Keychain — it is never checked into the repo.
 
 ### App lifecycle and window management
 

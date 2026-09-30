@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 import SwiftData
 import MachO
 import Darwin
+import Sparkle
 
 struct SettingsView: View {
     @ObservedObject var appStore: AppStore
@@ -249,7 +250,6 @@ struct SettingsView: View {
         }
         .onChange(of: selectedSection) { _, newSection in
             guard newSection == .about else { return }
-            guard appStore.updateState != .checking else { return }
 
             let now = Date()
             if let lastRefresh = lastUpdatesTabRefreshAt,
@@ -258,7 +258,7 @@ struct SettingsView: View {
             }
 
             lastUpdatesTabRefreshAt = now
-            appStore.checkForUpdates()
+            SparkleUpdaterController.shared.controller.updater.checkForUpdatesInBackground()
         }
     }
 
@@ -1310,10 +1310,10 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                 .foregroundStyle(.secondary)
 
             updateControlButton(
-                title: "Test update notification",
+                title: "Force update check (Sparkle)",
                 systemImage: "bell.badge"
             ) {
-                appStore.sendTestUpdateNotification()
+                SparkleUpdaterController.shared.checkForUpdates()
             }
 
             VStack(alignment: .leading, spacing: 8) {
@@ -2508,9 +2508,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
             HStack(spacing: 12) {
                 glassButton(title: appStore.localized(.aboutProjectLink), systemImage: "arrow.up.right.square") {
                     openExternalLink("https://github.com/moonmig/LaunchNG")
-                }
-                glassButton(title: appStore.localized(.openUpdaterConfig), systemImage: "doc.text") {
-                    appStore.openUpdaterConfigFile()
                 }
             }
             .frame(maxWidth: .infinity)
@@ -6002,105 +5999,23 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
     }
 
     // MARK: - Update Check Section
+    //
+    // Sparkle owns the actual check/download/install flow and presents its
+    // own native progress, release-notes and error windows -- this card is
+    // just an entry point into that (plus the auto-check toggle), not a
+    // mirror of Sparkle's internal state.
     private var updatesStatusCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            let availableNotes: String? = {
-                if case .updateAvailable(let release) = appStore.updateState {
-                    return release.notes
-                }
-                return nil
-            }()
-            let availableNotesModel: MarkdownRenderModel = {
-                guard let availableNotes, !availableNotes.isEmpty else { return .empty }
-                return SimpleMarkdownParser.parse(availableNotes)
-            }()
-
             Text(appStore.localized(.checkForUpdates))
                 .font(.headline)
 
-            switch appStore.updateState {
-            case .idle:
-                HStack {
-                    Spacer()
-                    checkForUpdatesButton
-                }
-
-            case .checking:
-                HStack {
-                    ProgressView()
-                        .scaleEffect(0.8)
-                    Text(appStore.localized(.checkingForUpdates))
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    checkForUpdatesButton
-                }
-
-            case .upToDate:
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                    Text(appStore.localized(.upToDate))
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    checkForUpdatesButton
-                }
-
-            case .updateAvailable(let release):
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Label(appStore.localized(.updateAvailable), systemImage: "party.popper.fill")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.orange)
-
-                        Text(appStore.localized(.newVersion) + " \(release.version)")
-                            .font(.footnote.weight(.medium))
-                            .foregroundStyle(.secondary)
-
-                        Spacer(minLength: 0)
-
-                        updateControlButton(
-                            title: appStore.localized(.downloadUpdate),
-                            systemImage: "arrow.down.circle",
-                            minWidth: 0
-                        ) {
-                            appStore.launchUpdater(for: release)
-                        }
-                    }
-
-                    if !availableNotesModel.blocks.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Release Notes")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
-
-                            ReleaseNotesMarkdownView(model: availableNotesModel, mode: .full)
-                        }
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color.primary.opacity(0.04))
-                        )
-                    }
-                }
-
-            case .failed(let error):
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.red)
-                        Text(appStore.localized(.updateCheckFailed))
-                            .font(.subheadline.weight(.medium))
-                        Spacer()
-                        checkForUpdatesButton
-                    }
-
-                    Text(error)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
+            HStack {
+                Text(String(format: appStore.localized(.versionLabelFormat),
+                            getVersion(fallback: appStore.localized(.versionFallback))))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                checkForUpdatesButton
             }
-
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -6110,16 +6025,18 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
         )
     }
 
-
     private var updatesControlCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text(appStore.localized(.autoCheckForUpdates))
                     .font(.subheadline)
                 Spacer()
-                Toggle("", isOn: $appStore.autoCheckForUpdates)
-                    .labelsHidden()
-                    .toggleStyle(.switch)
+                Toggle("", isOn: Binding(
+                    get: { SparkleUpdaterController.shared.automaticallyChecksForUpdates },
+                    set: { SparkleUpdaterController.shared.automaticallyChecksForUpdates = $0 }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
             }
         }
         .padding(12)
@@ -6132,16 +6049,13 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
 
     private var checkForUpdatesButton: some View {
         updateControlButton(
-            title: appStore.updateState == .idle
-                ? appStore.localized(.checkForUpdatesButton)
-                : appStore.localized(.updatesRefreshButton),
+            title: appStore.localized(.checkForUpdatesButton),
             systemImage: "arrow.clockwise",
             isPrimary: true,
             minWidth: 0
         ) {
-            appStore.checkForUpdates()
+            SparkleUpdaterController.shared.checkForUpdates()
         }
-        .disabled(appStore.updateState == .checking)
     }
 
     private func updateControlButton(title: String, systemImage: String, isPrimary: Bool = false, minWidth: CGFloat = 160, action: @escaping () -> Void) -> some View {
