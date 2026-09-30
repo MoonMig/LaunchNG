@@ -1253,17 +1253,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-
-            Divider()
-
-            Toggle(appStore.localized(.showFPSOverlay), isOn: $appStore.showFPSOverlay)
-                .toggleStyle(.switch)
-            Text(appStore.localized(.showFPSOverlayDisclaimer))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Text(appStore.localized(.showFPSOverlayWarning))
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 

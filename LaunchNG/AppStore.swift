@@ -799,7 +799,6 @@ final class AppStore: ObservableObject {
             Self.activePressScaleKey: activePressScale,
             "animationDuration": animationDuration,
             Self.globalHotKeyKey: globalHotKey?.dictionaryRepresentation ?? [:],
-            "showFPSOverlay": showFPSOverlay,
             Self.gameControllerEnabledKey: gameControllerEnabled,
             Self.gameControllerMenuToggleKey: gameControllerMenuTogglesLaunchpad
         ]
@@ -882,7 +881,6 @@ final class AppStore: ObservableObject {
         defaults.removeObject(forKey: Self.rememberedPageIndexKey)
         defaults.set(Self.defaultFolderPopoverWidth, forKey: "folderPopoverWidthFactor")
         defaults.set(Self.defaultFolderPopoverHeight, forKey: "folderPopoverHeightFactor")
-        defaults.set(false, forKey: "showFPSOverlay")
         if let data = try? JSONEncoder().encode(Self.defaultDualModeAppearanceSettings) {
             defaults.set(data, forKey: Self.dualModeAppearanceSettingsKey)
         }
@@ -945,7 +943,6 @@ final class AppStore: ObservableObject {
         activePressScale = defaults.object(forKey: Self.activePressScaleKey) as? Double ?? Self.defaultActivePressScale
         useLocalizedThirdPartyTitles = defaults.object(forKey: "useLocalizedThirdPartyTitles") as? Bool ?? true
         iconLabelFontWeight = defaults.string(forKey: Self.iconLabelFontWeightKey).flatMap(IconLabelFontWeightOption.init(rawValue:)) ?? .medium
-        showFPSOverlay = defaults.object(forKey: "showFPSOverlay") as? Bool ?? false
         enableWindowOpenAnimation = defaults.object(forKey: Self.windowOpenAnimationKey) as? Bool ?? true
         windowShadowEnabled = defaults.object(forKey: Self.windowShadowEnabledKey) as? Bool ?? false
         compactWindowMaxWidth = CompactWindowLayout.normalizedMaximumWidth(defaults.integer(forKey: Self.compactWindowMaxWidthKey))
@@ -1851,12 +1848,6 @@ final class AppStore: ObservableObject {
         }
     }
 
-    @Published var showFPSOverlay: Bool = {
-        if UserDefaults.standard.object(forKey: "showFPSOverlay") == nil { return false }
-        return UserDefaults.standard.bool(forKey: "showFPSOverlay")
-    }() {
-        didSet { UserDefaults.standard.set(showFPSOverlay, forKey: "showFPSOverlay") }
-    }
 
     @Published var gameControllerEnabled: Bool = {
         if UserDefaults.standard.object(forKey: AppStore.gameControllerEnabledKey) == nil { return false }
@@ -2941,9 +2932,6 @@ final class AppStore: ObservableObject {
         }
         if defaults.object(forKey: Self.windowAnimationDurationKey) == nil {
             defaults.set(Self.defaultWindowAnimationDuration, forKey: Self.windowAnimationDurationKey)
-        }
-        if UserDefaults.standard.object(forKey: "showFPSOverlay") == nil {
-            UserDefaults.standard.set(false, forKey: "showFPSOverlay")
         }
         if defaults.object(forKey: "pageIndicatorOffset") == nil {
             defaults.set(27.0, forKey: "pageIndicatorOffset")
@@ -4977,8 +4965,7 @@ final class AppStore: ObservableObject {
             Self.rememberPageKey,
             Self.rememberedPageIndexKey,
             "folderPopoverWidthFactor",
-            "folderPopoverHeightFactor",
-            "showFPSOverlay"
+            "folderPopoverHeightFactor"
         ]
 
         keysToClear.forEach { defaults.removeObject(forKey: $0) }
