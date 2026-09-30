@@ -2331,9 +2331,6 @@ final class AppStore: ObservableObject {
         didSet { persistCustomTitles() }
     }
 
-    // Cache manager
-    private let cacheManager = AppCacheManager.shared
-
     // Folder-related state
     @Published var openFolder: FolderInfo? = nil
     @Published var isDragCreatingFolder = false
@@ -2382,7 +2379,6 @@ final class AppStore: ObservableObject {
     // Background refresh queues and throttling
     private var gridRefreshWorkItem: DispatchWorkItem?
     private var iconScaleWorkItem: DispatchWorkItem?
-    private var customTitleRefreshWorkItem: DispatchWorkItem?
     private var searchQueryWorkItem: DispatchWorkItem?
     private let fsEventsQueue = DispatchQueue(label: "app.store.fsevents")
     private let customIconFileURL: URL
@@ -3544,10 +3540,6 @@ final class AppStore: ObservableObject {
         applicationReconciliationReasons.removeAll()
         applicationReconciliationInProgress = true
 
-        if reasons.contains(.manual) {
-            cacheManager.clearAllCaches()
-        }
-
         performApplicationReconciliation(reasons: reasons)
     }
 
@@ -3614,7 +3606,7 @@ final class AppStore: ObservableObject {
                 self.refreshMissingPlaceholders()
                 
                 // Generate the cache once the scan finishes
-                self.generateCacheAfterScan()
+                self.finishInitialLoadIfNeeded()
             }
         }
     }
@@ -3754,7 +3746,7 @@ final class AppStore: ObservableObject {
                     reasons: reasons
                 )
                 if didApplyChanges {
-                    self.generateCacheAfterScan()
+                    self.finishInitialLoadIfNeeded()
                 }
                 self.finishApplicationReconciliation(reasons: reasons, succeeded: true)
             }
@@ -4556,7 +4548,7 @@ final class AppStore: ObservableObject {
         triggerGridRefresh()
 
         // Refresh the cache, so search can find the apps inside the newly created folder
-        refreshCacheAfterFolderOperation()
+        clearStaleSearchAfterFolderOperation()
 
         saveAllOrder()
         return folder
@@ -4602,7 +4594,7 @@ final class AppStore: ObservableObject {
         triggerGridRefresh()
 
         // Refresh the cache, so search can find the newly added app
-        refreshCacheAfterFolderOperation()
+        clearStaleSearchAfterFolderOperation()
 
         saveAllOrder()
     }
@@ -4674,7 +4666,7 @@ final class AppStore: ObservableObject {
         triggerGridRefresh()
 
         // Refresh the cache, so search can find the app that was removed from the folder (refresh after the rebuild)
-        refreshCacheAfterFolderOperation()
+        clearStaleSearchAfterFolderOperation()
 
         saveAllOrder()
     }
@@ -4703,7 +4695,7 @@ final class AppStore: ObservableObject {
         triggerGridRefresh()
 
         // Refresh the cache, so search keeps working correctly
-        refreshCacheAfterFolderOperation()
+        clearStaleSearchAfterFolderOperation()
         
         rebuildItems()
         saveAllOrder()
@@ -4733,7 +4725,7 @@ final class AppStore: ObservableObject {
 
         triggerFolderUpdate()
         triggerGridRefresh()
-        refreshCacheAfterFolderOperation()
+        clearStaleSearchAfterFolderOperation()
         saveAllOrder()
         return true
     }
@@ -4930,7 +4922,7 @@ final class AppStore: ObservableObject {
         removeEmptyPages()
         triggerFolderUpdate()
         triggerGridRefresh()
-        refreshCacheAfterFolderOperation()
+        clearStaleSearchAfterFolderOperation()
         saveAllOrder()
         return true
     }
@@ -4945,9 +4937,6 @@ final class AppStore: ObservableObject {
 
         // Clear all persisted ordering data
         clearAllPersistedData()
-
-        // Clear the cache
-        cacheManager.clearAllCaches()
 
         // Reset the scan flag to force a rescan
         hasPerformedInitialScan = false
@@ -4970,7 +4959,7 @@ final class AppStore: ObservableObject {
 
         // Refresh the cache once the scan finishes
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.refreshCacheAfterFolderOperation()
+            self?.clearStaleSearchAfterFolderOperation()
         }
     }
 
@@ -5864,11 +5853,6 @@ final class AppStore: ObservableObject {
                 self.currentPage = maxPageIndex
             }
             self.triggerGridRefresh()
-            self.cacheManager.refreshCache(from: self.apps,
-                                           items: self.items,
-                                           itemsPerPage: self.itemsPerPage,
-                                           columns: self.gridColumnsPerPage,
-                                           rows: self.gridRowsPerPage)
             if self.rememberLastPage {
                 UserDefaults.standard.set(self.currentPage, forKey: Self.rememberedPageIndexKey)
             }
@@ -5983,19 +5967,8 @@ final class AppStore: ObservableObject {
     
     // MARK: - Cache management
 
-    /// Generates the cache once the scan finishes
-    private func generateCacheAfterScan() {
-
-        // Check whether the cache is valid
-        if !cacheManager.isCacheValid {
-            // Generate a new cache
-            cacheManager.generateCache(from: apps,
-                                      items: items,
-                                      itemsPerPage: itemsPerPage,
-                                      columns: gridColumnsPerPage,
-                                      rows: gridRowsPerPage)
-        }
-
+    /// Clears the initial-loading flag once the first scan finishes.
+    private func finishInitialLoadIfNeeded() {
         if isInitialLoading {
             isInitialLoading = false
         }
@@ -6021,27 +5994,12 @@ final class AppStore: ObservableObject {
         triggerGridRefresh()
     }
 
-    /// Clears the cache
-    func clearCache() {
-        cacheManager.clearAllCaches()
-    }
-
-    /// Returns cache statistics
-    var cacheStatistics: CacheStatistics {
-        return cacheManager.cacheStatistics
-    }
-
-    /// Updates the cache after an incremental change
-    private func updateCacheAfterChanges() {
-        // Check whether the cache needs updating
-        if !cacheManager.isCacheValid {
-            // Cache is invalid, regenerate it
-            cacheManager.generateCache(from: apps,
-                                      items: items,
-                                      itemsPerPage: itemsPerPage,
-                                      columns: gridColumnsPerPage,
-                                      rows: gridRowsPerPage)
-        }
+    /// Forces app icons and folder previews to re-render from disk, discarding
+    /// any cached bitmaps -- useful if an icon looks stale or corrupted.
+    func resetIconCache() {
+        IconStore.shared.clear()
+        FolderPreviewCache.shared.clear()
+        triggerGridRefresh()
     }
 
     private var resolvedLanguage: AppLanguage {
@@ -6090,7 +6048,6 @@ final class AppStore: ObservableObject {
         removeEmptyPages()
         triggerFolderUpdate()
         triggerGridRefresh()
-        updateCacheAfterChanges()
         saveAllOrder()
         return true
     }
@@ -6129,7 +6086,6 @@ final class AppStore: ObservableObject {
         removeEmptyPages()
         triggerFolderUpdate()
         triggerGridRefresh()
-        updateCacheAfterChanges()
         saveAllOrder()
         return true
     }
@@ -6162,7 +6118,6 @@ final class AppStore: ObservableObject {
         compactItemsWithinPages()
         triggerFolderUpdate()
         triggerGridRefresh()
-        updateCacheAfterChanges()
         saveAllOrder()
     }
 
@@ -6465,22 +6420,7 @@ final class AppStore: ObservableObject {
         if changed {
             triggerFolderUpdate()
             triggerGridRefresh()
-            scheduleCustomTitleCacheRefresh()
         }
-    }
-
-    private func scheduleCustomTitleCacheRefresh() {
-        customTitleRefreshWorkItem?.cancel()
-        let work = DispatchWorkItem { [weak self] in
-            guard let self else { return }
-            self.cacheManager.refreshCache(from: self.apps,
-                                           items: self.items,
-                                           itemsPerPage: self.itemsPerPage,
-                                           columns: self.gridColumnsPerPage,
-                                           rows: self.gridRowsPerPage)
-        }
-        customTitleRefreshWorkItem = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
     }
 
     func setCustomAppIcon(from url: URL) -> Bool {
@@ -6581,17 +6521,9 @@ final class AppStore: ObservableObject {
         ensureAppSupportDirectory().appendingPathComponent("CustomAppIcon.png", isDirectory: false)
     }
 
-    /// Refreshes the cache after a folder operation, keeping search working correctly
-    private func refreshCacheAfterFolderOperation() {
-        // Refresh the cache directly, making sure it covers every app (including ones inside folders)
-        cacheManager.refreshCache(from: apps,
-                                  items: items,
-                                  itemsPerPage: itemsPerPage,
-                                  columns: gridColumnsPerPage,
-                                  rows: gridRowsPerPage)
-
-        // Clear the search text, resetting the search state
-        // This avoids showing stale results the next time the user searches
+    /// Clears the search text after a folder operation, so the next search
+    /// doesn't show stale results.
+    private func clearStaleSearchAfterFolderOperation() {
         if !searchText.isEmpty {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                 self?.searchText = ""
@@ -6727,7 +6659,6 @@ final class AppStore: ObservableObject {
         refreshMissingPlaceholders()
         triggerFolderUpdate()
         triggerGridRefresh()
-        updateCacheAfterChanges()
         saveAllOrder()
         return true
     }

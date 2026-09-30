@@ -381,7 +381,6 @@ struct LaunchpadView: View {
            .onAppear {
               if !appStore.shouldShowOnboarding {
                   appStore.performInitialScanIfNeeded()
-                  checkCacheStatus()
               }
               setupKeyHandlers()
               setupInitialSelection()
@@ -448,7 +447,6 @@ struct LaunchpadView: View {
 
             guard !visible, !appStore.isInitialLoading else { return }
             appStore.performInitialScanIfNeeded()
-            checkCacheStatus()
         }
         .onChange(of: appStore.isInitialLoading) { _, loading in
             guard !loading, pendingPostOnboardingReveal, !appStore.shouldShowOnboarding else { return }
@@ -2742,18 +2740,6 @@ func arrowDelta(for keyCode: UInt16) -> (dx: Int, dy: Int)? {
 // MARK: - Cache management extension
 
 extension LaunchpadView {
-    /// Check the cache state
-    private func checkCacheStatus() {
-        guard !appStore.shouldShowOnboarding else { return }
-        // Trigger a rescan if the cache is invalid
-        if !AppCacheManager.shared.isCacheValid {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                guard !self.appStore.shouldShowOnboarding else { return }
-                self.appStore.performInitialScanIfNeeded()
-            }
-        }
-    }
-    
     // Unified drag-end handling logic (shared by normal and handoff drags)
     private func finalizeDragOperation(containerSize: CGSize, columnWidth: CGFloat, appHeight: CGFloat, iconSize: CGFloat) {
         guard let dragging = draggingItem else { return }

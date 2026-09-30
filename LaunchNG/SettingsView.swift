@@ -563,7 +563,6 @@ private func layoutModeScopeControl(width: CGFloat = 130) -> some View {
 private enum SettingsSection: String, CaseIterable, Identifiable {
     case general
     case appearance
-    case performance
     case titles
     case appSources
     case hiddenApps
@@ -586,7 +585,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
         case .gameController: return "gamecontroller"
         case .sound: return "speaker.wave.2"
         case .appearance: return "paintbrush"
-        case .performance: return "speedometer"
         case .titles: return "text.badge.plus"
         case .hiddenApps: return "eye.slash"
         case .uninstall: return "trash"
@@ -612,8 +610,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
             colors = [Color(red: 0.46, green: 0.34, blue: 0.97), Color(red: 0.31, green: 0.54, blue: 0.99)]
         case .appearance:
             colors = [Color(red: 0.73, green: 0.25, blue: 0.96), Color(red: 0.98, green: 0.43, blue: 0.80)]
-        case .performance:
-            colors = [Color(red: 0.02, green: 0.70, blue: 0.46), Color(red: 0.31, green: 0.93, blue: 0.69)]
         case .titles:
             colors = [Color(red: 0.95, green: 0.37, blue: 0.32), Color(red: 0.98, green: 0.55, blue: 0.44)]
         case .hiddenApps:
@@ -640,7 +636,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
         case .sound: return .settingsSectionSound
         case .gameController: return .settingsSectionGameController
         case .appearance: return .settingsSectionAppearance
-        case .performance: return .settingsSectionPerformance
         case .titles: return .settingsSectionTitles
         case .hiddenApps: return .settingsSectionHiddenApps
         case .uninstall: return .settingsSectionUninstall
@@ -722,8 +717,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
             generalSection
         case .appearance:
             appearanceSection
-        case .performance:
-            performanceSection
         case .titles:
             titlesSection
         case .appSources:
@@ -1316,6 +1309,18 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                 SparkleUpdaterController.shared.checkForUpdates()
             }
 
+            Divider()
+
+            updateControlButton(
+                title: appStore.localized(.developmentResetIconCacheButton),
+                systemImage: "arrow.triangle.2.circlepath"
+            ) {
+                appStore.resetIconCache()
+            }
+            Text(appStore.localized(.developmentResetIconCacheHint))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
             VStack(alignment: .leading, spacing: 8) {
                 Text("Screenshot background")
                     .font(.headline)
@@ -1413,58 +1418,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
     //     }
     //     .frame(maxWidth: .infinity, alignment: .leading)
     // }
-
-    private var performanceSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .firstTextBaseline, spacing: 16) {
-                    Text(appStore.localized(.performanceCacheTitle))
-                        .font(.headline)
-                    Spacer(minLength: 8)
-                    cacheStatusLabel(isValid: appStore.cacheStatistics.isCacheValid)
-                }
-                .help(appStore.localized(.performanceCacheCountsHint))
-                Divider()
-                performanceCacheDetails
-            }
-            .padding(20)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(nsColor: .quaternarySystemFill),
-                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        }
-    }
-
-    private var performanceCacheDetails: some View {
-        let stats = appStore.cacheStatistics
-        return VStack(alignment: .leading, spacing: 0) {
-            cacheDetailRow(title: appStore.localized(.performanceCacheIconLabel),
-                           valueText: appStore.localized(.performanceCacheIconsDisabled))
-                .help(appStore.localized(.performanceCacheLeanHint))
-            Divider()
-            cacheDetailRow(title: appStore.localized(.performanceCacheAppInfoLabel),
-                           valueText: "\(stats.appInfoCacheSize)")
-            Divider()
-            cacheDetailRow(title: appStore.localized(.performanceCacheGridLabel),
-                           valueText: "\(stats.gridLayoutCacheSize)")
-            Divider()
-            cacheDetailRow(title: appStore.localized(.performanceCacheLastUpdateLabel),
-                           valueText: formattedCacheUpdate(stats.lastUpdate))
-
-            HStack {
-                Spacer(minLength: 0)
-                Button {
-                    appStore.clearCache()
-                    IconStore.shared.clear()
-                    FolderPreviewCache.shared.clear()
-                } label: {
-                    Label(appStore.localized(.performanceCacheClearButton), systemImage: "trash")
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.regular)
-            }
-            .padding(.top, 12)
-        }
-    }
 
     private var hiddenAppsSection: some View {
         return LazyVStack(alignment: .leading, spacing: 16) {
@@ -2604,48 +2557,6 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
 
     private func currentMemoryUsageString() -> String {
         "Memory: \(currentMemoryUsageValue())"
-    }
-
-    private func formattedCacheUpdate(_ date: Date) -> String {
-        if date == .distantPast {
-            return appStore.localized(.performanceCacheNever)
-        }
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
-    }
-
-    private func cacheStatusLabel(isValid: Bool) -> some View {
-        let title = appStore.localized(isValid ? .performanceCacheStatusValid : .performanceCacheStatusInvalid)
-        let color = isValid ? Color.green : Color.orange
-        return HStack(spacing: 6) {
-            Circle()
-                .fill(color)
-                .frame(width: 6, height: 6)
-                .accessibilityHidden(true)
-            Text(title)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    private func cacheDetailRow(title: String, valueText: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 16) {
-            Text(title)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 8)
-            Text(valueText)
-                .font(.callout.weight(.semibold).monospacedDigit())
-                .foregroundStyle(.primary)
-                .multilineTextAlignment(.trailing)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.vertical, 11)
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var generalSection: some View {
