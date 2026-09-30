@@ -5,7 +5,16 @@
     <link>https://raw.githubusercontent.com/MoonMig/LaunchNG/main/appcast.xml</link>
     <description>LaunchNG update feed.</description>
     <language>en</language>
-                                        <item>
+                                            <item>
+      <title>Version 2.4.17</title>
+      <pubDate>Wed, 30 Sep 2026 15:17:22 +0000</pubDate>
+      <sparkle:version>20260941</sparkle:version>
+      <sparkle:shortVersionString>2.4.17</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <sparkle:releaseNotesLink>https://github.com/MoonMig/LaunchNG/releases/tag/v2.4.17</sparkle:releaseNotesLink>
+      <enclosure url="https://github.com/MoonMig/LaunchNG/releases/download/v2.4.17/LaunchNG2.4.17.zip" sparkle:edSignature="5LACxZhPlzY/pziW+xjcD7SC/Y16W4LHbERqJJnwVnWh4HaekR5765YnECuAvFlxpV9zLSmEbigI0PyFFtftAA==" length="10204577" type="application/octet-stream" />
+    </item>
+<item>
       <title>Version 2.4.16</title>
       <pubDate>Wed, 30 Sep 2026 15:10:51 +0000</pubDate>
       <sparkle:version>20260940</sparkle:version>
