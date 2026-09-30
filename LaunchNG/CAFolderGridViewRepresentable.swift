@@ -27,6 +27,13 @@ struct CAFolderGridViewRepresentable: NSViewRepresentable {
 
     func updateNSView(_ nsView: CAFolderGridView, context: Context) {
         configure(nsView)
+        // Re-wire on every update, not just at creation: this is a struct, so
+        // the closures below close over `self` by value -- wiring them only
+        // once in makeNSView would freeze onDragAppOut (and everything else
+        // here) on whatever `folder`/`appStore` snapshot existed the moment
+        // this folder's view was first created, silently going stale for the
+        // rest of that folder presentation's lifetime.
+        wireCallbacks(nsView)
         if nsView.apps != folder.apps {
             nsView.apps = folder.apps
         }

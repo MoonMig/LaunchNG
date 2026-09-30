@@ -299,7 +299,7 @@ extension CAGridView {
 
             // Rubber-band effect - add resistance at the boundary
             let pageStride = bounds.width + pageSpacing
-            let minOffset = -CGFloat(pageCount - 1) * pageStride
+            let minOffset = -CGFloat(navigablePageCount - 1) * pageStride
             let maxOffset: CGFloat = 0
 
             if newOffset > maxOffset {
@@ -367,7 +367,7 @@ extension CAGridView {
             var targetPage = currentPage
             if totalDrag < -threshold {
                 // Dragged left -> next page
-                targetPage = min(currentPage + 1, pageCount - 1)
+                targetPage = min(currentPage + 1, navigablePageCount - 1)
             } else if totalDrag > threshold {
                 // Dragged right -> previous page
                 targetPage = max(currentPage - 1, 0)

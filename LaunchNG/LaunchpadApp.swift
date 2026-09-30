@@ -1615,8 +1615,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSGestureR
     /// left-click before AppKit's dispatch, independent of that race, so it
     /// can fall back to closing the folder itself whenever the resolved
     /// target isn't part of the folder presentation's own view tree.
+    ///
+    /// Next Engine (Core Animation) only: the Legacy Engine's folder is a
+    /// plain SwiftUI overlay with no dedicated NSView subclass to recognize
+    /// here, but it doesn't need one -- its own dimmed backdrop already
+    /// closes it on an outside tap (see `isFolderOpen` in LaunchpadView,
+    /// `.allowsHitTesting(!appStore.useCAGridRenderer)`). Applying this same
+    /// walk-up check there would misfire: any click on the folder's own
+    /// SwiftUI content (which never matches these Next Engine types) would
+    /// close the folder on the very first click inside it.
     private func closeFolderIfClickFellThroughToBackground(_ event: NSEvent) {
-        guard appStore.openFolder != nil, let window, event.window === window,
+        guard appStore.useCAGridRenderer,
+              appStore.openFolder != nil, let window, event.window === window,
               let hit = window.contentView?.hitTest(event.locationInWindow) else { return }
         var view: NSView? = hit
         while let current = view {
