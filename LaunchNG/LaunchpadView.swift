@@ -1048,10 +1048,17 @@ struct LaunchpadView: View {
         // (LaunchNG stays active and visible the whole time, right up until the
         // new app's window is ready to take over) never creates. Launching the
         // same app straight from Finder never reproduced the crash; launching
-        // it the old way here did, reliably.
+        // it the old way here did, reliably. Still, waiting for the full launch
+        // leaves the window lingering for the entire startup time of slow apps
+        // -- hide on whichever comes first, the confirmed launch or a short
+        // fallback timeout, since the fallback only fires after openApplication
+        // has already been called and so can't reopen the crash gap above.
         let configuration = NSWorkspace.OpenConfiguration()
+        let fallbackHide = DispatchWorkItem { AppDelegate.shared?.hideWindow() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + CAGridViewRepresentable.launchHideFallbackDelay, execute: fallbackHide)
         NSWorkspace.shared.openApplication(at: app.url, configuration: configuration) { _, error in
             DispatchQueue.main.async {
+                fallbackHide.cancel()
                 if error != nil {
                     NSSound.beep()
                     return

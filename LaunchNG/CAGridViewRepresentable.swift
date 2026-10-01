@@ -5,6 +5,11 @@ import LaunchNGContextMenuCore
 // MARK: - SwiftUI Wrapper
 
 struct CAGridViewRepresentable: NSViewRepresentable {
+    /// How long to wait for `openApplication`'s completion before hiding
+    /// LaunchNG's window anyway -- see the comment at the launchApp closure
+    /// in makeNSView for why this can't just hide immediately.
+    static let launchHideFallbackDelay: TimeInterval = 0.15
+
     @ObservedObject var appStore: AppStore
     var items: [LaunchpadItem]  // Supports passing in already-filtered items
     var iconSize: CGFloat
@@ -78,10 +83,19 @@ struct CAGridViewRepresentable: NSViewRepresentable {
             // other way around -- hiding first with just a blind short delay
             // left a gap where no app was cleanly "active", which crashed some
             // apps' own window setup (confirmed with Transmission) in a way
-            // launching the same app from Finder never did.
+            // launching the same app from Finder never did. That said, waiting
+            // for the full launch to finish makes LaunchNG's window linger for
+            // the entire startup time of slow apps, which reads as a stuck/
+            // unresponsive window. Split the difference: hide on whichever
+            // comes first, the confirmed launch or a short fallback timeout --
+            // the fallback still only fires after openApplication has already
+            // been called, so it doesn't reopen the crash gap above.
             let configuration = NSWorkspace.OpenConfiguration()
+            let fallbackHide = DispatchWorkItem { AppDelegate.shared?.hideWindow() }
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.launchHideFallbackDelay, execute: fallbackHide)
             NSWorkspace.shared.openApplication(at: app.url, configuration: configuration) { _, error in
                 DispatchQueue.main.async {
+                    fallbackHide.cancel()
                     if error != nil {
                         NSSound.beep()
                         return
