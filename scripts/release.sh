@@ -50,6 +50,15 @@ if [[ ! -d "${APP_PATH}" ]]; then
   exit 1
 fi
 
+# `lipo -create` (used above via ARCHS="arm64 x86_64") combines two already
+# linker-signed per-arch slices into one fat Mach-O, which invalidates
+# whichever ad-hoc signature happened to carry over -- codesign/spctl then
+# see the result as entirely unsigned, which makes Sparkle refuse to install
+# the update over a signed (even just ad-hoc) previous install ("Sparkle
+# only supports rotation, but not removal of Apple Code Signing identity").
+# Re-sign the whole bundle ad-hoc after lipo so it's actually valid.
+codesign --force --deep --sign - "${APP_PATH}"
+
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${APP_PATH}/Contents/Info.plist")"
 if [[ -z "${VERSION}" ]]; then
   echo "error: Could not read CFBundleShortVersionString from ${APP_PATH}" >&2
